@@ -54,7 +54,7 @@ const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
-    service: 'Celebrity Meet & Greet Request Intake API',
+    service: 'WME (William Morris Endeavor) Meet & Greet Request Intake API',
     timestamp: new Date().toISOString()
   });
 });
@@ -239,6 +239,6 @@ if (fs.existsSync(distDir)) {
 
 // Start listening
 app.listen(PORT, () => {
-  console.log(`✦ Celebrity Meet & Greet Intake Server running at http://localhost:${PORT}`);
+  console.log(`✦ WME (William Morris Endeavor) Meet & Greet Intake Server running at http://localhost:${PORT}`);
   console.log(`✦ Storage file: ${SUBMISSIONS_FILE}`);
 });

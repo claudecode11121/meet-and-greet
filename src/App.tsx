@@ -64,7 +64,7 @@ export const App: React.FC = () => {
   // Minimum selectable date: today in YYYY-MM-DD
   const todayDateString = new Date().toISOString().split('T')[0];
 
-  // Email format validation regex
+  // Standard email format validation regex
   const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
   const validateField = (name: keyof FormData, value: any): string | undefined => {
@@ -291,27 +291,27 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F2] text-[#191919] font-sans antialiased flex flex-col justify-between">
-      {/* Restrained Editorial Header */}
-      <header className="border-b border-[#DAD8D1] bg-[#F7F6F2]">
+    <div className="min-h-screen bg-[#FAFAFA] text-[#111111] font-sans antialiased flex flex-col justify-between">
+      {/* Restrained WME Header */}
+      <header className="border-b border-[#E5E5E5] bg-[#FFFFFF]">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 py-5 flex items-center justify-between">
           <div className="flex items-baseline gap-3">
-            <span className="font-serif text-lg tracking-wide text-[#191919] font-normal">
-              Atelier
+            <span className="wme-wordmark text-2xl text-[#000000]">
+              WME
             </span>
-            <span className="text-[10px] tracking-[0.2em] uppercase font-mono text-[#77736D] hidden sm:inline">
-              / Guest Relations
+            <span className="text-xs font-mono tracking-wider uppercase text-[#737373] hidden sm:inline">
+              / William Morris Endeavor
             </span>
           </div>
-          <div className="flex items-center gap-4 text-[11px] font-mono tracking-widest text-[#77736D] uppercase">
-            <span>Private Event Enquiry</span>
-            <span className="text-[#DAD8D1]">•</span>
-            <span className="hidden sm:inline">Protocol 2026</span>
+          <div className="flex items-center gap-3 text-[11px] font-mono tracking-widest text-[#737373] uppercase">
+            <span>Meet &amp; Greet Request</span>
+            <span className="text-[#E5E5E5]">•</span>
+            <span className="hidden sm:inline">Intake Protocol</span>
           </div>
         </div>
       </header>
 
-      {/* Main Page Content */}
+      {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 sm:px-8 py-12 sm:py-16 w-full flex-1">
         {submissionResult ? (
           <div className="max-w-2xl mx-auto">
@@ -319,63 +319,63 @@ export const App: React.FC = () => {
           </div>
         ) : (
           <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-start">
-            {/* Left Column: Context, Narrative & Editorial Protocol */}
+            {/* Left Column: WME Agency Context & Guidelines */}
             <aside className="lg:col-span-5 mb-12 lg:mb-0 lg:sticky lg:top-8 space-y-8">
               <div>
-                <span className="inline-block text-[10px] tracking-[0.25em] font-mono uppercase text-[#806746] mb-3">
-                  [ Private Inquiry ]
+                <span className="inline-block text-[11px] font-mono tracking-[0.2em] uppercase text-[#737373] mb-3">
+                  WME Client Relations
                 </span>
-                <h1 className="text-3xl sm:text-4xl md:text-[2.65rem] font-serif font-normal text-[#191919] leading-[1.15] tracking-tight">
-                  An Opportunity to Connect.
+                <h1 className="text-3xl sm:text-4xl md:text-[2.75rem] font-serif font-normal text-[#111111] leading-[1.12] tracking-tight">
+                  Meet &amp; Greet Request
                 </h1>
-                <p className="mt-4 text-sm sm:text-base text-[#55524D] leading-relaxed font-sans">
-                  Complete the form below to express your interest in a personal meet-and-greet experience. Please provide accurate information so your request can be reviewed.
+                <p className="mt-4 text-sm sm:text-base text-[#555555] leading-relaxed font-sans">
+                  Complete the form below to submit your request for consideration. Please ensure that all required information is accurate before submitting.
                 </p>
               </div>
 
-              <div className="w-12 h-[1px] bg-[#DAD8D1]" />
+              <div className="w-12 h-[1px] bg-[#E5E5E5]" />
 
-              {/* Editorial Protocol Guidelines */}
+              {/* Agency Consideration Guidelines */}
               <div className="space-y-6 pt-2">
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#806746] block">
-                    01 / Evaluation
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#111111] font-semibold block">
+                    01 / Review Protocol
                   </span>
-                  <p className="text-xs text-[#6B6760] leading-relaxed">
-                    Submissions are assessed individually based on talent availability, logistical feasibility, and touring schedules.
+                  <p className="text-xs text-[#666666] leading-relaxed">
+                    Requests are reviewed by WME representation and client management teams in accordance with client availability and scheduling commitments.
                   </p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#806746] block">
-                    02 / Non-Guaranteed
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#111111] font-semibold block">
+                    02 / Non-Approval Notice
                   </span>
-                  <p className="text-xs text-[#6B6760] leading-relaxed">
-                    This inquiry records your expression of interest. It does not constitute a booking commitment, ticket purchase, or guarantee of appearance.
+                  <p className="text-xs text-[#666666] leading-relaxed">
+                    Submission of this form conveys interest for evaluation only. It does not constitute approval, confirmation, or guarantee of a meeting or celebrity appearance.
                   </p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#806746] block">
-                    03 / Discretion &amp; Privacy
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#111111] font-semibold block">
+                    03 / Confidentiality
                   </span>
-                  <p className="text-xs text-[#6B6760] leading-relaxed">
-                    All participant records are handled with strict confidentiality by authorized guest relations representatives.
+                  <p className="text-xs text-[#666666] leading-relaxed">
+                    All contact details and submission records are maintained under strict confidentiality standards by WME.
                   </p>
                 </div>
               </div>
 
-              {/* Discrete Location Marker */}
-              <div className="pt-6 border-t border-[#DAD8D1] text-[11px] font-mono text-[#8C8880] tracking-wider uppercase">
-                New York · London · Paris · Los Angeles
+              {/* Agency Office Locations */}
+              <div className="pt-6 border-t border-[#E5E5E5] text-[11px] font-mono text-[#888888] tracking-wider uppercase">
+                Beverly Hills · New York · London · Nashville · Sydney
               </div>
             </aside>
 
             {/* Right Column: The Form */}
-            <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#DAD8D1] p-6 sm:p-10 shadow-sm">
+            <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#E5E5E5] p-6 sm:p-10 shadow-sm">
               {errors.general && (
                 <div
-                  className="mb-8 p-4 bg-[#FDF2F2] border border-[#F87171] text-[#991B1B] text-xs sm:text-sm flex items-start gap-3"
+                  className="mb-8 p-4 bg-[#FEF2F2] border border-[#F87171] text-[#991B1B] text-xs sm:text-sm flex items-start gap-3"
                   role="alert"
                 >
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#B91C1C]" />
@@ -386,18 +386,18 @@ export const App: React.FC = () => {
               <form onSubmit={handleSubmit} noValidate className="space-y-10">
                 {/* Section 01: Personal Information */}
                 <div>
-                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#DAD8D1]">
-                    <h2 className="text-xs font-mono uppercase tracking-[0.18em] text-[#191919] font-medium">
+                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#E5E5E5]">
+                    <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
                       Section 01 — Personal Information
                     </h2>
-                    <span className="text-[10px] font-mono text-[#806746]">[ 01 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#888888]">[ 01 / 03 ]</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
                     {/* Full Name */}
                     <div className="sm:col-span-2">
-                      <label htmlFor="fullName" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
-                        Full Name <span className="text-[#806746]">*</span>
+                      <label htmlFor="fullName" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
+                        Full Name <span className="text-[#888888]">*</span>
                       </label>
                       <input
                         id="fullName"
@@ -409,7 +409,7 @@ export const App: React.FC = () => {
                         value={formData.fullName}
                         onChange={(e) => handleChange('fullName', e.target.value)}
                         onBlur={() => handleBlur('fullName')}
-                        className={`editorial-input ${errors.fullName && touched.fullName ? 'has-error' : ''}`}
+                        className={`wme-input ${errors.fullName && touched.fullName ? 'has-error' : ''}`}
                         aria-invalid={!!errors.fullName && touched.fullName}
                         aria-describedby={errors.fullName ? 'fullName-error' : undefined}
                       />
@@ -422,8 +422,8 @@ export const App: React.FC = () => {
 
                     {/* Email Address */}
                     <div className="sm:col-span-1">
-                      <label htmlFor="email" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
-                        Email Address <span className="text-[#806746]">*</span>
+                      <label htmlFor="email" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
+                        Email Address <span className="text-[#888888]">*</span>
                       </label>
                       <input
                         id="email"
@@ -435,7 +435,7 @@ export const App: React.FC = () => {
                         value={formData.email}
                         onChange={(e) => handleChange('email', e.target.value)}
                         onBlur={() => handleBlur('email')}
-                        className={`editorial-input ${errors.email && touched.email ? 'has-error' : ''}`}
+                        className={`wme-input ${errors.email && touched.email ? 'has-error' : ''}`}
                         aria-invalid={!!errors.email && touched.email}
                         aria-describedby={errors.email ? 'email-error' : undefined}
                       />
@@ -448,15 +448,15 @@ export const App: React.FC = () => {
 
                     {/* Phone Number with Country Code */}
                     <div className="sm:col-span-1">
-                      <label htmlFor="phone" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
-                        Phone Number <span className="text-[#806746]">*</span>
+                      <label htmlFor="phone" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
+                        Phone Number <span className="text-[#888888]">*</span>
                       </label>
                       <div className="flex gap-2">
                         <select
                           aria-label="Country dial code"
                           value={formData.countryCode}
                           onChange={(e) => handleChange('countryCode', e.target.value)}
-                          className="editorial-input w-28 shrink-0 text-xs px-2"
+                          className="wme-input w-28 shrink-0 text-xs px-2"
                         >
                           {COUNTRIES.map((c) => (
                             <option key={c.code} value={c.dialCode}>
@@ -474,7 +474,7 @@ export const App: React.FC = () => {
                           value={formData.phone}
                           onChange={(e) => handleChange('phone', e.target.value)}
                           onBlur={() => handleBlur('phone')}
-                          className={`editorial-input flex-1 ${errors.phone && touched.phone ? 'has-error' : ''}`}
+                          className={`wme-input flex-1 ${errors.phone && touched.phone ? 'has-error' : ''}`}
                           aria-invalid={!!errors.phone && touched.phone}
                           aria-describedby={errors.phone ? 'phone-error' : undefined}
                         />
@@ -484,14 +484,14 @@ export const App: React.FC = () => {
                           {errors.phone}
                         </p>
                       ) : (
-                        <p className="mt-1 text-[11px] text-[#77736D]">Includes international country code.</p>
+                        <p className="mt-1 text-[11px] text-[#737373]">Includes international country code.</p>
                       )}
                     </div>
 
                     {/* Country of Residence */}
                     <div className="sm:col-span-1">
-                      <label htmlFor="country" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
-                        Country of Residence <span className="text-[#806746]">*</span>
+                      <label htmlFor="country" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
+                        Country of Residence <span className="text-[#888888]">*</span>
                       </label>
                       <select
                         id="country"
@@ -500,7 +500,7 @@ export const App: React.FC = () => {
                         value={formData.country}
                         onChange={(e) => handleChange('country', e.target.value)}
                         onBlur={() => handleBlur('country')}
-                        className={`editorial-input ${errors.country && touched.country ? 'has-error' : ''}`}
+                        className={`wme-input ${errors.country && touched.country ? 'has-error' : ''}`}
                         aria-invalid={!!errors.country && touched.country}
                         aria-describedby={errors.country ? 'country-error' : undefined}
                       >
@@ -520,19 +520,19 @@ export const App: React.FC = () => {
 
                     {/* City */}
                     <div className="sm:col-span-1">
-                      <label htmlFor="city" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
-                        City <span className="text-[#806746]">*</span>
+                      <label htmlFor="city" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
+                        City <span className="text-[#888888]">*</span>
                       </label>
                       <input
                         id="city"
                         name="city"
                         type="text"
                         required
-                        placeholder="e.g. London, Chicago"
+                        placeholder="e.g. London, Los Angeles"
                         value={formData.city}
                         onChange={(e) => handleChange('city', e.target.value)}
                         onBlur={() => handleBlur('city')}
-                        className={`editorial-input ${errors.city && touched.city ? 'has-error' : ''}`}
+                        className={`wme-input ${errors.city && touched.city ? 'has-error' : ''}`}
                         aria-invalid={!!errors.city && touched.city}
                         aria-describedby={errors.city ? 'city-error' : undefined}
                       />
@@ -547,18 +547,18 @@ export const App: React.FC = () => {
 
                 {/* Section 02: Meet & Greet Preferences */}
                 <div>
-                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#DAD8D1]">
-                    <h2 className="text-xs font-mono uppercase tracking-[0.18em] text-[#191919] font-medium">
+                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#E5E5E5]">
+                    <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
                       Section 02 — Meet &amp; Greet Preferences
                     </h2>
-                    <span className="text-[10px] font-mono text-[#806746]">[ 02 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#888888]">[ 02 / 03 ]</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
                     {/* Celebrity Name */}
                     <div className="sm:col-span-2">
-                      <label htmlFor="celebrityName" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
-                        Celebrity Name <span className="text-[#806746]">*</span>
+                      <label htmlFor="celebrityName" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
+                        Celebrity Name <span className="text-[#888888]">*</span>
                       </label>
                       <input
                         id="celebrityName"
@@ -569,7 +569,7 @@ export const App: React.FC = () => {
                         value={formData.celebrityName}
                         onChange={(e) => handleChange('celebrityName', e.target.value)}
                         onBlur={() => handleBlur('celebrityName')}
-                        className={`editorial-input ${errors.celebrityName && touched.celebrityName ? 'has-error' : ''}`}
+                        className={`wme-input ${errors.celebrityName && touched.celebrityName ? 'has-error' : ''}`}
                         aria-invalid={!!errors.celebrityName && touched.celebrityName}
                         aria-describedby={errors.celebrityName ? 'celebrityName-error' : undefined}
                       />
@@ -582,8 +582,8 @@ export const App: React.FC = () => {
 
                     {/* Preferred Meeting Type */}
                     <div className="sm:col-span-1">
-                      <label htmlFor="meetingType" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
-                        Preferred Meeting Type <span className="text-[#806746]">*</span>
+                      <label htmlFor="meetingType" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
+                        Preferred Meeting Type <span className="text-[#888888]">*</span>
                       </label>
                       <select
                         id="meetingType"
@@ -592,7 +592,7 @@ export const App: React.FC = () => {
                         value={formData.meetingType}
                         onChange={(e) => handleChange('meetingType', e.target.value)}
                         onBlur={() => handleBlur('meetingType')}
-                        className={`editorial-input ${errors.meetingType && touched.meetingType ? 'has-error' : ''}`}
+                        className={`wme-input ${errors.meetingType && touched.meetingType ? 'has-error' : ''}`}
                         aria-invalid={!!errors.meetingType && touched.meetingType}
                         aria-describedby={errors.meetingType ? 'meetingType-error' : undefined}
                       >
@@ -610,8 +610,8 @@ export const App: React.FC = () => {
 
                     {/* Number of Attendees */}
                     <div className="sm:col-span-1">
-                      <label htmlFor="attendees" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
-                        Number of Attendees <span className="text-[#806746]">*</span>
+                      <label htmlFor="attendees" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
+                        Number of Attendees <span className="text-[#888888]">*</span>
                       </label>
                       <select
                         id="attendees"
@@ -620,7 +620,7 @@ export const App: React.FC = () => {
                         value={formData.attendees}
                         onChange={(e) => handleChange('attendees', e.target.value)}
                         onBlur={() => handleBlur('attendees')}
-                        className={`editorial-input ${errors.attendees && touched.attendees ? 'has-error' : ''}`}
+                        className={`wme-input ${errors.attendees && touched.attendees ? 'has-error' : ''}`}
                         aria-invalid={!!errors.attendees && touched.attendees}
                         aria-describedby={errors.attendees ? 'attendees-error' : undefined}
                       >
@@ -640,10 +640,10 @@ export const App: React.FC = () => {
                     {/* Preferred Date */}
                     <div className="sm:col-span-2">
                       <div className="flex items-center justify-between mb-1.5">
-                        <label htmlFor="preferredDate" className="block text-xs font-mono uppercase tracking-wider text-[#191919]">
-                          Preferred Date <span className="text-[#77736D] font-normal lowercase">(optional)</span>
+                        <label htmlFor="preferredDate" className="block text-xs font-mono uppercase tracking-wider text-[#111111]">
+                          Preferred Date <span className="text-[#737373] font-normal lowercase">(optional)</span>
                         </label>
-                        <span className="text-[11px] text-[#77736D]">Subject to schedule feasibility</span>
+                        <span className="text-[11px] text-[#737373]">Subject to schedule feasibility</span>
                       </div>
                       <input
                         id="preferredDate"
@@ -652,17 +652,17 @@ export const App: React.FC = () => {
                         min={todayDateString}
                         value={formData.preferredDate}
                         onChange={(e) => handleChange('preferredDate', e.target.value)}
-                        className="editorial-input"
+                        className="wme-input"
                       />
                     </div>
 
                     {/* Why Would You Like to Meet This Celebrity? */}
                     <div className="sm:col-span-2">
                       <div className="flex items-center justify-between mb-1.5">
-                        <label htmlFor="reason" className="block text-xs font-mono uppercase tracking-wider text-[#191919]">
-                          Why Would You Like to Meet This Celebrity? <span className="text-[#77736D] font-normal lowercase">(optional)</span>
+                        <label htmlFor="reason" className="block text-xs font-mono uppercase tracking-wider text-[#111111]">
+                          Why Would You Like to Meet This Celebrity? <span className="text-[#737373] font-normal lowercase">(optional)</span>
                         </label>
-                        <span className="text-[11px] font-mono text-[#77736D]">{formData.reason.length} / 1000</span>
+                        <span className="text-[11px] font-mono text-[#737373]">{formData.reason.length} / 1000</span>
                       </div>
                       <textarea
                         id="reason"
@@ -672,17 +672,17 @@ export const App: React.FC = () => {
                         placeholder="Please share what inspires this request or the significance of the artist's work to you..."
                         value={formData.reason}
                         onChange={(e) => handleChange('reason', e.target.value)}
-                        className="editorial-input resize-y"
+                        className="wme-input resize-y"
                       />
                     </div>
 
                     {/* Additional Message */}
                     <div className="sm:col-span-2">
                       <div className="flex items-center justify-between mb-1.5">
-                        <label htmlFor="message" className="block text-xs font-mono uppercase tracking-wider text-[#191919]">
-                          Additional Message <span className="text-[#77736D] font-normal lowercase">(optional)</span>
+                        <label htmlFor="message" className="block text-xs font-mono uppercase tracking-wider text-[#111111]">
+                          Additional Message <span className="text-[#737373] font-normal lowercase">(optional)</span>
                         </label>
-                        <span className="text-[11px] font-mono text-[#77736D]">{formData.message.length} / 1000</span>
+                        <span className="text-[11px] font-mono text-[#737373]">{formData.message.length} / 1000</span>
                       </div>
                       <textarea
                         id="message"
@@ -692,7 +692,7 @@ export const App: React.FC = () => {
                         placeholder="Any relevant logistical notes, preferred geographic region, or accessibility considerations..."
                         value={formData.message}
                         onChange={(e) => handleChange('message', e.target.value)}
-                        className="editorial-input resize-y"
+                        className="wme-input resize-y"
                       />
                     </div>
                   </div>
@@ -700,11 +700,11 @@ export const App: React.FC = () => {
 
                 {/* Section 03: Confirmation */}
                 <div>
-                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#DAD8D1]">
-                    <h2 className="text-xs font-mono uppercase tracking-[0.18em] text-[#191919] font-medium">
+                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#E5E5E5]">
+                    <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
                       Section 03 — Confirmation
                     </h2>
-                    <span className="text-[10px] font-mono text-[#806746]">[ 03 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#888888]">[ 03 / 03 ]</span>
                   </div>
 
                   <div className="space-y-4">
@@ -717,11 +717,11 @@ export const App: React.FC = () => {
                           checked={formData.confirmedAccurate}
                           onChange={(e) => handleChange('confirmedAccurate', e.target.checked)}
                           onBlur={() => handleBlur('confirmedAccurate')}
-                          className={`editorial-checkbox ${errors.confirmedAccurate && touched.confirmedAccurate ? 'has-error' : ''}`}
+                          className={`wme-checkbox ${errors.confirmedAccurate && touched.confirmedAccurate ? 'has-error' : ''}`}
                           aria-invalid={!!errors.confirmedAccurate && touched.confirmedAccurate}
                         />
-                        <span className="text-xs sm:text-sm text-[#33312E] group-hover:text-[#191919] transition-colors leading-normal select-none">
-                          I confirm that the submitted information is accurate and truthful. <span className="text-[#806746]">*</span>
+                        <span className="text-xs sm:text-sm text-[#333333] group-hover:text-[#000000] transition-colors leading-normal select-none">
+                          I confirm that the submitted information is accurate and truthful. <span className="text-[#888888]">*</span>
                         </span>
                       </label>
                       {errors.confirmedAccurate && touched.confirmedAccurate && (
@@ -740,10 +740,10 @@ export const App: React.FC = () => {
                           checked={formData.acknowledgedPrivacy}
                           onChange={(e) => handleChange('acknowledgedPrivacy', e.target.checked)}
                           onBlur={() => handleBlur('acknowledgedPrivacy')}
-                          className={`editorial-checkbox ${errors.acknowledgedPrivacy && touched.acknowledgedPrivacy ? 'has-error' : ''}`}
+                          className={`wme-checkbox ${errors.acknowledgedPrivacy && touched.acknowledgedPrivacy ? 'has-error' : ''}`}
                           aria-invalid={!!errors.acknowledgedPrivacy && touched.acknowledgedPrivacy}
                         />
-                        <span className="text-xs sm:text-sm text-[#33312E] group-hover:text-[#191919] transition-colors leading-normal select-none">
+                        <span className="text-xs sm:text-sm text-[#333333] group-hover:text-[#000000] transition-colors leading-normal select-none">
                           I acknowledge and agree to the{' '}
                           <button
                             type="button"
@@ -751,11 +751,11 @@ export const App: React.FC = () => {
                               e.preventDefault();
                               setIsPrivacyModalOpen(true);
                             }}
-                            className="underline underline-offset-4 decoration-[#77736D] hover:decoration-[#191919] font-medium text-[#191919]"
+                            className="underline underline-offset-4 decoration-[#888888] hover:decoration-[#000000] font-medium text-[#000000]"
                           >
                             Privacy Policy
                           </button>
-                          {' '}regarding the confidential processing of my inquiry. <span className="text-[#806746]">*</span>
+                          {' '}regarding the confidential processing of my inquiry. <span className="text-[#888888]">*</span>
                         </span>
                       </label>
                       {errors.acknowledgedPrivacy && touched.acknowledgedPrivacy && (
@@ -765,9 +765,9 @@ export const App: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Clear Notice */}
-                    <div className="pt-3 border-t border-[#EAE8E1] text-[11px] text-[#77736D] leading-relaxed">
-                      Notice: Submitting this form expresses fan interest only and does not guarantee a meeting, booking, or celebrity appearance. All inquiries are subject to representation review.
+                    {/* Notice */}
+                    <div className="pt-3 border-t border-[#F0F0F0] text-[11px] text-[#737373] leading-relaxed">
+                      Notice: Submitting this form expresses fan interest for consideration only and does not guarantee a meeting, booking, or celebrity appearance. All inquiries are subject to review by WME and talent representation.
                     </div>
                   </div>
                 </div>
@@ -788,8 +788,8 @@ export const App: React.FC = () => {
                       <span>Submit Request</span>
                     )}
                   </button>
-                  <p className="text-center text-[11px] text-[#77736D] mt-3 font-mono">
-                    Official Intake Portal — Encrypted Transmission
+                  <p className="text-center text-[11px] text-[#737373] mt-3 font-mono">
+                    WME Official Intake Portal — Encrypted Transmission
                   </p>
                 </div>
               </form>
@@ -798,21 +798,21 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Understated Editorial Footer */}
-      <footer className="border-t border-[#DAD8D1] bg-[#F7F6F2] py-8 text-xs text-[#77736D]">
+      {/* Restrained WME Footer */}
+      <footer className="border-t border-[#E5E5E5] bg-[#FFFFFF] py-8 text-xs text-[#737373]">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px]">
           <div>
-            &copy; {new Date().getFullYear()} Atelier Guest Relations. Confidential Intake Protocol.
+            &copy; {new Date().getFullYear()} WME (William Morris Endeavor). All rights reserved.
           </div>
           <div className="flex items-center gap-6">
             <button
               type="button"
               onClick={() => setIsPrivacyModalOpen(true)}
-              className="hover:text-[#191919] underline underline-offset-2 transition-colors"
+              className="hover:text-[#000000] underline underline-offset-2 transition-colors"
             >
               Privacy Policy
             </button>
-            <span>All rights reserved.</span>
+            <span>Confidential Intake Protocol</span>
           </div>
         </div>
       </footer>
