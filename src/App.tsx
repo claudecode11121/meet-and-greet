@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { COUNTRIES } from './data/countries';
 import { PrivacyModal } from './components/PrivacyModal';
 import { ConfirmationView, SubmissionResult } from './components/ConfirmationView';
@@ -45,7 +45,7 @@ const INITIAL_FORM_DATA: FormData = {
   phone: '',
   country: 'United States',
   city: '',
-  celebrityName: '',
+  celebrityName: 'Keanu Reeves',
   meetingType: '',
   preferredDate: '',
   attendees: '1 attendee',
@@ -116,16 +116,13 @@ export const App: React.FC = () => {
 
       case 'celebrityName':
         if (!value || typeof value !== 'string' || !value.trim()) {
-          return "Celebrity name is required.";
-        }
-        if (value.trim().length < 2) {
-          return "Celebrity name must be at least 2 characters.";
+          return 'Celebrity name is required.';
         }
         return undefined;
 
       case 'meetingType':
         if (!value || !['In-person', 'Virtual', 'No preference'].includes(value)) {
-          return 'Please select a preferred meeting type.';
+          return 'Please select a preferred meeting format.';
         }
         return undefined;
 
@@ -243,9 +240,10 @@ export const App: React.FC = () => {
     setIsSubmitting(true);
     setErrors((prev) => ({ ...prev, general: undefined }));
 
-    const fullPhone = formData.phone.startsWith('+')
-      ? formData.phone
-      : `${formData.countryCode} ${formData.phone}`.trim();
+    const trimmedPhone = formData.phone.trim();
+    const fullPhone = trimmedPhone.startsWith('+')
+      ? trimmedPhone
+      : `${formData.countryCode} ${trimmedPhone}`;
 
     const payload = {
       fullName: formData.fullName.trim(),
@@ -253,7 +251,7 @@ export const App: React.FC = () => {
       phone: fullPhone,
       country: formData.country.trim(),
       city: formData.city.trim(),
-      celebrityName: formData.celebrityName.trim(),
+      celebrityName: 'Keanu Reeves',
       meetingType: formData.meetingType,
       preferredDate: formData.preferredDate || null,
       attendees: formData.attendees,
@@ -297,7 +295,10 @@ export const App: React.FC = () => {
   };
 
   const handleResetForm = () => {
-    setFormData(INITIAL_FORM_DATA);
+    setFormData({
+      ...INITIAL_FORM_DATA,
+      celebrityName: 'Keanu Reeves',
+    });
     setErrors({});
     setTouched({});
     setSubmissionResult(null);
@@ -310,7 +311,7 @@ export const App: React.FC = () => {
       <header className="border-b border-[#E5E5E5] bg-[#FFFFFF]">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 py-5 flex items-center justify-between">
           <div className="flex items-baseline gap-3">
-            <span className="wme-wordmark text-2xl text-[#000000]">
+            <span className="wme-wordmark text-2xl text-[#111111]">
               WME
             </span>
             <span className="text-xs font-mono tracking-wider uppercase text-[#737373] hidden sm:inline">
@@ -318,9 +319,9 @@ export const App: React.FC = () => {
             </span>
           </div>
           <div className="flex items-center gap-3 text-[11px] font-mono tracking-widest text-[#737373] uppercase">
-            <span>Meet &amp; Greet Request</span>
+            <span>Talent Inquiry</span>
             <span className="text-[#E5E5E5]">•</span>
-            <span className="hidden sm:inline">Intake Protocol</span>
+            <span className="text-[#6B1D2F] font-semibold">Keanu Reeves</span>
           </div>
         </div>
       </header>
@@ -333,63 +334,69 @@ export const App: React.FC = () => {
           </div>
         ) : (
           <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-start">
-            {/* Left Column: WME Agency Context & Guidelines */}
+            {/* Left Column: Context & Guidelines for Keanu Reeves Inquiry */}
             <aside className="lg:col-span-5 mb-12 lg:mb-0 lg:sticky lg:top-8 space-y-8">
               <div>
-                <span className="inline-block text-[11px] font-mono tracking-[0.2em] uppercase text-[#737373] mb-3">
-                  WME Client Relations
-                </span>
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-[#6B1D2F]/5 border border-[#6B1D2F]/20 text-[10px] font-mono uppercase tracking-[0.2em] text-[#6B1D2F] font-semibold mb-3 rounded-[2px]">
+                  <span>WME Client Relations</span>
+                </div>
                 <h1 className="text-3xl sm:text-4xl md:text-[2.75rem] font-serif font-normal text-[#111111] leading-[1.12] tracking-tight">
-                  Meet &amp; Greet Request
+                  A Moment with Keanu Reeves
                 </h1>
                 <p className="mt-4 text-sm sm:text-base text-[#555555] leading-relaxed font-sans">
-                  Complete the form below to submit your request for consideration. Please ensure that all required information is accurate before submitting.
+                  Express your interest in a meet-and-greet experience with Keanu Reeves by completing the request form below. Please provide accurate information so your request can be reviewed.
                 </p>
               </div>
 
               <div className="w-12 h-[1px] bg-[#E5E5E5]" />
 
-              {/* Agency Consideration Guidelines */}
+              {/* Guidelines */}
               <div className="space-y-6 pt-2">
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#111111] font-semibold block">
-                    01 / Review Protocol
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B1D2F] font-semibold block">
+                    01 / Evaluation Protocol
                   </span>
                   <p className="text-xs text-[#666666] leading-relaxed">
-                    Requests are reviewed by WME representation and client management teams in accordance with client availability and scheduling commitments.
+                    Inquiries are reviewed in sequence by talent management representatives based on schedule feasibility and touring commitments.
                   </p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#111111] font-semibold block">
-                    02 / Non-Approval Notice
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B1D2F] font-semibold block">
+                    02 / Non-Guaranteed Consideration
                   </span>
                   <p className="text-xs text-[#666666] leading-relaxed">
-                    Submission of this form conveys interest for evaluation only. It does not constitute approval, confirmation, or guarantee of a meeting or celebrity appearance.
+                    Submission conveys interest for consideration only. It does not constitute approval, a booking contract, ticket reservation, or confirmed appearance.
                   </p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#111111] font-semibold block">
-                    03 / Confidentiality
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B1D2F] font-semibold block">
+                    03 / Discretion &amp; Confidentiality
                   </span>
                   <p className="text-xs text-[#666666] leading-relaxed">
-                    All contact details and submission records are maintained under strict confidentiality standards by WME.
+                    All fan information and submission records are maintained under strict non-disclosure protocol and are not shared with third parties.
                   </p>
                 </div>
               </div>
 
+              {/* Disclaimer Notice */}
+              <div className="p-3.5 bg-[#FFFFFF] border border-[#E5E5E5] text-[11px] text-[#737373] leading-relaxed rounded-[2px]">
+                <strong className="text-[#111111] block mb-0.5">Inquiry Notice</strong>
+                This fan-interest inquiry form is designed for talent management consideration. Submission does not imply an official partnership, authorization, or guarantee of a meeting with Keanu Reeves.
+              </div>
+
               {/* Agency Office Locations */}
-              <div className="pt-6 border-t border-[#E5E5E5] text-[11px] font-mono text-[#888888] tracking-wider uppercase">
+              <div className="pt-2 text-[11px] font-mono text-[#888888] tracking-wider uppercase">
                 Beverly Hills · New York · London · Nashville · Sydney
               </div>
             </aside>
 
             {/* Right Column: The Form */}
-            <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#E5E5E5] p-6 sm:p-10 shadow-sm">
+            <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#E5E5E5] p-6 sm:p-10 shadow-sm rounded-[2px]">
               {errors.general && (
                 <div
-                  className="mb-8 p-4 bg-[#FEF2F2] border border-[#F87171] text-[#991B1B] text-xs sm:text-sm flex items-start gap-3"
+                  className="mb-8 p-4 bg-[#FEF2F2] border border-[#F87171] text-[#991B1B] text-xs sm:text-sm flex items-start gap-3 rounded-[2px]"
                   role="alert"
                 >
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#B91C1C]" />
@@ -404,7 +411,7 @@ export const App: React.FC = () => {
                     <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
                       Section 01 — Personal Information
                     </h2>
-                    <span className="text-[10px] font-mono text-[#888888]">[ 01 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold">[ 01 / 03 ]</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
@@ -466,10 +473,10 @@ export const App: React.FC = () => {
                         Phone Number <span className="text-[#888888]">*</span>
                       </label>
                       <div
-                        className={`flex items-stretch border bg-white transition-all ${
+                        className={`flex items-stretch border bg-white rounded-[2px] transition-all ${
                           errors.phone && touched.phone
                             ? 'border-[#B91C1C] bg-[#FEF2F2]'
-                            : 'border-[#E5E5E5] hover:border-[#A3A3A3] focus-within:border-[#000000] focus-within:ring-1 focus-within:ring-[#000000]'
+                            : 'border-[#E5E5E5] hover:border-[#A3A3A3] focus-within:border-[#111111] focus-within:ring-1 focus-within:ring-[#111111]'
                         }`}
                       >
                         <select
@@ -569,39 +576,36 @@ export const App: React.FC = () => {
                     <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
                       Section 02 — Meet &amp; Greet Preferences
                     </h2>
-                    <span className="text-[10px] font-mono text-[#888888]">[ 02 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold">[ 02 / 03 ]</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
-                    {/* Celebrity Name */}
+                    {/* Fixed Celebrity Name */}
                     <div className="sm:col-span-2">
-                      <label htmlFor="celebrityName" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
-                        Celebrity Name <span className="text-[#888888]">*</span>
+                      <label htmlFor="celebrityDisplay" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
+                        Celebrity
                       </label>
-                      <input
-                        id="celebrityName"
-                        name="celebrityName"
-                        type="text"
-                        required
-                        placeholder="Artist, author, actor, or public figure"
-                        value={formData.celebrityName}
-                        onChange={(e) => handleChange('celebrityName', e.target.value)}
-                        onBlur={() => handleBlur('celebrityName')}
-                        className={`wme-input ${errors.celebrityName && touched.celebrityName ? 'has-error' : ''}`}
-                        aria-invalid={!!errors.celebrityName && touched.celebrityName}
-                        aria-describedby={errors.celebrityName ? 'celebrityName-error' : undefined}
-                      />
-                      {errors.celebrityName && touched.celebrityName && (
-                        <p id="celebrityName-error" className="mt-1.5 text-xs text-[#B91C1C]">
-                          {errors.celebrityName}
-                        </p>
-                      )}
+                      <div className="flex items-center justify-between p-3.5 bg-[#F7F7F6] border border-[#E5E5E5] rounded-[2px]">
+                        <div className="flex items-center gap-3">
+                          <span className="font-serif text-lg sm:text-xl text-[#111111] font-normal tracking-wide">
+                            Keanu Reeves
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono tracking-widest uppercase bg-[#6B1D2F]/10 text-[#6B1D2F] px-2 py-0.5 border border-[#6B1D2F]/20 font-semibold rounded-[2px]">
+                            <CheckCircle2 className="w-3 h-3 text-[#6B1D2F]" />
+                            <span>Designated Talent</span>
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-[#737373] font-mono hidden sm:inline">
+                          Pre-selected
+                        </span>
+                      </div>
+                      <input type="hidden" name="celebrityName" value="Keanu Reeves" />
                     </div>
 
-                    {/* Preferred Meeting Type */}
+                    {/* Preferred Meeting Format */}
                     <div className="sm:col-span-1">
                       <label htmlFor="meetingType" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
-                        Preferred Meeting Type <span className="text-[#888888]">*</span>
+                        Preferred Meeting Format <span className="text-[#888888]">*</span>
                       </label>
                       <select
                         id="meetingType"
@@ -614,7 +618,7 @@ export const App: React.FC = () => {
                         aria-invalid={!!errors.meetingType && touched.meetingType}
                         aria-describedby={errors.meetingType ? 'meetingType-error' : undefined}
                       >
-                        <option value="">Select meeting type</option>
+                        <option value="">Select meeting format</option>
                         <option value="In-person">In-person</option>
                         <option value="Virtual">Virtual</option>
                         <option value="No preference">No preference</option>
@@ -674,11 +678,11 @@ export const App: React.FC = () => {
                       />
                     </div>
 
-                    {/* Why Would You Like to Meet This Celebrity? */}
+                    {/* Why Would You Like to Meet Keanu Reeves? */}
                     <div className="sm:col-span-2">
                       <div className="flex items-center justify-between mb-1.5">
                         <label htmlFor="reason" className="block text-xs font-mono uppercase tracking-wider text-[#111111]">
-                          Why Would You Like to Meet This Celebrity? <span className="text-[#737373] font-normal lowercase">(optional)</span>
+                          Why Would You Like to Meet Keanu Reeves? <span className="text-[#737373] font-normal lowercase">(optional)</span>
                         </label>
                         <span className="text-[11px] font-mono text-[#737373]">{formData.reason.length} / 1000</span>
                       </div>
@@ -687,7 +691,7 @@ export const App: React.FC = () => {
                         name="reason"
                         rows={3}
                         maxLength={1000}
-                        placeholder="Please share what inspires this request or the significance of the artist's work to you..."
+                        placeholder="Please share what inspires this request or the personal significance of Keanu Reeves' work and philanthropy to you..."
                         value={formData.reason}
                         onChange={(e) => handleChange('reason', e.target.value)}
                         className="wme-input resize-y"
@@ -707,7 +711,7 @@ export const App: React.FC = () => {
                         name="message"
                         rows={2}
                         maxLength={1000}
-                        placeholder="Any relevant logistical notes, preferred geographic region, or accessibility considerations..."
+                        placeholder="Any relevant logistical notes, proposed geographic region, or accessibility considerations..."
                         value={formData.message}
                         onChange={(e) => handleChange('message', e.target.value)}
                         className="wme-input resize-y"
@@ -722,7 +726,7 @@ export const App: React.FC = () => {
                     <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
                       Section 03 — Confirmation
                     </h2>
-                    <span className="text-[10px] font-mono text-[#888888]">[ 03 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold">[ 03 / 03 ]</span>
                   </div>
 
                   <div className="space-y-4">
@@ -738,7 +742,7 @@ export const App: React.FC = () => {
                           className={`wme-checkbox ${errors.confirmedAccurate && touched.confirmedAccurate ? 'has-error' : ''}`}
                           aria-invalid={!!errors.confirmedAccurate && touched.confirmedAccurate}
                         />
-                        <span className="text-xs sm:text-sm text-[#333333] group-hover:text-[#000000] transition-colors leading-normal select-none">
+                        <span className="text-xs sm:text-sm text-[#333333] group-hover:text-[#111111] transition-colors leading-normal select-none">
                           I confirm that the submitted information is accurate and truthful. <span className="text-[#888888]">*</span>
                         </span>
                       </label>
@@ -761,7 +765,7 @@ export const App: React.FC = () => {
                           className={`wme-checkbox ${errors.acknowledgedPrivacy && touched.acknowledgedPrivacy ? 'has-error' : ''}`}
                           aria-invalid={!!errors.acknowledgedPrivacy && touched.acknowledgedPrivacy}
                         />
-                        <span className="text-xs sm:text-sm text-[#333333] group-hover:text-[#000000] transition-colors leading-normal select-none">
+                        <span className="text-xs sm:text-sm text-[#333333] group-hover:text-[#111111] transition-colors leading-normal select-none">
                           I acknowledge and agree to the{' '}
                           <button
                             type="button"
@@ -769,7 +773,7 @@ export const App: React.FC = () => {
                               e.preventDefault();
                               setIsPrivacyModalOpen(true);
                             }}
-                            className="underline underline-offset-4 decoration-[#888888] hover:decoration-[#000000] font-medium text-[#000000]"
+                            className="underline underline-offset-4 decoration-[#888888] hover:decoration-[#6B1D2F] font-medium text-[#111111] hover:text-[#6B1D2F] transition-colors"
                           >
                             Privacy Policy
                           </button>
@@ -785,7 +789,7 @@ export const App: React.FC = () => {
 
                     {/* Notice */}
                     <div className="pt-3 border-t border-[#F0F0F0] text-[11px] text-[#737373] leading-relaxed">
-                      Notice: Submitting this form expresses fan interest for consideration only and does not guarantee a meeting, booking, or celebrity appearance. All inquiries are subject to review by WME and talent representation.
+                      Notice: Submitting this form expresses fan interest for consideration only and does not guarantee a meeting, booking, or reservation with Keanu Reeves. All inquiries are subject to review by WME and talent management.
                     </div>
                   </div>
                 </div>
@@ -807,7 +811,7 @@ export const App: React.FC = () => {
                     )}
                   </button>
                   <p className="text-center text-[11px] text-[#737373] mt-3 font-mono">
-                    WME Official Intake Portal — Encrypted Transmission
+                    WME Intake Portal — Encrypted Transmission
                   </p>
                 </div>
               </form>
@@ -826,11 +830,11 @@ export const App: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsPrivacyModalOpen(true)}
-              className="hover:text-[#000000] underline underline-offset-2 transition-colors"
+              className="hover:text-[#6B1D2F] underline underline-offset-2 transition-colors"
             >
               Privacy Policy
             </button>
-            <span>Confidential Intake Protocol</span>
+            <span>Talent Inquiry · Keanu Reeves</span>
           </div>
         </div>
       </footer>

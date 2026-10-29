@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 /*
- * WME (William Morris Endeavor) — Celebrity Meet & Greet Request Form
- * Minimalist, High-Contrast Entertainment Agency Aesthetic
+ * WME (William Morris Endeavor) — Keanu Reeves Meet & Greet Request Form
+ * Editorial Entertainment Agency Aesthetic with Restrained Burgundy Accents
  */
 
 :root {
@@ -12,15 +12,17 @@
   --text-secondary: #555555;
   --text-muted: #888888;
   --border-subtle: #e5e5e5;
-  --border-focus: #000000;
+  --border-focus: #111111;
+  --accent-burgundy: #6b1d2f;
+  --accent-burgundy-hover: #541724;
+  --accent-burgundy-subtle: rgba(107, 29, 47, 0.05);
   --error: #b91c1c;
   --error-bg: #fef2f2;
 }
 
-/* Strict Zero Border Radius for Architectural Precision */
+/* Tasteful Small Corner Radius (2px) */
 *, *::before, *::after {
   box-sizing: border-box;
-  border-radius: 0 !important;
 }
 
 html, body {
@@ -49,7 +51,7 @@ html, body {
   line-height: 1;
 }
 
-/* Form Inputs */
+/* Form Inputs - Small Corner Radius (2px) */
 .wme-input {
   width: 100%;
   background-color: var(--surface);
@@ -58,6 +60,7 @@ html, body {
   font-size: 0.9375rem;
   line-height: 1.5;
   padding: 12px 14px;
+  border-radius: 2px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   outline: none;
   font-family: 'Inter', sans-serif;
@@ -91,6 +94,7 @@ select.wme-input {
   background-size: 15px 15px;
   padding-right: 40px;
   cursor: pointer;
+  border-radius: 2px;
 }
 
 select.wme-input option {
@@ -105,6 +109,8 @@ select.wme-input option {
   background-color: #f7f7f6;
   border: 0;
   border-right: 1px solid var(--border-subtle);
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
   color: var(--text-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.8125rem;
@@ -134,13 +140,15 @@ select.wme-input option {
 /* Date input */
 input[type="date"].wme-input {
   color-scheme: light;
+  border-radius: 2px;
 }
 
-/* Checkbox */
+/* Checkbox - Small Corner Radius (2px) */
 .wme-checkbox {
   appearance: none;
   width: 17px;
   height: 17px;
+  border-radius: 2px;
   border: 1px solid #737373;
   background-color: var(--surface);
   display: inline-grid;
@@ -152,12 +160,12 @@ input[type="date"].wme-input {
 }
 
 .wme-checkbox:hover {
-  border-color: var(--text-primary);
+  border-color: var(--accent-burgundy);
 }
 
 .wme-checkbox:checked {
-  background-color: var(--text-primary);
-  border-color: var(--text-primary);
+  background-color: var(--accent-burgundy);
+  border-color: var(--accent-burgundy);
 }
 
 .wme-checkbox:checked::before {
@@ -170,7 +178,7 @@ input[type="date"].wme-input {
 }
 
 .wme-checkbox:focus-visible {
-  outline: 2px solid var(--border-focus);
+  outline: 2px solid var(--accent-burgundy);
   outline-offset: 2px;
 }
 
@@ -179,17 +187,18 @@ input[type="date"].wme-input {
   background-color: var(--error-bg);
 }
 
-/* Primary Action Button */
+/* Primary Action Button - Burgundy Hover & 2px Radius */
 .btn-primary {
   width: 100%;
-  background-color: #000000;
+  background-color: #111111;
   color: #ffffff;
   font-weight: 600;
   font-size: 0.875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 16px 28px;
-  border: 1px solid #000000;
+  border-radius: 2px;
+  border: 1px solid #111111;
   cursor: pointer;
   transition: background-color 0.2s ease, border-color 0.2s ease;
   display: flex;
@@ -200,16 +209,16 @@ input[type="date"].wme-input {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #262626;
-  border-color: #262626;
+  background-color: var(--accent-burgundy);
+  border-color: var(--accent-burgundy);
 }
 
 .btn-primary:active:not(:disabled) {
-  background-color: #000000;
+  background-color: var(--accent-burgundy-hover);
 }
 
 .btn-primary:focus-visible {
-  outline: 2px solid #000000;
+  outline: 2px solid var(--accent-burgundy);
   outline-offset: 3px;
 }
 
@@ -218,18 +227,19 @@ input[type="date"].wme-input {
   cursor: not-allowed;
 }
 
-/* Secondary Button */
+/* Secondary Button - 2px Radius */
 .btn-outline {
   background-color: transparent;
-  border: 1px solid #000000;
-  color: #000000;
+  border: 1px solid #111111;
+  color: #111111;
   font-weight: 600;
   font-size: 0.8125rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 12px 24px;
+  border-radius: 2px;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -238,7 +248,8 @@ input[type="date"].wme-input {
 }
 
 .btn-outline:hover {
-  background-color: #000000;
+  background-color: var(--accent-burgundy);
+  border-color: var(--accent-burgundy);
   color: #ffffff;
 }
 

@@ -29,25 +29,25 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-xl bg-[#FFFFFF] border border-[#E5E5E5] p-6 sm:p-10 text-left shadow-2xl max-h-[88vh] overflow-y-auto"
+        className="relative w-full max-w-xl bg-[#FFFFFF] border border-[#E5E5E5] p-6 sm:p-10 text-left shadow-2xl max-h-[88vh] overflow-y-auto rounded-[2px]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between pb-5 border-b border-[#E5E5E5]">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="wme-wordmark text-base text-[#000000]">WME</span>
-              <span className="text-[11px] font-mono tracking-wider uppercase text-[#737373]">
-                / Privacy Policy
+              <span className="wme-wordmark text-base text-[#111111]">WME</span>
+              <span className="text-[11px] font-mono tracking-wider uppercase text-[#6B1D2F] font-semibold">
+                / Confidentiality Standard
               </span>
             </div>
             <h3 id="privacy-modal-title" className="text-xl sm:text-2xl font-serif text-[#111111]">
-              Data Handling &amp; Confidentiality
+              Privacy &amp; Data Handling Policy
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-[#737373] hover:text-[#000000] p-1.5 transition-colors"
+            className="text-[#737373] hover:text-[#111111] p-1.5 transition-colors rounded-[2px]"
             aria-label="Close privacy policy"
           >
             <X className="w-5 h-5" />
@@ -57,37 +57,37 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
         <div className="mt-6 space-y-5 text-sm text-[#333333] leading-relaxed font-sans">
           <div>
             <h4 className="text-xs uppercase tracking-wider font-semibold text-[#111111] mb-1">
-              01. Purpose of Collection
+              01. Scope of Inquiry Processing
             </h4>
             <p className="text-[#555555]">
-              Personal details submitted through this form—including full name, contact information, geographic location, and message details—are processed solely for the evaluation and coordination of meet &amp; greet inquiries by WME (William Morris Endeavor) on behalf of represented talent.
+              Personal details submitted through this form—including full name, contact information, country of residence, and request notes—are processed exclusively to evaluate fan meet-and-greet interest for Keanu Reeves on behalf of talent management.
             </p>
           </div>
 
           <div>
             <h4 className="text-xs uppercase tracking-wider font-semibold text-[#111111] mb-1">
-              02. Strict Confidentiality
+              02. Strict Confidentiality &amp; Security
             </h4>
             <p className="text-[#555555]">
-              All submissions are treated confidentially. Information is not sold, rented, or distributed to third-party commercial marketing lists. Access is restricted to authorized WME talent agents, coordinators, and designated management representatives.
+              All submissions are treated confidentially. Information is not sold, rented, or distributed to commercial lists. Access is restricted to authorized representatives evaluating inquiries.
             </p>
           </div>
 
           <div>
             <h4 className="text-xs uppercase tracking-wider font-semibold text-[#111111] mb-1">
-              03. Identity Verification &amp; Security
+              03. Identity Verification &amp; Security Protocols
             </h4>
             <p className="text-[#555555]">
-              Due to standard security protocols for public figures and clients represented by WME, attendee credentials may be verified should an inquiry proceed to active scheduling review.
+              Due to standard security protocols established for public figures, all attendees may be asked to provide standard identification should an inquiry proceed to formal scheduling consideration.
             </p>
           </div>
 
           <div>
             <h4 className="text-xs uppercase tracking-wider font-semibold text-[#111111] mb-1">
-              04. Non-Guarantee
+              04. Non-Affiliation &amp; Non-Guarantee Notice
             </h4>
             <p className="text-[#555555]">
-              Submitting an inquiry does not constitute a contract, booking agreement, ticket reservation, or commitment of celebrity appearance.
+              Submitting an inquiry does not constitute an official booking contract, ticket reservation, or confirmed appearance with Keanu Reeves.
             </p>
           </div>
         </div>
