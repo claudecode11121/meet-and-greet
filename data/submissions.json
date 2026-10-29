@@ -1,0 +1,58 @@
+[
+  {
+    "referenceId": "MG-DA5DFD",
+    "submittedAt": "2026-10-29T16:05:08.117Z",
+    "status": "SUBMITTED",
+    "personalInfo": {
+      "fullName": "Sarah Jenkins",
+      "email": "sarah.j@outlook.com",
+      "phone": "+44 7911 123456",
+      "country": "United Kingdom",
+      "city": "London"
+    },
+    "meetAndGreetInfo": {
+      "celebrityName": "Adele",
+      "meetingType": "Virtual Meet & Greet",
+      "preferredDate": null,
+      "attendees": "1 Person",
+      "reason": "",
+      "message": ""
+    },
+    "confirmations": {
+      "confirmedAccurate": true,
+      "acknowledgedPrivacy": true
+    },
+    "metadata": {
+      "userAgent": "curl/8.5.0",
+      "ipAddress": "::1"
+    }
+  },
+  {
+    "referenceId": "MG-C2DB49",
+    "submittedAt": "2026-10-29T16:03:12.633Z",
+    "status": "SUBMITTED",
+    "personalInfo": {
+      "fullName": "Elena Rostova",
+      "email": "elena.rostova@example.com",
+      "phone": "+1 (310) 555-0199",
+      "country": "United States",
+      "city": "Beverly Hills"
+    },
+    "meetAndGreetInfo": {
+      "celebrityName": "Keanu Reeves",
+      "meetingType": "In-person Meet & Greet",
+      "preferredDate": "2026-12-15",
+      "attendees": "2 People",
+      "reason": "Lifelong admirer of his philanthropic endeavors, humble nature, and iconic cinema career.",
+      "message": "We would be honored to attend in Los Angeles or any premier venue at management discretion."
+    },
+    "confirmations": {
+      "confirmedAccurate": true,
+      "acknowledgedPrivacy": true
+    },
+    "metadata": {
+      "userAgent": "curl/8.5.0",
+      "ipAddress": "::1"
+    }
+  }
+]
