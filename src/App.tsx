@@ -7,6 +7,7 @@ import { ConfirmationView, SubmissionResult } from './components/ConfirmationVie
 interface FormData {
   fullName: string;
   email: string;
+  phoneCountryCode: string;
   countryCode: string;
   phone: string;
   country: string;
@@ -39,6 +40,7 @@ interface FormErrors {
 const INITIAL_FORM_DATA: FormData = {
   fullName: '',
   email: '',
+  phoneCountryCode: 'US',
   countryCode: '+1',
   phone: '',
   country: 'United States',
@@ -169,6 +171,7 @@ export const App: React.FC = () => {
         const found = COUNTRIES.find((c) => c.name === value);
         if (found) {
           updated.countryCode = found.dialCode;
+          updated.phoneCountryCode = found.code;
         }
       }
       return updated;
@@ -179,6 +182,17 @@ export const App: React.FC = () => {
       setErrors((prev) => ({
         ...prev,
         [field]: errorMsg,
+      }));
+    }
+  };
+
+  const handlePhoneCountryChange = (isoCode: string) => {
+    const found = COUNTRIES.find((c) => c.code === isoCode);
+    if (found) {
+      setFormData((prev) => ({
+        ...prev,
+        phoneCountryCode: found.code,
+        countryCode: found.dialCode,
       }));
     }
   };
@@ -451,16 +465,22 @@ export const App: React.FC = () => {
                       <label htmlFor="phone" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
                         Phone Number <span className="text-[#888888]">*</span>
                       </label>
-                      <div className="flex gap-2">
+                      <div
+                        className={`flex items-stretch border bg-white transition-all ${
+                          errors.phone && touched.phone
+                            ? 'border-[#B91C1C] bg-[#FEF2F2]'
+                            : 'border-[#E5E5E5] hover:border-[#A3A3A3] focus-within:border-[#000000] focus-within:ring-1 focus-within:ring-[#000000]'
+                        }`}
+                      >
                         <select
                           aria-label="Country dial code"
-                          value={formData.countryCode}
-                          onChange={(e) => handleChange('countryCode', e.target.value)}
-                          className="wme-input w-28 shrink-0 text-xs px-2"
+                          value={formData.phoneCountryCode}
+                          onChange={(e) => handlePhoneCountryChange(e.target.value)}
+                          className="phone-prefix-select shrink-0"
                         >
                           {COUNTRIES.map((c) => (
-                            <option key={c.code} value={c.dialCode}>
-                              {c.code} ({c.dialCode})
+                            <option key={c.code} value={c.code}>
+                              {c.code} ({c.dialCode}) — {c.name}
                             </option>
                           ))}
                         </select>
@@ -470,21 +490,19 @@ export const App: React.FC = () => {
                           type="tel"
                           required
                           autoComplete="tel"
-                          placeholder="212 555 0192"
+                          placeholder="(212) 555-0192"
                           value={formData.phone}
                           onChange={(e) => handleChange('phone', e.target.value)}
                           onBlur={() => handleBlur('phone')}
-                          className={`wme-input flex-1 ${errors.phone && touched.phone ? 'has-error' : ''}`}
+                          className="w-full bg-transparent border-0 px-3.5 py-3 text-[0.9375rem] text-[#111111] placeholder:text-[#888888] focus:outline-none focus:ring-0 font-sans"
                           aria-invalid={!!errors.phone && touched.phone}
                           aria-describedby={errors.phone ? 'phone-error' : undefined}
                         />
                       </div>
-                      {errors.phone && touched.phone ? (
+                      {errors.phone && touched.phone && (
                         <p id="phone-error" className="mt-1.5 text-xs text-[#B91C1C]">
                           {errors.phone}
                         </p>
-                      ) : (
-                        <p className="mt-1 text-[11px] text-[#737373]">Includes international country code.</p>
                       )}
                     </div>
 
