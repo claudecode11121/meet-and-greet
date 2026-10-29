@@ -2,7 +2,7 @@
 
 /*
  * WME (William Morris Endeavor) — Keanu Reeves Meet & Greet Request Form
- * Editorial Entertainment Agency Aesthetic with Restrained Burgundy Accents
+ * Mobile-First Responsive Editorial Design System
  */
 
 :root {
@@ -20,13 +20,15 @@
   --error-bg: #fef2f2;
 }
 
-/* Tasteful Small Corner Radius (2px) */
+/* Base Responsive & Box-Sizing Reset */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 html, body {
   min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
   background-color: var(--bg-page);
   color: var(--text-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -34,13 +36,26 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Typography */
+/* Typography Classes */
 .font-serif {
   font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
 }
 
 .font-sans {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Fluid Typography with clamp */
+.fluid-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+
+.fluid-subtitle {
+  font-size: clamp(0.875rem, 2.2vw, 1rem);
+  line-height: 1.6;
 }
 
 /* WME Wordmark Styling */
@@ -51,13 +66,15 @@ html, body {
   line-height: 1;
 }
 
-/* Form Inputs - Small Corner Radius (2px) */
+/* Form Inputs - 16px Font Prevents Unwanted iOS Auto-Zoom */
 .wme-input {
   width: 100%;
+  min-width: 0;
+  min-height: 48px;
   background-color: var(--surface);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
-  font-size: 0.9375rem;
+  font-size: 1rem; /* 16px standard to eliminate iOS zoom */
   line-height: 1.5;
   padding: 12px 14px;
   border-radius: 2px;
@@ -83,6 +100,7 @@ html, body {
 .wme-input::placeholder {
   color: var(--text-muted);
   font-weight: 400;
+  font-size: 0.9375rem;
 }
 
 /* Dropdown Select */
@@ -91,8 +109,8 @@ select.wme-input {
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='1.5' stroke-linecap='square' stroke-linejoin='miter'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 14px center;
-  background-size: 15px 15px;
-  padding-right: 40px;
+  background-size: 14px 14px;
+  padding-right: 38px;
   cursor: pointer;
   border-radius: 2px;
 }
@@ -103,7 +121,7 @@ select.wme-input option {
   padding: 8px;
 }
 
-/* Dedicated Phone Dial Code Prefix Select */
+/* Dedicated Responsive Phone Dial Code Prefix Select */
 .phone-prefix-select {
   appearance: none;
   background-color: #f7f7f6;
@@ -115,17 +133,28 @@ select.wme-input option {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.8125rem;
   font-weight: 500;
-  padding-left: 12px;
-  padding-right: 26px;
-  width: 110px;
+  padding-left: 10px;
+  padding-right: 22px;
+  width: 96px;
+  min-width: 90px;
   height: 100%;
+  min-height: 48px;
   cursor: pointer;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555555' stroke-width='2' stroke-linecap='square' stroke-linejoin='miter'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 9px center;
-  background-size: 11px 11px;
+  background-position: right 7px center;
+  background-size: 10px 10px;
   transition: background-color 0.15s ease;
   outline: none;
+}
+
+@media (min-width: 400px) {
+  .phone-prefix-select {
+    width: 108px;
+    padding-left: 12px;
+    padding-right: 26px;
+    background-position: right 9px center;
+  }
 }
 
 .phone-prefix-select:hover {
@@ -143,11 +172,11 @@ input[type="date"].wme-input {
   border-radius: 2px;
 }
 
-/* Checkbox - Small Corner Radius (2px) */
+/* Checkbox - Touch-Friendly Target */
 .wme-checkbox {
   appearance: none;
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   border-radius: 2px;
   border: 1px solid #737373;
   background-color: var(--surface);
@@ -187,25 +216,27 @@ input[type="date"].wme-input {
   background-color: var(--error-bg);
 }
 
-/* Primary Action Button - Burgundy Hover & 2px Radius */
+/* Primary Action Button - 48px Minimum Touch Target */
 .btn-primary {
   width: 100%;
+  min-height: 48px;
   background-color: #111111;
   color: #ffffff;
   font-weight: 600;
   font-size: 0.875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 16px 28px;
+  padding: 14px 24px;
   border-radius: 2px;
   border: 1px solid #111111;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   font-family: 'Inter', sans-serif;
+  touch-action: manipulation;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -215,6 +246,7 @@ input[type="date"].wme-input {
 
 .btn-primary:active:not(:disabled) {
   background-color: var(--accent-burgundy-hover);
+  transform: scale(0.99);
 }
 
 .btn-primary:focus-visible {
@@ -227,24 +259,26 @@ input[type="date"].wme-input {
   cursor: not-allowed;
 }
 
-/* Secondary Button - 2px Radius */
+/* Secondary Button */
 .btn-outline {
   background-color: transparent;
+  min-height: 44px;
   border: 1px solid #111111;
   color: #111111;
   font-weight: 600;
   font-size: 0.8125rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 2px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   font-family: 'Inter', sans-serif;
+  touch-action: manipulation;
 }
 
 .btn-outline:hover {
@@ -267,7 +301,7 @@ input[type="date"].wme-input {
   animation: spin 1s linear infinite;
 }
 
-/* Reduced Motion */
+/* Reduced Motion Preference */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

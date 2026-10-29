@@ -22,17 +22,17 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#000000]/60 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#000000]/60 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="privacy-modal-title"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-xl bg-[#FFFFFF] border border-[#E5E5E5] p-6 sm:p-10 text-left shadow-2xl max-h-[88vh] overflow-y-auto rounded-[2px]"
+        className="relative w-full max-w-xl bg-[#FFFFFF] border border-[#E5E5E5] p-4 sm:p-7 md:p-9 text-left shadow-2xl max-h-[90vh] overflow-y-auto rounded-[2px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between pb-5 border-b border-[#E5E5E5]">
+        <div className="flex items-start justify-between pb-4 sm:pb-5 border-b border-[#E5E5E5] gap-2">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="wme-wordmark text-base text-[#111111]">WME</span>

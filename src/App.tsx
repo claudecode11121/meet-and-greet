@@ -306,44 +306,46 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-[#111111] font-sans antialiased flex flex-col justify-between">
+    <div className="min-h-screen w-full bg-[#FAFAFA] text-[#111111] font-sans antialiased flex flex-col justify-between overflow-x-hidden">
       {/* Restrained WME Header */}
-      <header className="border-b border-[#E5E5E5] bg-[#FFFFFF]">
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 py-5 flex items-center justify-between">
-          <div className="flex items-baseline gap-3">
-            <span className="wme-wordmark text-2xl text-[#111111]">
+      <header className="border-b border-[#E5E5E5] bg-[#FFFFFF] sticky top-0 z-30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-3.5 sm:py-5 flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
+          <div className="flex items-baseline gap-2 sm:gap-3 shrink-0">
+            <span className="wme-wordmark text-xl sm:text-2xl text-[#111111]">
               WME
             </span>
-            <span className="text-xs font-mono tracking-wider uppercase text-[#737373] hidden sm:inline">
+            <span className="text-[11px] sm:text-xs font-mono tracking-wider uppercase text-[#737373]">
               / William Morris Endeavor
             </span>
           </div>
-          <div className="flex items-center gap-3 text-[11px] font-mono tracking-widest text-[#737373] uppercase">
-            <span>Talent Inquiry</span>
-            <span className="text-[#E5E5E5]">•</span>
-            <span className="text-[#6B1D2F] font-semibold">Keanu Reeves</span>
+          <div className="flex items-center gap-2 sm:gap-3 text-[11px] font-mono tracking-wider text-[#737373] uppercase shrink-0">
+            <span className="hidden sm:inline">Talent Inquiry</span>
+            <span className="hidden sm:inline text-[#E5E5E5]">•</span>
+            <span className="text-[#6B1D2F] font-semibold bg-[#6B1D2F]/5 px-2 py-0.5 rounded-[2px] border border-[#6B1D2F]/20 text-[10px] sm:text-[11px]">
+              Keanu Reeves
+            </span>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 sm:px-8 py-12 sm:py-16 w-full flex-1">
+      {/* Main Content Area */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-10 lg:py-14 w-full flex-1 min-w-0">
         {submissionResult ? (
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto w-full min-w-0">
             <ConfirmationView data={submissionResult} onReset={handleResetForm} />
           </div>
         ) : (
-          <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-start">
+          <div className="lg:grid lg:grid-cols-12 lg:gap-12 xl:gap-16 items-start w-full min-w-0">
             {/* Left Column: Context & Guidelines for Keanu Reeves Inquiry */}
-            <aside className="lg:col-span-5 mb-12 lg:mb-0 lg:sticky lg:top-8 space-y-8">
+            <aside className="lg:col-span-5 mb-8 lg:mb-0 lg:sticky lg:top-24 space-y-6 sm:space-y-8 w-full min-w-0">
               <div>
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-[#6B1D2F]/5 border border-[#6B1D2F]/20 text-[10px] font-mono uppercase tracking-[0.2em] text-[#6B1D2F] font-semibold mb-3 rounded-[2px]">
                   <span>WME Client Relations</span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl md:text-[2.75rem] font-serif font-normal text-[#111111] leading-[1.12] tracking-tight">
+                <h1 className="fluid-title font-serif font-normal text-[#111111]">
                   A Moment with Keanu Reeves
                 </h1>
-                <p className="mt-4 text-sm sm:text-base text-[#555555] leading-relaxed font-sans">
+                <p className="mt-3 sm:mt-4 fluid-subtitle text-[#555555] font-sans">
                   Express your interest in a meet-and-greet experience with Keanu Reeves by completing the request form below. Please provide accurate information so your request can be reviewed.
                 </p>
               </div>
@@ -351,38 +353,38 @@ export const App: React.FC = () => {
               <div className="w-12 h-[1px] bg-[#E5E5E5]" />
 
               {/* Guidelines */}
-              <div className="space-y-6 pt-2">
-                <div className="space-y-1.5">
+              <div className="space-y-4 sm:space-y-5 pt-1">
+                <div className="space-y-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B1D2F] font-semibold block">
                     01 / Evaluation Protocol
                   </span>
-                  <p className="text-xs text-[#666666] leading-relaxed">
+                  <p className="text-xs sm:text-[13px] text-[#666666] leading-relaxed">
                     Inquiries are reviewed in sequence by talent management representatives based on schedule feasibility and touring commitments.
                   </p>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B1D2F] font-semibold block">
                     02 / Non-Guaranteed Consideration
                   </span>
-                  <p className="text-xs text-[#666666] leading-relaxed">
+                  <p className="text-xs sm:text-[13px] text-[#666666] leading-relaxed">
                     Submission conveys interest for consideration only. It does not constitute approval, a booking contract, ticket reservation, or confirmed appearance.
                   </p>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B1D2F] font-semibold block">
                     03 / Discretion &amp; Confidentiality
                   </span>
-                  <p className="text-xs text-[#666666] leading-relaxed">
+                  <p className="text-xs sm:text-[13px] text-[#666666] leading-relaxed">
                     All fan information and submission records are maintained under strict non-disclosure protocol and are not shared with third parties.
                   </p>
                 </div>
               </div>
 
-              {/* Disclaimer Notice */}
+              {/* Disclaimer Notice Box */}
               <div className="p-3.5 bg-[#FFFFFF] border border-[#E5E5E5] text-[11px] text-[#737373] leading-relaxed rounded-[2px]">
-                <strong className="text-[#111111] block mb-0.5">Inquiry Notice</strong>
+                <strong className="text-[#111111] block mb-0.5 font-medium">Inquiry Notice</strong>
                 This fan-interest inquiry form is designed for talent management consideration. Submission does not imply an official partnership, authorization, or guarantee of a meeting with Keanu Reeves.
               </div>
 
@@ -392,11 +394,11 @@ export const App: React.FC = () => {
               </div>
             </aside>
 
-            {/* Right Column: The Form */}
-            <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#E5E5E5] p-6 sm:p-10 shadow-sm rounded-[2px]">
+            {/* Right Column: The Form Card */}
+            <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#E5E5E5] p-4 sm:p-7 md:p-9 shadow-sm rounded-[2px] w-full min-w-0">
               {errors.general && (
                 <div
-                  className="mb-8 p-4 bg-[#FEF2F2] border border-[#F87171] text-[#991B1B] text-xs sm:text-sm flex items-start gap-3 rounded-[2px]"
+                  className="mb-6 sm:mb-8 p-3.5 sm:p-4 bg-[#FEF2F2] border border-[#F87171] text-[#991B1B] text-xs sm:text-sm flex items-start gap-2.5 sm:gap-3 rounded-[2px]"
                   role="alert"
                 >
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#B91C1C]" />
@@ -404,19 +406,19 @@ export const App: React.FC = () => {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} noValidate className="space-y-10">
+              <form onSubmit={handleSubmit} noValidate className="space-y-8 sm:space-y-10 w-full min-w-0">
                 {/* Section 01: Personal Information */}
-                <div>
-                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#E5E5E5]">
+                <div className="w-full min-w-0">
+                  <div className="flex items-baseline justify-between pb-2.5 sm:pb-3 mb-5 sm:mb-6 border-b border-[#E5E5E5]">
                     <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
                       Section 01 — Personal Information
                     </h2>
-                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold">[ 01 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold shrink-0">[ 01 / 03 ]</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
                     {/* Full Name */}
-                    <div className="sm:col-span-2">
+                    <div className="sm:col-span-2 min-w-0">
                       <label htmlFor="fullName" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
                         Full Name <span className="text-[#888888]">*</span>
                       </label>
@@ -426,6 +428,8 @@ export const App: React.FC = () => {
                         type="text"
                         required
                         autoComplete="name"
+                        inputMode="text"
+                        autoCapitalize="words"
                         placeholder="e.g. Eleanor Vance"
                         value={formData.fullName}
                         onChange={(e) => handleChange('fullName', e.target.value)}
@@ -442,7 +446,7 @@ export const App: React.FC = () => {
                     </div>
 
                     {/* Email Address */}
-                    <div className="sm:col-span-1">
+                    <div className="sm:col-span-1 min-w-0">
                       <label htmlFor="email" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
                         Email Address <span className="text-[#888888]">*</span>
                       </label>
@@ -452,6 +456,9 @@ export const App: React.FC = () => {
                         type="email"
                         required
                         autoComplete="email"
+                        inputMode="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
                         placeholder="eleanor@domain.com"
                         value={formData.email}
                         onChange={(e) => handleChange('email', e.target.value)}
@@ -467,13 +474,13 @@ export const App: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Phone Number with Country Code */}
-                    <div className="sm:col-span-1">
+                    {/* Phone Number with Integrated Prefix */}
+                    <div className="sm:col-span-1 min-w-0">
                       <label htmlFor="phone" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
                         Phone Number <span className="text-[#888888]">*</span>
                       </label>
                       <div
-                        className={`flex items-stretch border bg-white rounded-[2px] transition-all ${
+                        className={`flex items-stretch border bg-white rounded-[2px] transition-all w-full min-w-0 ${
                           errors.phone && touched.phone
                             ? 'border-[#B91C1C] bg-[#FEF2F2]'
                             : 'border-[#E5E5E5] hover:border-[#A3A3A3] focus-within:border-[#111111] focus-within:ring-1 focus-within:ring-[#111111]'
@@ -497,11 +504,12 @@ export const App: React.FC = () => {
                           type="tel"
                           required
                           autoComplete="tel"
+                          inputMode="tel"
                           placeholder="(212) 555-0192"
                           value={formData.phone}
                           onChange={(e) => handleChange('phone', e.target.value)}
                           onBlur={() => handleBlur('phone')}
-                          className="w-full bg-transparent border-0 px-3.5 py-3 text-[0.9375rem] text-[#111111] placeholder:text-[#888888] focus:outline-none focus:ring-0 font-sans"
+                          className="w-full min-w-0 bg-transparent border-0 px-3 py-2.5 text-base sm:text-[0.9375rem] text-[#111111] placeholder:text-[#888888] focus:outline-none focus:ring-0 font-sans"
                           aria-invalid={!!errors.phone && touched.phone}
                           aria-describedby={errors.phone ? 'phone-error' : undefined}
                         />
@@ -514,7 +522,7 @@ export const App: React.FC = () => {
                     </div>
 
                     {/* Country of Residence */}
-                    <div className="sm:col-span-1">
+                    <div className="sm:col-span-1 min-w-0">
                       <label htmlFor="country" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
                         Country of Residence <span className="text-[#888888]">*</span>
                       </label>
@@ -544,7 +552,7 @@ export const App: React.FC = () => {
                     </div>
 
                     {/* City */}
-                    <div className="sm:col-span-1">
+                    <div className="sm:col-span-1 min-w-0">
                       <label htmlFor="city" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
                         City <span className="text-[#888888]">*</span>
                       </label>
@@ -553,6 +561,9 @@ export const App: React.FC = () => {
                         name="city"
                         type="text"
                         required
+                        autoComplete="address-level2"
+                        inputMode="text"
+                        autoCapitalize="words"
                         placeholder="e.g. London, Los Angeles"
                         value={formData.city}
                         onChange={(e) => handleChange('city', e.target.value)}
@@ -571,31 +582,31 @@ export const App: React.FC = () => {
                 </div>
 
                 {/* Section 02: Meet & Greet Preferences */}
-                <div>
-                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#E5E5E5]">
+                <div className="w-full min-w-0">
+                  <div className="flex items-baseline justify-between pb-2.5 sm:pb-3 mb-5 sm:mb-6 border-b border-[#E5E5E5]">
                     <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
                       Section 02 — Meet &amp; Greet Preferences
                     </h2>
-                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold">[ 02 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold shrink-0">[ 02 / 03 ]</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
-                    {/* Fixed Celebrity Name */}
-                    <div className="sm:col-span-2">
-                      <label htmlFor="celebrityDisplay" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
+                    {/* Fixed Designated Celebrity */}
+                    <div className="sm:col-span-2 min-w-0">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
                         Celebrity
                       </label>
-                      <div className="flex items-center justify-between p-3.5 bg-[#F7F7F6] border border-[#E5E5E5] rounded-[2px]">
-                        <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-3.5 bg-[#F7F7F6] border border-[#E5E5E5] rounded-[2px] w-full min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                           <span className="font-serif text-lg sm:text-xl text-[#111111] font-normal tracking-wide">
                             Keanu Reeves
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono tracking-widest uppercase bg-[#6B1D2F]/10 text-[#6B1D2F] px-2 py-0.5 border border-[#6B1D2F]/20 font-semibold rounded-[2px]">
-                            <CheckCircle2 className="w-3 h-3 text-[#6B1D2F]" />
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono tracking-wider uppercase bg-[#6B1D2F]/10 text-[#6B1D2F] px-2 py-0.5 border border-[#6B1D2F]/20 font-semibold rounded-[2px]">
+                            <CheckCircle2 className="w-3 h-3 text-[#6B1D2F] shrink-0" />
                             <span>Designated Talent</span>
                           </span>
                         </div>
-                        <span className="text-[11px] text-[#737373] font-mono hidden sm:inline">
+                        <span className="text-[11px] text-[#737373] font-mono">
                           Pre-selected
                         </span>
                       </div>
@@ -603,7 +614,7 @@ export const App: React.FC = () => {
                     </div>
 
                     {/* Preferred Meeting Format */}
-                    <div className="sm:col-span-1">
+                    <div className="sm:col-span-1 min-w-0">
                       <label htmlFor="meetingType" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
                         Preferred Meeting Format <span className="text-[#888888]">*</span>
                       </label>
@@ -631,7 +642,7 @@ export const App: React.FC = () => {
                     </div>
 
                     {/* Number of Attendees */}
-                    <div className="sm:col-span-1">
+                    <div className="sm:col-span-1 min-w-0">
                       <label htmlFor="attendees" className="block text-xs font-mono uppercase tracking-wider text-[#111111] mb-1.5">
                         Number of Attendees <span className="text-[#888888]">*</span>
                       </label>
@@ -660,8 +671,8 @@ export const App: React.FC = () => {
                     </div>
 
                     {/* Preferred Date */}
-                    <div className="sm:col-span-2">
-                      <div className="flex items-center justify-between mb-1.5">
+                    <div className="sm:col-span-2 min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-1 mb-1.5">
                         <label htmlFor="preferredDate" className="block text-xs font-mono uppercase tracking-wider text-[#111111]">
                           Preferred Date <span className="text-[#737373] font-normal lowercase">(optional)</span>
                         </label>
@@ -679,12 +690,12 @@ export const App: React.FC = () => {
                     </div>
 
                     {/* Why Would You Like to Meet Keanu Reeves? */}
-                    <div className="sm:col-span-2">
-                      <div className="flex items-center justify-between mb-1.5">
+                    <div className="sm:col-span-2 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
                         <label htmlFor="reason" className="block text-xs font-mono uppercase tracking-wider text-[#111111]">
                           Why Would You Like to Meet Keanu Reeves? <span className="text-[#737373] font-normal lowercase">(optional)</span>
                         </label>
-                        <span className="text-[11px] font-mono text-[#737373]">{formData.reason.length} / 1000</span>
+                        <span className="text-[11px] font-mono text-[#737373] shrink-0">{formData.reason.length} / 1000</span>
                       </div>
                       <textarea
                         id="reason"
@@ -694,17 +705,17 @@ export const App: React.FC = () => {
                         placeholder="Please share what inspires this request or the personal significance of Keanu Reeves' work and philanthropy to you..."
                         value={formData.reason}
                         onChange={(e) => handleChange('reason', e.target.value)}
-                        className="wme-input resize-y"
+                        className="wme-input resize-y min-h-[90px]"
                       />
                     </div>
 
                     {/* Additional Message */}
-                    <div className="sm:col-span-2">
-                      <div className="flex items-center justify-between mb-1.5">
+                    <div className="sm:col-span-2 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
                         <label htmlFor="message" className="block text-xs font-mono uppercase tracking-wider text-[#111111]">
                           Additional Message <span className="text-[#737373] font-normal lowercase">(optional)</span>
                         </label>
-                        <span className="text-[11px] font-mono text-[#737373]">{formData.message.length} / 1000</span>
+                        <span className="text-[11px] font-mono text-[#737373] shrink-0">{formData.message.length} / 1000</span>
                       </div>
                       <textarea
                         id="message"
@@ -714,25 +725,25 @@ export const App: React.FC = () => {
                         placeholder="Any relevant logistical notes, proposed geographic region, or accessibility considerations..."
                         value={formData.message}
                         onChange={(e) => handleChange('message', e.target.value)}
-                        className="wme-input resize-y"
+                        className="wme-input resize-y min-h-[72px]"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Section 03: Confirmation */}
-                <div>
-                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#E5E5E5]">
+                <div className="w-full min-w-0">
+                  <div className="flex items-baseline justify-between pb-2.5 sm:pb-3 mb-5 sm:mb-6 border-b border-[#E5E5E5]">
                     <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
                       Section 03 — Confirmation
                     </h2>
-                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold">[ 03 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold shrink-0">[ 03 / 03 ]</span>
                   </div>
 
                   <div className="space-y-4">
                     {/* Checkbox 1: Accurate Information */}
                     <div>
-                      <label className="flex items-start gap-3 cursor-pointer group">
+                      <label className="flex items-start gap-3 cursor-pointer group py-1">
                         <input
                           type="checkbox"
                           id="confirmedAccurate"
@@ -755,7 +766,7 @@ export const App: React.FC = () => {
 
                     {/* Checkbox 2: Privacy Policy */}
                     <div>
-                      <label className="flex items-start gap-3 cursor-pointer group">
+                      <label className="flex items-start gap-3 cursor-pointer group py-1">
                         <input
                           type="checkbox"
                           id="acknowledgedPrivacy"
@@ -821,16 +832,16 @@ export const App: React.FC = () => {
       </main>
 
       {/* Restrained WME Footer */}
-      <footer className="border-t border-[#E5E5E5] bg-[#FFFFFF] py-8 text-xs text-[#737373]">
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px]">
+      <footer className="border-t border-[#E5E5E5] bg-[#FFFFFF] py-6 sm:py-8 text-xs text-[#737373]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 font-mono text-[11px] text-center sm:text-left">
           <div>
             &copy; {new Date().getFullYear()} WME (William Morris Endeavor). All rights reserved.
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <button
               type="button"
               onClick={() => setIsPrivacyModalOpen(true)}
-              className="hover:text-[#6B1D2F] underline underline-offset-2 transition-colors"
+              className="hover:text-[#6B1D2F] underline underline-offset-2 transition-colors py-1"
             >
               Privacy Policy
             </button>
