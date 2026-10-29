@@ -1,20 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Sparkles,
-  User,
-  Mail,
-  Phone,
-  Globe,
-  MapPin,
-  Star,
-  Users,
-  Calendar,
-  MessageSquare,
-  AlertCircle,
-  Loader2,
-  FileText,
-  ShieldCheck
-} from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { COUNTRIES } from './data/countries';
 import { PrivacyModal } from './components/PrivacyModal';
 import { ConfirmationView, SubmissionResult } from './components/ConfirmationView';
@@ -61,7 +46,7 @@ const INITIAL_FORM_DATA: FormData = {
   celebrityName: '',
   meetingType: '',
   preferredDate: '',
-  attendees: '1 Person',
+  attendees: '1 attendee',
   reason: '',
   message: '',
   confirmedAccurate: false,
@@ -76,7 +61,7 @@ export const App: React.FC = () => {
   const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
-  // Minimum selectable date: today's date in YYYY-MM-DD
+  // Minimum selectable date: today in YYYY-MM-DD
   const todayDateString = new Date().toISOString().split('T')[0];
 
   // Email format validation regex
@@ -98,7 +83,7 @@ export const App: React.FC = () => {
           return 'Email address is required.';
         }
         if (!emailRegex.test(value.trim())) {
-          return 'Please enter a valid email address (e.g. name@example.com).';
+          return 'Please provide a valid email address (e.g. name@domain.com).';
         }
         return undefined;
 
@@ -106,10 +91,9 @@ export const App: React.FC = () => {
         if (!value || typeof value !== 'string' || !value.trim()) {
           return 'Phone number is required, including country code.';
         }
-        // At least 6 digits/characters excluding symbols
         const cleanDigits = value.replace(/\D/g, '');
         if (cleanDigits.length < 6) {
-          return 'Please enter a valid phone number with your area/country code.';
+          return 'Please enter a valid telephone number with area code.';
         }
         return undefined;
 
@@ -130,28 +114,28 @@ export const App: React.FC = () => {
 
       case 'celebrityName':
         if (!value || typeof value !== 'string' || !value.trim()) {
-          return "Celebrity's name is required.";
+          return "Celebrity name is required.";
         }
         if (value.trim().length < 2) {
-          return "Celebrity's name must be at least 2 characters.";
+          return "Celebrity name must be at least 2 characters.";
         }
         return undefined;
 
       case 'meetingType':
-        if (!value || !['In-person Meet & Greet', 'Virtual Meet & Greet', 'No Preference'].includes(value)) {
+        if (!value || !['In-person', 'Virtual', 'No preference'].includes(value)) {
           return 'Please select a preferred meeting type.';
         }
         return undefined;
 
       case 'attendees':
         if (!value || typeof value !== 'string' || !value.trim()) {
-          return 'Please select the number of attendees.';
+          return 'Please indicate the number of attendees.';
         }
         return undefined;
 
       case 'confirmedAccurate':
         if (!value) {
-          return 'You must confirm that the information provided is accurate.';
+          return 'You must confirm that the submitted information is accurate.';
         }
         return undefined;
 
@@ -181,7 +165,6 @@ export const App: React.FC = () => {
   ) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
-      // If user updates Country, automatically sync the country code if not customized
       if (field === 'country') {
         const found = COUNTRIES.find((c) => c.name === value);
         if (found) {
@@ -223,7 +206,6 @@ export const App: React.FC = () => {
     });
 
     setErrors(newErrors);
-    // Mark all fields as touched
     const touchedMap: Record<string, boolean> = {};
     fieldsToValidate.forEach((field) => {
       touchedMap[field] = true;
@@ -237,10 +219,9 @@ export const App: React.FC = () => {
     e.preventDefault();
 
     if (!validateAll()) {
-      // Scroll to the first error
-      const firstErrorElement = document.querySelector('.has-error');
-      if (firstErrorElement) {
-        firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const firstError = document.querySelector('.has-error');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       return;
     }
@@ -248,7 +229,6 @@ export const App: React.FC = () => {
     setIsSubmitting(true);
     setErrors((prev) => ({ ...prev, general: undefined }));
 
-    // Format phone with dial code if not already included
     const fullPhone = formData.phone.startsWith('+')
       ? formData.phone
       : `${formData.countryCode} ${formData.phone}`.trim();
@@ -284,19 +264,18 @@ export const App: React.FC = () => {
         if (data.errors) {
           setErrors(data.errors);
         } else {
-          setErrors({ general: data.message || 'Submission failed. Please check your information and try again.' });
+          setErrors({ general: data.message || 'Unable to submit request. Please check your information.' });
         }
         setIsSubmitting(false);
         return;
       }
 
-      // Success
       setSubmissionResult(data);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
-      console.error('Submission request failed:', err);
+      console.error('Request submission failed:', err);
       setErrors({
-        general: 'Unable to connect to the intake server. Please verify your connection or try again shortly.',
+        general: 'Unable to communicate with the intake service. Please check your network connection and try again.',
       });
     } finally {
       setIsSubmitting(false);
@@ -312,473 +291,531 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 flex flex-col justify-between items-center text-zinc-100 font-sans">
-      {/* Background Decorative Accent */}
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#c5a059]/10 blur-[140px]" />
-      </div>
-
-      <div className="w-full max-w-2xl mx-auto">
-        {/* Simple Professional Header */}
-        <header className="text-center mb-8 sm:mb-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/[0.04] border border-[#c5a059]/30 text-xs tracking-[0.2em] uppercase text-[#e0be7a] mb-4">
-            <Sparkles className="w-3.5 h-3.5 text-[#c5a059]" />
-            <span>Vanguard Talent Relations</span>
+    <div className="min-h-screen bg-[#F7F6F2] text-[#191919] font-sans antialiased flex flex-col justify-between">
+      {/* Restrained Editorial Header */}
+      <header className="border-b border-[#DAD8D1] bg-[#F7F6F2]">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 py-5 flex items-center justify-between">
+          <div className="flex items-baseline gap-3">
+            <span className="font-serif text-lg tracking-wide text-[#191919] font-normal">
+              Atelier
+            </span>
+            <span className="text-[10px] tracking-[0.2em] uppercase font-mono text-[#77736D] hidden sm:inline">
+              / Guest Relations
+            </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-white tracking-tight leading-tight">
-            Celebrity Meet &amp; Greet Request
-          </h1>
-          <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed">
-            Submit a private inquiry to express your interest in an exclusive in-person or virtual meet &amp; greet with your preferred celebrity or public figure.
-          </p>
-          <div className="mt-4 gold-divider mx-auto max-w-xs" />
-        </header>
+          <div className="flex items-center gap-4 text-[11px] font-mono tracking-widest text-[#77736D] uppercase">
+            <span>Private Event Enquiry</span>
+            <span className="text-[#DAD8D1]">•</span>
+            <span className="hidden sm:inline">Protocol 2026</span>
+          </div>
+        </div>
+      </header>
 
-        {/* Conditional Rendering: Form OR Submission Confirmation View */}
+      {/* Main Page Content */}
+      <main className="max-w-6xl mx-auto px-6 sm:px-8 py-12 sm:py-16 w-full flex-1">
         {submissionResult ? (
-          <ConfirmationView data={submissionResult} onReset={handleResetForm} />
+          <div className="max-w-2xl mx-auto">
+            <ConfirmationView data={submissionResult} onReset={handleResetForm} />
+          </div>
         ) : (
-          <main className="luxury-card p-6 sm:p-10 border border-white/10 shadow-2xl">
-            {/* General Submission Error Banner */}
-            {errors.general && (
-              <div
-                className="mb-6 p-4 bg-red-950/40 border border-red-500/40 text-red-200 text-sm flex items-start gap-3"
-                role="alert"
-              >
-                <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                <span>{errors.general}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} noValidate className="space-y-8">
-              {/* SECTION 1: Personal Information */}
+          <div className="lg:grid lg:grid-cols-12 lg:gap-16 items-start">
+            {/* Left Column: Context, Narrative & Editorial Protocol */}
+            <aside className="lg:col-span-5 mb-12 lg:mb-0 lg:sticky lg:top-8 space-y-8">
               <div>
-                <div className="flex items-center gap-2 pb-2 mb-4 border-b border-white/10">
-                  <User className="w-4 h-4 text-[#c5a059]" />
-                  <h2 className="text-sm font-semibold tracking-wider uppercase text-zinc-300">
-                    1. Personal Information
-                  </h2>
+                <span className="inline-block text-[10px] tracking-[0.25em] font-mono uppercase text-[#806746] mb-3">
+                  [ Private Inquiry ]
+                </span>
+                <h1 className="text-3xl sm:text-4xl md:text-[2.65rem] font-serif font-normal text-[#191919] leading-[1.15] tracking-tight">
+                  An Opportunity to Connect.
+                </h1>
+                <p className="mt-4 text-sm sm:text-base text-[#55524D] leading-relaxed font-sans">
+                  Complete the form below to express your interest in a personal meet-and-greet experience. Please provide accurate information so your request can be reviewed.
+                </p>
+              </div>
+
+              <div className="w-12 h-[1px] bg-[#DAD8D1]" />
+
+              {/* Editorial Protocol Guidelines */}
+              <div className="space-y-6 pt-2">
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#806746] block">
+                    01 / Evaluation
+                  </span>
+                  <p className="text-xs text-[#6B6760] leading-relaxed">
+                    Submissions are assessed individually based on talent availability, logistical feasibility, and touring schedules.
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {/* Full Name */}
-                  <div className="sm:col-span-2">
-                    <label htmlFor="fullName" className="block text-xs font-medium text-zinc-300 mb-1.5 uppercase tracking-wide">
-                      Full Name <span className="text-[#c5a059]">*</span>
-                    </label>
-                    <input
-                      id="fullName"
-                      name="fullName"
-                      type="text"
-                      required
-                      autoComplete="name"
-                      placeholder="e.g. Victoria Sterling"
-                      value={formData.fullName}
-                      onChange={(e) => handleChange('fullName', e.target.value)}
-                      onBlur={() => handleBlur('fullName')}
-                      className={`luxury-input ${errors.fullName && touched.fullName ? 'has-error' : ''}`}
-                      aria-invalid={!!errors.fullName && touched.fullName}
-                      aria-describedby={errors.fullName ? 'fullName-error' : undefined}
-                    />
-                    {errors.fullName && touched.fullName && (
-                      <p id="fullName-error" className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errors.fullName}
-                      </p>
-                    )}
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#806746] block">
+                    02 / Non-Guaranteed
+                  </span>
+                  <p className="text-xs text-[#6B6760] leading-relaxed">
+                    This inquiry records your expression of interest. It does not constitute a booking commitment, ticket purchase, or guarantee of appearance.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#806746] block">
+                    03 / Discretion &amp; Privacy
+                  </span>
+                  <p className="text-xs text-[#6B6760] leading-relaxed">
+                    All participant records are handled with strict confidentiality by authorized guest relations representatives.
+                  </p>
+                </div>
+              </div>
+
+              {/* Discrete Location Marker */}
+              <div className="pt-6 border-t border-[#DAD8D1] text-[11px] font-mono text-[#8C8880] tracking-wider uppercase">
+                New York · London · Paris · Los Angeles
+              </div>
+            </aside>
+
+            {/* Right Column: The Form */}
+            <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#DAD8D1] p-6 sm:p-10 shadow-sm">
+              {errors.general && (
+                <div
+                  className="mb-8 p-4 bg-[#FDF2F2] border border-[#F87171] text-[#991B1B] text-xs sm:text-sm flex items-start gap-3"
+                  role="alert"
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#B91C1C]" />
+                  <span>{errors.general}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} noValidate className="space-y-10">
+                {/* Section 01: Personal Information */}
+                <div>
+                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#DAD8D1]">
+                    <h2 className="text-xs font-mono uppercase tracking-[0.18em] text-[#191919] font-medium">
+                      Section 01 — Personal Information
+                    </h2>
+                    <span className="text-[10px] font-mono text-[#806746]">[ 01 / 03 ]</span>
                   </div>
 
-                  {/* Email Address */}
-                  <div className="sm:col-span-1">
-                    <label htmlFor="email" className="block text-xs font-medium text-zinc-300 mb-1.5 uppercase tracking-wide">
-                      Email Address <span className="text-[#c5a059]">*</span>
-                    </label>
-                    <div className="relative">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
+                    {/* Full Name */}
+                    <div className="sm:col-span-2">
+                      <label htmlFor="fullName" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
+                        Full Name <span className="text-[#806746]">*</span>
+                      </label>
+                      <input
+                        id="fullName"
+                        name="fullName"
+                        type="text"
+                        required
+                        autoComplete="name"
+                        placeholder="e.g. Eleanor Vance"
+                        value={formData.fullName}
+                        onChange={(e) => handleChange('fullName', e.target.value)}
+                        onBlur={() => handleBlur('fullName')}
+                        className={`editorial-input ${errors.fullName && touched.fullName ? 'has-error' : ''}`}
+                        aria-invalid={!!errors.fullName && touched.fullName}
+                        aria-describedby={errors.fullName ? 'fullName-error' : undefined}
+                      />
+                      {errors.fullName && touched.fullName && (
+                        <p id="fullName-error" className="mt-1.5 text-xs text-[#B91C1C]">
+                          {errors.fullName}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Email Address */}
+                    <div className="sm:col-span-1">
+                      <label htmlFor="email" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
+                        Email Address <span className="text-[#806746]">*</span>
+                      </label>
                       <input
                         id="email"
                         name="email"
                         type="email"
                         required
                         autoComplete="email"
-                        placeholder="v.sterling@domain.com"
+                        placeholder="eleanor@domain.com"
                         value={formData.email}
                         onChange={(e) => handleChange('email', e.target.value)}
                         onBlur={() => handleBlur('email')}
-                        className={`luxury-input ${errors.email && touched.email ? 'has-error' : ''}`}
+                        className={`editorial-input ${errors.email && touched.email ? 'has-error' : ''}`}
                         aria-invalid={!!errors.email && touched.email}
                         aria-describedby={errors.email ? 'email-error' : undefined}
                       />
+                      {errors.email && touched.email && (
+                        <p id="email-error" className="mt-1.5 text-xs text-[#B91C1C]">
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
-                    {errors.email && touched.email && (
-                      <p id="email-error" className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errors.email}
-                      </p>
-                    )}
-                  </div>
 
-                  {/* Phone Number with Country Code */}
-                  <div className="sm:col-span-1">
-                    <label htmlFor="phone" className="block text-xs font-medium text-zinc-300 mb-1.5 uppercase tracking-wide">
-                      Phone Number <span className="text-[#c5a059]">*</span>
-                    </label>
-                    <div className="flex gap-2">
+                    {/* Phone Number with Country Code */}
+                    <div className="sm:col-span-1">
+                      <label htmlFor="phone" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
+                        Phone Number <span className="text-[#806746]">*</span>
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          aria-label="Country dial code"
+                          value={formData.countryCode}
+                          onChange={(e) => handleChange('countryCode', e.target.value)}
+                          className="editorial-input w-28 shrink-0 text-xs px-2"
+                        >
+                          {COUNTRIES.map((c) => (
+                            <option key={c.code} value={c.dialCode}>
+                              {c.code} ({c.dialCode})
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          required
+                          autoComplete="tel"
+                          placeholder="212 555 0192"
+                          value={formData.phone}
+                          onChange={(e) => handleChange('phone', e.target.value)}
+                          onBlur={() => handleBlur('phone')}
+                          className={`editorial-input flex-1 ${errors.phone && touched.phone ? 'has-error' : ''}`}
+                          aria-invalid={!!errors.phone && touched.phone}
+                          aria-describedby={errors.phone ? 'phone-error' : undefined}
+                        />
+                      </div>
+                      {errors.phone && touched.phone ? (
+                        <p id="phone-error" className="mt-1.5 text-xs text-[#B91C1C]">
+                          {errors.phone}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-[11px] text-[#77736D]">Includes international country code.</p>
+                      )}
+                    </div>
+
+                    {/* Country of Residence */}
+                    <div className="sm:col-span-1">
+                      <label htmlFor="country" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
+                        Country of Residence <span className="text-[#806746]">*</span>
+                      </label>
                       <select
-                        aria-label="Country dial code"
-                        value={formData.countryCode}
-                        onChange={(e) => handleChange('countryCode', e.target.value)}
-                        className="luxury-input w-28 shrink-0 text-xs sm:text-sm px-2.5"
+                        id="country"
+                        name="country"
+                        required
+                        value={formData.country}
+                        onChange={(e) => handleChange('country', e.target.value)}
+                        onBlur={() => handleBlur('country')}
+                        className={`editorial-input ${errors.country && touched.country ? 'has-error' : ''}`}
+                        aria-invalid={!!errors.country && touched.country}
+                        aria-describedby={errors.country ? 'country-error' : undefined}
                       >
+                        <option value="">Select country</option>
                         {COUNTRIES.map((c) => (
-                          <option key={c.code} value={c.dialCode}>
-                            {c.code} ({c.dialCode})
+                          <option key={c.name} value={c.name}>
+                            {c.name}
                           </option>
                         ))}
                       </select>
+                      {errors.country && touched.country && (
+                        <p id="country-error" className="mt-1.5 text-xs text-[#B91C1C]">
+                          {errors.country}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* City */}
+                    <div className="sm:col-span-1">
+                      <label htmlFor="city" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
+                        City <span className="text-[#806746]">*</span>
+                      </label>
                       <input
-                        id="phone"
-                        name="phone"
-                        type="tel"
+                        id="city"
+                        name="city"
+                        type="text"
                         required
-                        autoComplete="tel"
-                        placeholder="(555) 234-5678"
-                        value={formData.phone}
-                        onChange={(e) => handleChange('phone', e.target.value)}
-                        onBlur={() => handleBlur('phone')}
-                        className={`luxury-input flex-1 ${errors.phone && touched.phone ? 'has-error' : ''}`}
-                        aria-invalid={!!errors.phone && touched.phone}
-                        aria-describedby={errors.phone ? 'phone-error' : undefined}
+                        placeholder="e.g. London, Chicago"
+                        value={formData.city}
+                        onChange={(e) => handleChange('city', e.target.value)}
+                        onBlur={() => handleBlur('city')}
+                        className={`editorial-input ${errors.city && touched.city ? 'has-error' : ''}`}
+                        aria-invalid={!!errors.city && touched.city}
+                        aria-describedby={errors.city ? 'city-error' : undefined}
+                      />
+                      {errors.city && touched.city && (
+                        <p id="city-error" className="mt-1.5 text-xs text-[#B91C1C]">
+                          {errors.city}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 02: Meet & Greet Preferences */}
+                <div>
+                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#DAD8D1]">
+                    <h2 className="text-xs font-mono uppercase tracking-[0.18em] text-[#191919] font-medium">
+                      Section 02 — Meet &amp; Greet Preferences
+                    </h2>
+                    <span className="text-[10px] font-mono text-[#806746]">[ 02 / 03 ]</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
+                    {/* Celebrity Name */}
+                    <div className="sm:col-span-2">
+                      <label htmlFor="celebrityName" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
+                        Celebrity Name <span className="text-[#806746]">*</span>
+                      </label>
+                      <input
+                        id="celebrityName"
+                        name="celebrityName"
+                        type="text"
+                        required
+                        placeholder="Artist, author, actor, or public figure"
+                        value={formData.celebrityName}
+                        onChange={(e) => handleChange('celebrityName', e.target.value)}
+                        onBlur={() => handleBlur('celebrityName')}
+                        className={`editorial-input ${errors.celebrityName && touched.celebrityName ? 'has-error' : ''}`}
+                        aria-invalid={!!errors.celebrityName && touched.celebrityName}
+                        aria-describedby={errors.celebrityName ? 'celebrityName-error' : undefined}
+                      />
+                      {errors.celebrityName && touched.celebrityName && (
+                        <p id="celebrityName-error" className="mt-1.5 text-xs text-[#B91C1C]">
+                          {errors.celebrityName}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Preferred Meeting Type */}
+                    <div className="sm:col-span-1">
+                      <label htmlFor="meetingType" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
+                        Preferred Meeting Type <span className="text-[#806746]">*</span>
+                      </label>
+                      <select
+                        id="meetingType"
+                        name="meetingType"
+                        required
+                        value={formData.meetingType}
+                        onChange={(e) => handleChange('meetingType', e.target.value)}
+                        onBlur={() => handleBlur('meetingType')}
+                        className={`editorial-input ${errors.meetingType && touched.meetingType ? 'has-error' : ''}`}
+                        aria-invalid={!!errors.meetingType && touched.meetingType}
+                        aria-describedby={errors.meetingType ? 'meetingType-error' : undefined}
+                      >
+                        <option value="">Select meeting type</option>
+                        <option value="In-person">In-person</option>
+                        <option value="Virtual">Virtual</option>
+                        <option value="No preference">No preference</option>
+                      </select>
+                      {errors.meetingType && touched.meetingType && (
+                        <p id="meetingType-error" className="mt-1.5 text-xs text-[#B91C1C]">
+                          {errors.meetingType}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Number of Attendees */}
+                    <div className="sm:col-span-1">
+                      <label htmlFor="attendees" className="block text-xs font-mono uppercase tracking-wider text-[#191919] mb-1.5">
+                        Number of Attendees <span className="text-[#806746]">*</span>
+                      </label>
+                      <select
+                        id="attendees"
+                        name="attendees"
+                        required
+                        value={formData.attendees}
+                        onChange={(e) => handleChange('attendees', e.target.value)}
+                        onBlur={() => handleBlur('attendees')}
+                        className={`editorial-input ${errors.attendees && touched.attendees ? 'has-error' : ''}`}
+                        aria-invalid={!!errors.attendees && touched.attendees}
+                        aria-describedby={errors.attendees ? 'attendees-error' : undefined}
+                      >
+                        <option value="1 attendee">1 attendee</option>
+                        <option value="2 attendees">2 attendees</option>
+                        <option value="3 attendees">3 attendees</option>
+                        <option value="4 attendees">4 attendees</option>
+                        <option value="5+ attendees (group)">5+ attendees (group request)</option>
+                      </select>
+                      {errors.attendees && touched.attendees && (
+                        <p id="attendees-error" className="mt-1.5 text-xs text-[#B91C1C]">
+                          {errors.attendees}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Preferred Date */}
+                    <div className="sm:col-span-2">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label htmlFor="preferredDate" className="block text-xs font-mono uppercase tracking-wider text-[#191919]">
+                          Preferred Date <span className="text-[#77736D] font-normal lowercase">(optional)</span>
+                        </label>
+                        <span className="text-[11px] text-[#77736D]">Subject to schedule feasibility</span>
+                      </div>
+                      <input
+                        id="preferredDate"
+                        name="preferredDate"
+                        type="date"
+                        min={todayDateString}
+                        value={formData.preferredDate}
+                        onChange={(e) => handleChange('preferredDate', e.target.value)}
+                        className="editorial-input"
                       />
                     </div>
-                    {errors.phone && touched.phone ? (
-                      <p id="phone-error" className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errors.phone}
-                      </p>
+
+                    {/* Why Would You Like to Meet This Celebrity? */}
+                    <div className="sm:col-span-2">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label htmlFor="reason" className="block text-xs font-mono uppercase tracking-wider text-[#191919]">
+                          Why Would You Like to Meet This Celebrity? <span className="text-[#77736D] font-normal lowercase">(optional)</span>
+                        </label>
+                        <span className="text-[11px] font-mono text-[#77736D]">{formData.reason.length} / 1000</span>
+                      </div>
+                      <textarea
+                        id="reason"
+                        name="reason"
+                        rows={3}
+                        maxLength={1000}
+                        placeholder="Please share what inspires this request or the significance of the artist's work to you..."
+                        value={formData.reason}
+                        onChange={(e) => handleChange('reason', e.target.value)}
+                        className="editorial-input resize-y"
+                      />
+                    </div>
+
+                    {/* Additional Message */}
+                    <div className="sm:col-span-2">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label htmlFor="message" className="block text-xs font-mono uppercase tracking-wider text-[#191919]">
+                          Additional Message <span className="text-[#77736D] font-normal lowercase">(optional)</span>
+                        </label>
+                        <span className="text-[11px] font-mono text-[#77736D]">{formData.message.length} / 1000</span>
+                      </div>
+                      <textarea
+                        id="message"
+                        name="message"
+                        rows={2}
+                        maxLength={1000}
+                        placeholder="Any relevant logistical notes, preferred geographic region, or accessibility considerations..."
+                        value={formData.message}
+                        onChange={(e) => handleChange('message', e.target.value)}
+                        className="editorial-input resize-y"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 03: Confirmation */}
+                <div>
+                  <div className="flex items-baseline justify-between pb-3 mb-6 border-b border-[#DAD8D1]">
+                    <h2 className="text-xs font-mono uppercase tracking-[0.18em] text-[#191919] font-medium">
+                      Section 03 — Confirmation
+                    </h2>
+                    <span className="text-[10px] font-mono text-[#806746]">[ 03 / 03 ]</span>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Checkbox 1: Accurate Information */}
+                    <div>
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          id="confirmedAccurate"
+                          checked={formData.confirmedAccurate}
+                          onChange={(e) => handleChange('confirmedAccurate', e.target.checked)}
+                          onBlur={() => handleBlur('confirmedAccurate')}
+                          className={`editorial-checkbox ${errors.confirmedAccurate && touched.confirmedAccurate ? 'has-error' : ''}`}
+                          aria-invalid={!!errors.confirmedAccurate && touched.confirmedAccurate}
+                        />
+                        <span className="text-xs sm:text-sm text-[#33312E] group-hover:text-[#191919] transition-colors leading-normal select-none">
+                          I confirm that the submitted information is accurate and truthful. <span className="text-[#806746]">*</span>
+                        </span>
+                      </label>
+                      {errors.confirmedAccurate && touched.confirmedAccurate && (
+                        <p className="mt-1 ml-7 text-xs text-[#B91C1C]">
+                          {errors.confirmedAccurate}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Checkbox 2: Privacy Policy */}
+                    <div>
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          id="acknowledgedPrivacy"
+                          checked={formData.acknowledgedPrivacy}
+                          onChange={(e) => handleChange('acknowledgedPrivacy', e.target.checked)}
+                          onBlur={() => handleBlur('acknowledgedPrivacy')}
+                          className={`editorial-checkbox ${errors.acknowledgedPrivacy && touched.acknowledgedPrivacy ? 'has-error' : ''}`}
+                          aria-invalid={!!errors.acknowledgedPrivacy && touched.acknowledgedPrivacy}
+                        />
+                        <span className="text-xs sm:text-sm text-[#33312E] group-hover:text-[#191919] transition-colors leading-normal select-none">
+                          I acknowledge and agree to the{' '}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setIsPrivacyModalOpen(true);
+                            }}
+                            className="underline underline-offset-4 decoration-[#77736D] hover:decoration-[#191919] font-medium text-[#191919]"
+                          >
+                            Privacy Policy
+                          </button>
+                          {' '}regarding the confidential processing of my inquiry. <span className="text-[#806746]">*</span>
+                        </span>
+                      </label>
+                      {errors.acknowledgedPrivacy && touched.acknowledgedPrivacy && (
+                        <p className="mt-1 ml-7 text-xs text-[#B91C1C]">
+                          {errors.acknowledgedPrivacy}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Clear Notice */}
+                    <div className="pt-3 border-t border-[#EAE8E1] text-[11px] text-[#77736D] leading-relaxed">
+                      Notice: Submitting this form expresses fan interest only and does not guarantee a meeting, booking, or celebrity appearance. All inquiries are subject to representation review.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Primary Action Button */}
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="btn-primary"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Submitting Request...</span>
+                      </>
                     ) : (
-                      <p className="mt-1 text-[11px] text-zinc-500">Includes international country code.</p>
-                    )}
-                  </div>
-
-                  {/* Country of Residence */}
-                  <div className="sm:col-span-1">
-                    <label htmlFor="country" className="block text-xs font-medium text-zinc-300 mb-1.5 uppercase tracking-wide">
-                      Country of Residence <span className="text-[#c5a059]">*</span>
-                    </label>
-                    <select
-                      id="country"
-                      name="country"
-                      required
-                      value={formData.country}
-                      onChange={(e) => handleChange('country', e.target.value)}
-                      onBlur={() => handleBlur('country')}
-                      className={`luxury-input ${errors.country && touched.country ? 'has-error' : ''}`}
-                      aria-invalid={!!errors.country && touched.country}
-                      aria-describedby={errors.country ? 'country-error' : undefined}
-                    >
-                      <option value="">Select your country</option>
-                      {COUNTRIES.map((c) => (
-                        <option key={c.name} value={c.name}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.country && touched.country && (
-                      <p id="country-error" className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errors.country}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* City */}
-                  <div className="sm:col-span-1">
-                    <label htmlFor="city" className="block text-xs font-medium text-zinc-300 mb-1.5 uppercase tracking-wide">
-                      City <span className="text-[#c5a059]">*</span>
-                    </label>
-                    <input
-                      id="city"
-                      name="city"
-                      type="text"
-                      required
-                      placeholder="e.g. Los Angeles, London"
-                      value={formData.city}
-                      onChange={(e) => handleChange('city', e.target.value)}
-                      onBlur={() => handleBlur('city')}
-                      className={`luxury-input ${errors.city && touched.city ? 'has-error' : ''}`}
-                      aria-invalid={!!errors.city && touched.city}
-                      aria-describedby={errors.city ? 'city-error' : undefined}
-                    />
-                    {errors.city && touched.city && (
-                      <p id="city-error" className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errors.city}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* SECTION 2: Meet & Greet Information */}
-              <div>
-                <div className="flex items-center gap-2 pb-2 mb-4 border-b border-white/10">
-                  <Star className="w-4 h-4 text-[#c5a059]" />
-                  <h2 className="text-sm font-semibold tracking-wider uppercase text-zinc-300">
-                    2. Meet &amp; Greet Information
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {/* Celebrity's Name */}
-                  <div className="sm:col-span-2">
-                    <label htmlFor="celebrityName" className="block text-xs font-medium text-zinc-300 mb-1.5 uppercase tracking-wide">
-                      Celebrity's Name <span className="text-[#c5a059]">*</span>
-                    </label>
-                    <input
-                      id="celebrityName"
-                      name="celebrityName"
-                      type="text"
-                      required
-                      placeholder="e.g. Keanu Reeves, Zendaya, Adele"
-                      value={formData.celebrityName}
-                      onChange={(e) => handleChange('celebrityName', e.target.value)}
-                      onBlur={() => handleBlur('celebrityName')}
-                      className={`luxury-input ${errors.celebrityName && touched.celebrityName ? 'has-error' : ''}`}
-                      aria-invalid={!!errors.celebrityName && touched.celebrityName}
-                      aria-describedby={errors.celebrityName ? 'celebrityName-error' : undefined}
-                    />
-                    {errors.celebrityName && touched.celebrityName && (
-                      <p id="celebrityName-error" className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errors.celebrityName}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Preferred Meeting Type */}
-                  <div className="sm:col-span-1">
-                    <label htmlFor="meetingType" className="block text-xs font-medium text-zinc-300 mb-1.5 uppercase tracking-wide">
-                      Preferred Meeting Type <span className="text-[#c5a059]">*</span>
-                    </label>
-                    <select
-                      id="meetingType"
-                      name="meetingType"
-                      required
-                      value={formData.meetingType}
-                      onChange={(e) => handleChange('meetingType', e.target.value)}
-                      onBlur={() => handleBlur('meetingType')}
-                      className={`luxury-input ${errors.meetingType && touched.meetingType ? 'has-error' : ''}`}
-                      aria-invalid={!!errors.meetingType && touched.meetingType}
-                      aria-describedby={errors.meetingType ? 'meetingType-error' : undefined}
-                    >
-                      <option value="">Select meeting type</option>
-                      <option value="In-person Meet & Greet">In-person Meet &amp; Greet</option>
-                      <option value="Virtual Meet & Greet">Virtual Meet &amp; Greet</option>
-                      <option value="No Preference">No Preference</option>
-                    </select>
-                    {errors.meetingType && touched.meetingType && (
-                      <p id="meetingType-error" className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errors.meetingType}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Number of People Attending */}
-                  <div className="sm:col-span-1">
-                    <label htmlFor="attendees" className="block text-xs font-medium text-zinc-300 mb-1.5 uppercase tracking-wide">
-                      Number of People Attending <span className="text-[#c5a059]">*</span>
-                    </label>
-                    <select
-                      id="attendees"
-                      name="attendees"
-                      required
-                      value={formData.attendees}
-                      onChange={(e) => handleChange('attendees', e.target.value)}
-                      onBlur={() => handleBlur('attendees')}
-                      className={`luxury-input ${errors.attendees && touched.attendees ? 'has-error' : ''}`}
-                      aria-invalid={!!errors.attendees && touched.attendees}
-                      aria-describedby={errors.attendees ? 'attendees-error' : undefined}
-                    >
-                      <option value="1 Person">1 Person (Individual)</option>
-                      <option value="2 People">2 People</option>
-                      <option value="3 People">3 People</option>
-                      <option value="4 People">4 People</option>
-                      <option value="5+ People (Group Request)">5+ People (Group Request)</option>
-                    </select>
-                    {errors.attendees && touched.attendees && (
-                      <p id="attendees-error" className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        {errors.attendees}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Preferred Date (Optional) */}
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label htmlFor="preferredDate" className="block text-xs font-medium text-zinc-300 uppercase tracking-wide">
-                        Preferred Date <span className="text-zinc-500 font-normal lowercase">(optional)</span>
-                      </label>
-                      <span className="text-[11px] text-zinc-500">Subject to talent availability</span>
-                    </div>
-                    <input
-                      id="preferredDate"
-                      name="preferredDate"
-                      type="date"
-                      min={todayDateString}
-                      value={formData.preferredDate}
-                      onChange={(e) => handleChange('preferredDate', e.target.value)}
-                      className="luxury-input"
-                    />
-                  </div>
-
-                  {/* Why Would You Like to Meet This Celebrity? (Optional) */}
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label htmlFor="reason" className="block text-xs font-medium text-zinc-300 uppercase tracking-wide">
-                        Why Would You Like to Meet This Celebrity? <span className="text-zinc-500 font-normal lowercase">(optional)</span>
-                      </label>
-                      <span className="text-[11px] text-zinc-500">{formData.reason.length}/1000</span>
-                    </div>
-                    <textarea
-                      id="reason"
-                      name="reason"
-                      rows={3}
-                      maxLength={1000}
-                      placeholder="Share a brief message about what this artist or public figure's work means to you..."
-                      value={formData.reason}
-                      onChange={(e) => handleChange('reason', e.target.value)}
-                      className="luxury-input resize-y"
-                    />
-                  </div>
-
-                  {/* Additional Message (Optional) */}
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label htmlFor="message" className="block text-xs font-medium text-zinc-300 uppercase tracking-wide">
-                        Additional Message <span className="text-zinc-500 font-normal lowercase">(optional)</span>
-                      </label>
-                      <span className="text-[11px] text-zinc-500">{formData.message.length}/1000</span>
-                    </div>
-                    <textarea
-                      id="message"
-                      name="message"
-                      rows={2}
-                      maxLength={1000}
-                      placeholder="Any specific location suggestions, accessibility accommodations, or special notes..."
-                      value={formData.message}
-                      onChange={(e) => handleChange('message', e.target.value)}
-                      className="luxury-input resize-y"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* SECTION 3: Confirmations & Disclaimers */}
-              <div className="pt-2 border-t border-white/10 space-y-4">
-                {/* Notice banner */}
-                <div className="p-3.5 bg-[#c5a059]/5 border border-[#c5a059]/20 text-xs text-zinc-300 leading-relaxed font-sans">
-                  <span className="text-[#c5a059] font-semibold">Important Disclaimer: </span>
-                  Submitting this request form expresses fan interest only and does not guarantee a meet &amp; greet, attendance, or celebrity availability. All requests are subject to talent management review and authorization.
-                </div>
-
-                {/* Checkbox 1: Accurate Information */}
-                <div>
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      id="confirmedAccurate"
-                      checked={formData.confirmedAccurate}
-                      onChange={(e) => handleChange('confirmedAccurate', e.target.checked)}
-                      onBlur={() => handleBlur('confirmedAccurate')}
-                      className={`luxury-checkbox ${errors.confirmedAccurate && touched.confirmedAccurate ? 'has-error' : ''}`}
-                      aria-invalid={!!errors.confirmedAccurate && touched.confirmedAccurate}
-                    />
-                    <span className="text-xs sm:text-sm text-zinc-300 group-hover:text-white transition-colors leading-normal select-none">
-                      I confirm that all information provided in this request is accurate and truthful. <span className="text-[#c5a059]">*</span>
-                    </span>
-                  </label>
-                  {errors.confirmedAccurate && touched.confirmedAccurate && (
-                    <p className="mt-1 ml-8 text-xs text-red-400 flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      {errors.confirmedAccurate}
-                    </p>
-                  )}
-                </div>
-
-                {/* Checkbox 2: Privacy Policy */}
-                <div>
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      id="acknowledgedPrivacy"
-                      checked={formData.acknowledgedPrivacy}
-                      onChange={(e) => handleChange('acknowledgedPrivacy', e.target.checked)}
-                      onBlur={() => handleBlur('acknowledgedPrivacy')}
-                      className={`luxury-checkbox ${errors.acknowledgedPrivacy && touched.acknowledgedPrivacy ? 'has-error' : ''}`}
-                      aria-invalid={!!errors.acknowledgedPrivacy && touched.acknowledgedPrivacy}
-                    />
-                    <span className="text-xs sm:text-sm text-zinc-300 group-hover:text-white transition-colors leading-normal select-none">
-                      I acknowledge and agree to the{' '}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setIsPrivacyModalOpen(true);
-                        }}
-                        className="text-[#c5a059] hover:text-[#e0be7a] underline underline-offset-2 transition-colors font-medium"
-                      >
-                        Privacy Policy
-                      </button>
-                      {' '}regarding the confidential processing of my details. <span className="text-[#c5a059]">*</span>
-                    </span>
-                  </label>
-                  {errors.acknowledgedPrivacy && touched.acknowledgedPrivacy && (
-                    <p className="mt-1 ml-8 text-xs text-red-400 flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      {errors.acknowledgedPrivacy}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn-submit"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Submitting Request...</span>
-                    </>
-                  ) : (
-                    <>
                       <span>Submit Request</span>
-                    </>
-                  )}
-                </button>
-                <p className="text-center text-[11px] text-zinc-500 mt-3 font-sans">
-                  Submissions are transmitted securely and evaluated confidentially by talent management.
-                </p>
-              </div>
-            </form>
-          </main>
+                    )}
+                  </button>
+                  <p className="text-center text-[11px] text-[#77736D] mt-3 font-mono">
+                    Official Intake Portal — Encrypted Transmission
+                  </p>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
+      </main>
 
-        {/* Minimal Footer */}
-        <footer className="mt-12 text-center text-xs text-zinc-500 font-sans pb-6">
-          <p className="tracking-wide">
-            &copy; {new Date().getFullYear()} Vanguard Talent Relations. All rights reserved.
-          </p>
-          <p className="mt-1 text-[11px] text-zinc-600">
-            Official Fan Engagement &amp; Guest Inquiry Protocol
-          </p>
-        </footer>
-      </div>
+      {/* Understated Editorial Footer */}
+      <footer className="border-t border-[#DAD8D1] bg-[#F7F6F2] py-8 text-xs text-[#77736D]">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px]">
+          <div>
+            &copy; {new Date().getFullYear()} Atelier Guest Relations. Confidential Intake Protocol.
+          </div>
+          <div className="flex items-center gap-6">
+            <button
+              type="button"
+              onClick={() => setIsPrivacyModalOpen(true)}
+              className="hover:text-[#191919] underline underline-offset-2 transition-colors"
+            >
+              Privacy Policy
+            </button>
+            <span>All rights reserved.</span>
+          </div>
+        </div>
+      </footer>
 
       {/* Privacy Policy Modal */}
       <PrivacyModal

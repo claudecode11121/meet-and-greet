@@ -115,6 +115,9 @@ app.post('/api/submissions', (req, res) => {
     }
 
     const validMeetingTypes = [
+      'In-person',
+      'Virtual',
+      'No preference',
       'In-person Meet & Greet',
       'Virtual Meet & Greet',
       'No Preference'
