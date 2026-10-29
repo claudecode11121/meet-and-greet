@@ -18,12 +18,12 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg luxury-card rounded-2xl p-6 sm:p-8 text-left border border-[#c5a059]/40 shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg luxury-card p-6 sm:p-8 text-left border border-[#c5a059]/40 shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between pb-4 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-[#c5a059]/10 text-[#c5a059]">
+            <div className="p-2 bg-[#c5a059]/10 border border-[#c5a059]/30 text-[#c5a059]">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <h3 id="privacy-modal-title" className="text-xl font-serif font-bold text-white tracking-wide">
@@ -33,7 +33,7 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) =
           <button
             type="button"
             onClick={onClose}
-            className="text-zinc-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/5"
+            className="text-zinc-400 hover:text-white transition-colors p-1.5 hover:bg-white/5 border border-transparent hover:border-white/10"
             aria-label="Close privacy policy"
           >
             <X className="w-5 h-5" />

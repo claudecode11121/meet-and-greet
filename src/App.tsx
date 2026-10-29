@@ -315,13 +315,13 @@ export const App: React.FC = () => {
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 flex flex-col justify-between items-center text-zinc-100 font-sans">
       {/* Background Decorative Accent */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#c5a059]/10 rounded-full blur-[140px]" />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#c5a059]/10 blur-[140px]" />
       </div>
 
       <div className="w-full max-w-2xl mx-auto">
         {/* Simple Professional Header */}
         <header className="text-center mb-8 sm:mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-[#c5a059]/30 text-xs tracking-[0.2em] uppercase text-[#e0be7a] mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/[0.04] border border-[#c5a059]/30 text-xs tracking-[0.2em] uppercase text-[#e0be7a] mb-4">
             <Sparkles className="w-3.5 h-3.5 text-[#c5a059]" />
             <span>Vanguard Talent Relations</span>
           </div>
@@ -338,11 +338,11 @@ export const App: React.FC = () => {
         {submissionResult ? (
           <ConfirmationView data={submissionResult} onReset={handleResetForm} />
         ) : (
-          <main className="luxury-card rounded-2xl p-6 sm:p-10 border border-white/10 shadow-2xl">
+          <main className="luxury-card p-6 sm:p-10 border border-white/10 shadow-2xl">
             {/* General Submission Error Banner */}
             {errors.general && (
               <div
-                className="mb-6 p-4 rounded-xl bg-red-950/40 border border-red-500/40 text-red-200 text-sm flex items-start gap-3"
+                className="mb-6 p-4 bg-red-950/40 border border-red-500/40 text-red-200 text-sm flex items-start gap-3"
                 role="alert"
               >
                 <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
@@ -678,7 +678,7 @@ export const App: React.FC = () => {
               {/* SECTION 3: Confirmations & Disclaimers */}
               <div className="pt-2 border-t border-white/10 space-y-4">
                 {/* Notice banner */}
-                <div className="p-3.5 rounded-lg bg-[#c5a059]/5 border border-[#c5a059]/20 text-xs text-zinc-300 leading-relaxed font-sans">
+                <div className="p-3.5 bg-[#c5a059]/5 border border-[#c5a059]/20 text-xs text-zinc-300 leading-relaxed font-sans">
                   <span className="text-[#c5a059] font-semibold">Important Disclaimer: </span>
                   Submitting this request form expresses fan interest only and does not guarantee a meet &amp; greet, attendance, or celebrity availability. All requests are subject to talent management review and authorization.
                 </div>

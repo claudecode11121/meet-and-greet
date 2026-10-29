@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Celebrity Meet & Greet Request Form - Bespoke Luxury Styling */
+/* Celebrity Meet & Greet Request Form - Bespoke Luxury Styling (Sharp Architectural Aesthetic - Zero Border Radius) */
 
 :root {
   --bg-main: #0a0a0c;
@@ -32,8 +32,10 @@
   --success-bg: rgba(16, 185, 129, 0.08);
 }
 
-* {
+/* Strict Zero Border Radius across all elements */
+*, *::before, *::after {
   box-sizing: border-box;
+  border-radius: 0 !important;
 }
 
 html, body {
@@ -70,7 +72,7 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* Luxury Card Container */
+/* Luxury Card Container - Sharp Edges */
 .luxury-card {
   background: linear-gradient(180deg, rgba(20, 20, 25, 0.95) 0%, rgba(14, 14, 18, 0.98) 100%);
   border: 1px solid var(--border-subtle);
@@ -79,6 +81,7 @@ body {
     0 24px 48px -12px rgba(0, 0, 0, 0.7),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(12px);
+  border-radius: 0;
 }
 
 /* Section Divider */
@@ -87,7 +90,7 @@ body {
   background: linear-gradient(90deg, transparent 0%, rgba(197, 160, 89, 0.35) 50%, transparent 100%);
 }
 
-/* Form Inputs & Selects */
+/* Form Inputs & Selects - Sharp Edges */
 .luxury-input {
   width: 100%;
   background-color: var(--bg-input);
@@ -95,8 +98,8 @@ body {
   color: var(--text-pure);
   font-size: 0.95rem;
   line-height: 1.5;
-  border-radius: 8px;
-  padding: 12px 14px;
+  border-radius: 0;
+  padding: 13px 15px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   outline: none;
   font-family: 'Inter', sans-serif;
@@ -109,13 +112,13 @@ body {
 
 .luxury-input:focus {
   border-color: var(--border-active);
-  box-shadow: 0 0 0 3px var(--gold-glow);
+  box-shadow: 0 0 0 2px var(--gold-glow);
   background-color: var(--bg-input-focus);
 }
 
 .luxury-input.has-error {
   border-color: var(--error-border);
-  box-shadow: 0 0 0 2px var(--error-bg);
+  box-shadow: 0 0 0 1px var(--error-red);
 }
 
 .luxury-input::placeholder {
@@ -132,6 +135,7 @@ select.luxury-input {
   background-size: 16px 16px;
   padding-right: 40px;
   cursor: pointer;
+  border-radius: 0;
 }
 
 select.luxury-input option {
@@ -143,15 +147,16 @@ select.luxury-input option {
 /* Date input styling */
 input[type="date"].luxury-input {
   color-scheme: dark;
+  border-radius: 0;
 }
 
-/* Custom Checkbox */
+/* Custom Checkbox - Sharp Square */
 .luxury-checkbox {
   appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  border: 1px solid rgba(197, 160, 89, 0.4);
+  width: 18px;
+  height: 18px;
+  border-radius: 0;
+  border: 1px solid rgba(197, 160, 89, 0.45);
   background-color: var(--bg-input);
   display: inline-grid;
   place-content: center;
@@ -173,8 +178,8 @@ input[type="date"].luxury-input {
 
 .luxury-checkbox:checked::before {
   content: "";
-  width: 10px;
-  height: 6px;
+  width: 9px;
+  height: 5px;
   border-left: 2px solid #0a0a0c;
   border-bottom: 2px solid #0a0a0c;
   transform: rotate(-45deg) translate(1px, -1px);
@@ -182,7 +187,7 @@ input[type="date"].luxury-input {
 
 .luxury-checkbox:focus-visible {
   outline: 2px solid var(--gold-light);
-  outline-offset: 2px;
+  outline-offset: 1px;
 }
 
 .luxury-checkbox.has-error {
@@ -190,17 +195,18 @@ input[type="date"].luxury-input {
   background-color: var(--error-bg);
 }
 
-/* Submit Button */
+/* Submit Button - Sharp Architectural Aesthetic */
 .btn-submit {
   width: 100%;
   position: relative;
   background: linear-gradient(135deg, #dfbe78 0%, #c5a059 50%, #a98236 100%);
   color: #0b0b0e;
   font-weight: 600;
-  font-size: 1.05rem;
-  letter-spacing: 0.05em;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   padding: 16px 28px;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   box-shadow: 0 4px 18px rgba(197, 160, 89, 0.28);
@@ -228,20 +234,23 @@ input[type="date"].luxury-input {
   filter: grayscale(20%);
 }
 
-/* Secondary Button */
+/* Secondary Button - Sharp Edges */
 .btn-secondary {
   background-color: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
   font-weight: 500;
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
 }
 
 .btn-secondary:hover {
@@ -266,8 +275,8 @@ input[type="date"].luxury-input {
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -276,7 +285,7 @@ input[type="date"].luxury-input {
 
 ::-webkit-scrollbar-thumb {
   background: #27272f;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {

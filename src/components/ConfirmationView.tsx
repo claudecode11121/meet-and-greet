@@ -39,11 +39,11 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onRese
     : 'Flexible / Unspecified';
 
   return (
-    <div className="w-full max-w-2xl mx-auto luxury-card rounded-2xl p-6 sm:p-10 border border-[#c5a059]/30 text-left transition-all duration-300">
+    <div className="w-full max-w-2xl mx-auto luxury-card p-6 sm:p-10 border border-[#c5a059]/30 text-left transition-all duration-300">
       {/* Header with Luxury Crest & Checkmark */}
       <div className="text-center pb-8 border-b border-white/10">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#c5a059]/10 border border-[#c5a059]/30 text-[#c5a059] mb-4">
-          <CheckCircle2 className="w-8 h-8" />
+        <div className="inline-flex items-center justify-center w-14 h-14 bg-[#c5a059]/10 border border-[#c5a059]/30 text-[#c5a059] mb-4">
+          <CheckCircle2 className="w-7 h-7" />
         </div>
         <div className="text-xs tracking-[0.25em] text-[#c5a059] uppercase font-semibold mb-2">
           Request Acknowledged
@@ -56,7 +56,7 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onRese
         </p>
 
         {/* Reference Code Card */}
-        <div className="mt-6 inline-flex flex-col sm:flex-row items-center gap-3 bg-[#18181f] border border-[#c5a059]/30 px-5 py-3.5 rounded-xl">
+        <div className="mt-6 inline-flex flex-col sm:flex-row items-center gap-3 bg-[#18181f] border border-[#c5a059]/30 px-5 py-3.5">
           <div className="text-left">
             <span className="block text-[11px] tracking-wider uppercase text-zinc-400 font-medium">
               Inquiry Reference ID
@@ -68,7 +68,7 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onRese
           <button
             type="button"
             onClick={handleCopyReference}
-            className="flex items-center gap-1.5 text-xs text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-md transition-colors"
+            className="flex items-center gap-1.5 text-xs text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 transition-colors uppercase tracking-wider"
             title="Copy Reference ID"
           >
             {copied ? (
@@ -93,7 +93,7 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onRese
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-sans">
-          <div className="flex items-start gap-3 p-3.5 rounded-lg bg-white/[0.02] border border-white/5">
+          <div className="flex items-start gap-3 p-3.5 bg-white/[0.02] border border-white/5">
             <Star className="w-4 h-4 text-[#c5a059] mt-0.5 shrink-0" />
             <div>
               <span className="block text-xs text-zinc-500 uppercase tracking-wider">Celebrity</span>
@@ -101,7 +101,7 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onRese
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 rounded-lg bg-white/[0.02] border border-white/5">
+          <div className="flex items-start gap-3 p-3.5 bg-white/[0.02] border border-white/5">
             <Users className="w-4 h-4 text-[#c5a059] mt-0.5 shrink-0" />
             <div>
               <span className="block text-xs text-zinc-500 uppercase tracking-wider">Meeting Type &amp; Guests</span>
@@ -111,7 +111,7 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onRese
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 rounded-lg bg-white/[0.02] border border-white/5">
+          <div className="flex items-start gap-3 p-3.5 bg-white/[0.02] border border-white/5">
             <Calendar className="w-4 h-4 text-[#c5a059] mt-0.5 shrink-0" />
             <div>
               <span className="block text-xs text-zinc-500 uppercase tracking-wider">Preferred Date</span>
@@ -119,7 +119,7 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onRese
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 rounded-lg bg-white/[0.02] border border-white/5">
+          <div className="flex items-start gap-3 p-3.5 bg-white/[0.02] border border-white/5">
             <Mail className="w-4 h-4 text-[#c5a059] mt-0.5 shrink-0" />
             <div className="overflow-hidden">
               <span className="block text-xs text-zinc-500 uppercase tracking-wider">Contact Email</span>
@@ -130,7 +130,7 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onRese
       </div>
 
       {/* Crucial Notice / Disclaimer */}
-      <div className="my-6 p-4 rounded-xl bg-[#c5a059]/5 border border-[#c5a059]/20 flex items-start gap-3 text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
+      <div className="my-6 p-4 bg-[#c5a059]/5 border border-[#c5a059]/20 flex items-start gap-3 text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
         <ShieldAlert className="w-5 h-5 text-[#c5a059] shrink-0 mt-0.5" />
         <div>
           <strong className="text-white block font-medium mb-1">
