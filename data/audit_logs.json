@@ -1,0 +1,105 @@
+[
+  {
+    "id": "log_1793295820676_69c2dc",
+    "timestamp": "2026-10-29T17:43:40.676Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "ADD_INTERNAL_NOTE",
+    "targetReferenceId": "MG-1F3E70",
+    "details": {
+      "noteId": "note_1793295820675_cfd8",
+      "preview": "Automated E2E Verification Note: Identit"
+    }
+  },
+  {
+    "id": "log_1793295817888_e0131c",
+    "timestamp": "2026-10-29T17:43:37.888Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793295795135_a53896",
+    "timestamp": "2026-10-29T17:43:15.135Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "ADD_INTERNAL_NOTE",
+    "targetReferenceId": "MG-1F3E70",
+    "details": {
+      "noteId": "note_1793295795134_7349",
+      "preview": "Direct test note: Applicant profile veri"
+    }
+  },
+  {
+    "id": "log_1793295795115_be338d",
+    "timestamp": "2026-10-29T17:43:15.116Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793295782206_699b68",
+    "timestamp": "2026-10-29T17:43:02.206Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793295775970_0f3cf6",
+    "timestamp": "2026-10-29T17:42:55.970Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793295735928_8c80bf",
+    "timestamp": "2026-10-29T17:42:15.928Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793295173344_7681e5",
+    "timestamp": "2026-10-29T17:32:53.356Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "EXPORT_CSV",
+    "targetReferenceId": null,
+    "details": {
+      "exportedRows": 7,
+      "filters": {}
+    }
+  },
+  {
+    "id": "log_1793295135816_f1f27c",
+    "timestamp": "2026-10-29T17:32:15.820Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793295123107_67a987",
+    "timestamp": "2026-10-29T17:32:03.119Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_FAILED",
+    "targetReferenceId": null,
+    "details": {
+      "reason": "Password mismatch"
+    }
+  }
+]

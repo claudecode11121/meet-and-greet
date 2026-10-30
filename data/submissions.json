@@ -1,5 +1,83 @@
 [
   {
+    "referenceId": "MG-EA1EDA",
+    "submittedAt": "2026-10-29T17:49:42.018Z",
+    "status": "Submitted",
+    "statusHistory": [
+      {
+        "fromStatus": null,
+        "toStatus": "Submitted",
+        "timestamp": "2026-10-29T17:49:42.018Z",
+        "changedBy": "System / Fan Intake",
+        "reason": "Initial application submitted"
+      }
+    ],
+    "internalNotes": [],
+    "personalInfo": {
+      "fullName": "Marcus Aurelius",
+      "email": "marcus@roman-arts.org",
+      "phone": "+1 2125550192",
+      "country": "United States",
+      "city": "New York"
+    },
+    "meetAndGreetInfo": {
+      "celebrityName": "Keanu Reeves",
+      "meetingType": "In-person",
+      "preferredDate": null,
+      "attendees": "1 attendee",
+      "reason": "",
+      "message": ""
+    },
+    "confirmations": {
+      "confirmedAccurate": true,
+      "acknowledgedPrivacy": true,
+      "consentTimestamp": "2026-10-29T17:49:42.018Z"
+    },
+    "metadata": {
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "ipAddress": "::1"
+    }
+  },
+  {
+    "referenceId": "MG-9DC8BF",
+    "submittedAt": "2026-10-29T17:44:07.416Z",
+    "status": "Submitted",
+    "statusHistory": [
+      {
+        "fromStatus": null,
+        "toStatus": "Submitted",
+        "timestamp": "2026-10-29T17:44:07.417Z",
+        "changedBy": "System / Fan Intake",
+        "reason": "Initial application submitted"
+      }
+    ],
+    "internalNotes": [],
+    "personalInfo": {
+      "fullName": "Marcus Aurelius",
+      "email": "marcus@roman-arts.org",
+      "phone": "+1 2125550192",
+      "country": "United States",
+      "city": "New York"
+    },
+    "meetAndGreetInfo": {
+      "celebrityName": "Keanu Reeves",
+      "meetingType": "In-person",
+      "preferredDate": null,
+      "attendees": "1 attendee",
+      "reason": "",
+      "message": ""
+    },
+    "confirmations": {
+      "confirmedAccurate": true,
+      "acknowledgedPrivacy": true,
+      "consentTimestamp": "2026-10-29T17:44:07.417Z"
+    },
+    "metadata": {
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+      "ipAddress": "::1"
+    }
+  },
+  {
     "referenceId": "MG-1F3E70",
     "submittedAt": "2026-10-29T17:27:52.422Z",
     "status": "SUBMITTED",
@@ -25,7 +103,23 @@
     "metadata": {
       "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
       "ipAddress": "::1"
-    }
+    },
+    "internalNotes": [
+      {
+        "id": "note_1793295820675_cfd8",
+        "text": "Automated E2E Verification Note: Identity vetted and confirmed compliant with WME policies.",
+        "createdAt": "2026-10-29T17:43:40.675Z",
+        "authorName": "WME Guest Relations Administrator",
+        "authorEmail": "admin@wmeagency.com"
+      },
+      {
+        "id": "note_1793295795134_7349",
+        "text": "Direct test note: Applicant profile verified",
+        "createdAt": "2026-10-29T17:43:15.134Z",
+        "authorName": "WME Guest Relations Administrator",
+        "authorEmail": "admin@wmeagency.com"
+      }
+    ]
   },
   {
     "referenceId": "MG-3FBBF8",

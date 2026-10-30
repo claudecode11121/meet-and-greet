@@ -1,8 +1,18 @@
-import React, { useState } from 'react';
-import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Loader2, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
 import { COUNTRIES } from './data/countries';
 import { PrivacyModal } from './components/PrivacyModal';
 import { ConfirmationView, SubmissionResult } from './components/ConfirmationView';
+import { AdminLogin } from './admin/AdminLogin';
+import { AdminLayout } from './admin/AdminLayout';
+
+interface AdminUser {
+  id?: string;
+  email: string;
+  fullName: string;
+  role: string;
+  lastLoginAt?: string;
+}
 
 interface FormData {
   fullName: string;
@@ -62,6 +72,83 @@ export const App: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+
+  // Administrative Portal & Session State
+  const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname.startsWith('/admin');
+    }
+    return false;
+  });
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+  const [isCheckingAdminAuth, setIsCheckingAdminAuth] = useState<boolean>(true);
+
+  // Check admin session on mount
+  useEffect(() => {
+    const token = localStorage.getItem('wme_admin_token');
+    if (!token) {
+      setIsCheckingAdminAuth(false);
+      return;
+    }
+
+    fetch('/api/admin/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Unauthorized');
+        return res.json();
+      })
+      .then((data) => {
+        if (data.success && data.admin) {
+          setAdminUser(data.admin);
+        } else {
+          localStorage.removeItem('wme_admin_token');
+          setAdminUser(null);
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('wme_admin_token');
+        setAdminUser(null);
+      })
+      .finally(() => {
+        setIsCheckingAdminAuth(false);
+      });
+  }, []);
+
+  // Listen to browser navigation (back/forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      setIsAdminMode(window.location.pathname.startsWith('/admin'));
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateToAdmin = () => {
+    window.history.pushState(null, '', '/admin');
+    setIsAdminMode(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToPublicForm = () => {
+    window.history.pushState(null, '', '/');
+    setIsAdminMode(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAdminLogout = async () => {
+    const token = localStorage.getItem('wme_admin_token');
+    if (token) {
+      try {
+        await fetch('/api/admin/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch {}
+    }
+    localStorage.removeItem('wme_admin_token');
+    setAdminUser(null);
+  };
 
   // Minimum selectable date: today in YYYY-MM-DD
   const todayDateString = new Date().toISOString().split('T')[0];
@@ -305,8 +392,48 @@ export const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Render Admin View if on /admin route or Admin Mode active
+  if (isAdminMode) {
+    if (isCheckingAdminAuth) {
+      return (
+        <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center p-4">
+          <div className="text-center space-y-3">
+            <span className="wme-wordmark text-3xl text-[#111111] block">WME</span>
+            <span className="text-xs font-mono tracking-wider uppercase text-[#737373] block">
+              William Morris Endeavor
+            </span>
+            <div className="pt-4 flex items-center justify-center gap-2 text-xs font-mono text-[#666666]">
+              <Loader2 className="w-4 h-4 animate-spin text-[#6B1D2F]" />
+              <span>Verifying administrative session...</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (!adminUser) {
+      return (
+        <AdminLogin
+          onLoginSuccess={(token, admin) => {
+            localStorage.setItem('wme_admin_token', token);
+            setAdminUser(admin);
+          }}
+          onBackToPublicForm={navigateToPublicForm}
+        />
+      );
+    }
+
+    return (
+      <AdminLayout
+        adminUser={adminUser}
+        onLogout={handleAdminLogout}
+        onReturnToPublicForm={navigateToPublicForm}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen w-full bg-[#FAFAFA] text-[#111111] font-sans antialiased flex flex-col justify-between overflow-x-hidden">
+    <div className="min-h-screen w-full bg-[#FAFAFA] text-[#111111] font-sans antialiased flex flex-col justify-between overflow-x-clip">
       {/* Restrained WME Header */}
       <header className="border-b border-[#E5E5E5] bg-[#FFFFFF] sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-3.5 sm:py-5 flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
@@ -844,6 +971,14 @@ export const App: React.FC = () => {
               className="hover:text-[#6B1D2F] underline underline-offset-2 transition-colors py-1"
             >
               Privacy Policy
+            </button>
+            <button
+              type="button"
+              onClick={navigateToAdmin}
+              className="hover:text-[#6B1D2F] underline underline-offset-2 transition-colors py-1 inline-flex items-center gap-1.5"
+            >
+              <Lock className="w-3 h-3 text-[#888888]" />
+              <span>Staff Portal</span>
             </button>
             <span>Talent Inquiry · Keanu Reeves</span>
           </div>
