@@ -1,5 +1,26 @@
 [
   {
+    "id": "log_1793348038833_92d749",
+    "timestamp": "2026-10-30T08:13:58.833Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "ADD_INTERNAL_NOTE",
+    "targetReferenceId": "MG-EA1EDA",
+    "details": {
+      "noteId": "note_1793348038829_5a64",
+      "preview": "Automated E2E Verification Note: Identit"
+    }
+  },
+  {
+    "id": "log_1793348035823_3c4198",
+    "timestamp": "2026-10-30T08:13:55.824Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
     "id": "log_1793295820676_69c2dc",
     "timestamp": "2026-10-29T17:43:40.676Z",
     "actorEmail": "admin@wmeagency.com",

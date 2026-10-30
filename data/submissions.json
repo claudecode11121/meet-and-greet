@@ -12,7 +12,15 @@
         "reason": "Initial application submitted"
       }
     ],
-    "internalNotes": [],
+    "internalNotes": [
+      {
+        "id": "note_1793348038829_5a64",
+        "text": "Automated E2E Verification Note: Identity vetted and confirmed compliant with WME policies.",
+        "createdAt": "2026-10-30T08:13:58.829Z",
+        "authorName": "WME Guest Relations Administrator",
+        "authorEmail": "admin@wmeagency.com"
+      }
+    ],
     "personalInfo": {
       "fullName": "Marcus Aurelius",
       "email": "marcus@roman-arts.org",

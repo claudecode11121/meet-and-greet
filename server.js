@@ -10,7 +10,14 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const DATA_DIR = path.join(__dirname, 'data');
+
+// Determine data storage directory:
+// In serverless environments (e.g., Vercel / AWS Lambda), the root directory is read-only.
+// In such environments, we store state in `/tmp/wme-data` and seed initial files.
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
+const SOURCE_DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = isServerless ? path.join('/tmp', 'wme-data') : SOURCE_DATA_DIR;
+
 const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
 const ADMINS_FILE = path.join(DATA_DIR, 'admins.json');
 const AUDIT_LOGS_FILE = path.join(DATA_DIR, 'audit_logs.json');
@@ -22,6 +29,22 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'wme-keanu-reeves-session-s
 // Ensure data storage directory exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// In serverless environments, copy existing seed data from repository if not yet in /tmp
+if (isServerless && fs.existsSync(SOURCE_DATA_DIR)) {
+  const seedFiles = ['submissions.json', 'admins.json', 'audit_logs.json', 'settings.json'];
+  for (const file of seedFiles) {
+    const src = path.join(SOURCE_DATA_DIR, file);
+    const dest = path.join(DATA_DIR, file);
+    if (fs.existsSync(src) && !fs.existsSync(dest)) {
+      try {
+        fs.copyFileSync(src, dest);
+      } catch (e) {
+        console.warn(`[WME Serverless] Could not seed ${file} to /tmp:`, e);
+      }
+    }
+  }
 }
 
 // Ensure required files exist
@@ -860,9 +883,14 @@ if (fs.existsSync(distDir)) {
   });
 }
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`✦ WME (William Morris Endeavor) Intake & Admin Server running at http://localhost:${PORT}`);
-  console.log(`✦ Storage: ${SUBMISSIONS_FILE}`);
-  console.log(`✦ Initial Admin: admin@wmeagency.com (Password: KeanuMeet2026!WME)`);
-});
+export { app };
+export default app;
+
+// Start Server when run directly (local development / container platforms)
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`✦ WME (William Morris Endeavor) Intake & Admin Server running at http://localhost:${PORT}`);
+    console.log(`✦ Storage: ${SUBMISSIONS_FILE}`);
+    console.log(`✦ Initial Admin: admin@wmeagency.com (Password: KeanuMeet2026!WME)`);
+  });
+}
