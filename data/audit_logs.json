@@ -1,5 +1,120 @@
 [
   {
+    "id": "log_1793398733727_e64f01",
+    "timestamp": "2026-10-30T22:18:53.728Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "ADD_INTERNAL_NOTE",
+    "targetReferenceId": "MG-650D2E",
+    "details": {
+      "noteId": "note_1793398733707_5cc7",
+      "preview": "Automated E2E Verification Note: Identit"
+    }
+  },
+  {
+    "id": "log_1793398730233_87b3b7",
+    "timestamp": "2026-10-30T22:18:50.233Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793398683930_544f6d",
+    "timestamp": "2026-10-30T22:18:03.930Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "EXPORT_CSV",
+    "targetReferenceId": null,
+    "details": {
+      "exportedRows": 12,
+      "filters": {}
+    }
+  },
+  {
+    "id": "log_1793398680942_182dd6",
+    "timestamp": "2026-10-30T22:18:00.942Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793398631558_36d8ea",
+    "timestamp": "2026-10-30T22:17:11.558Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "EXPORT_CSV",
+    "targetReferenceId": null,
+    "details": {
+      "exportedRows": 11,
+      "filters": {}
+    }
+  },
+  {
+    "id": "log_1793398628435_43a967",
+    "timestamp": "2026-10-30T22:17:08.435Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793393960199_4a5601",
+    "timestamp": "2026-10-30T20:59:20.199Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793393898283_66d34c",
+    "timestamp": "2026-10-30T20:58:18.284Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "EXPORT_CSV",
+    "targetReferenceId": null,
+    "details": {
+      "exportedRows": 10,
+      "filters": {}
+    }
+  },
+  {
+    "id": "log_1793393895666_d094d3",
+    "timestamp": "2026-10-30T20:58:15.666Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
+    "id": "log_1793393439358_9c7078",
+    "timestamp": "2026-10-30T20:50:39.358Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "ADD_INTERNAL_NOTE",
+    "targetReferenceId": "MG-EA1EDA",
+    "details": {
+      "noteId": "note_1793393439357_c0c2",
+      "preview": "Automated E2E Verification Note: Identit"
+    }
+  },
+  {
+    "id": "log_1793393436744_9f5f0e",
+    "timestamp": "2026-10-30T20:50:36.744Z",
+    "actorEmail": "admin@wmeagency.com",
+    "action": "LOGIN_SUCCESS",
+    "targetReferenceId": null,
+    "details": {
+      "role": "Administrator"
+    }
+  },
+  {
     "id": "log_1793348038833_92d749",
     "timestamp": "2026-10-30T08:13:58.833Z",
     "actorEmail": "admin@wmeagency.com",

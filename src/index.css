@@ -64,6 +64,10 @@ html, body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+.font-signature {
+  font-family: 'Caveat', cursive, 'Brush Script MT', 'Dancing Script', sans-serif;
+}
+
 /* Fluid Typography with clamp */
 .fluid-title {
   font-family: 'DM Serif Display', Georgia, serif;

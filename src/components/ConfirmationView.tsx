@@ -11,6 +11,13 @@ export interface SubmissionResult {
     meetingType: string;
     attendees: string;
     preferredDate?: string | null;
+    idType?: string;
+    idNumber?: string;
+    hasIdDocument?: boolean;
+    signatureType?: 'drawn' | 'typed';
+    signeeName?: string;
+    signatureData?: string;
+    signedAt?: string;
   };
 }
 
@@ -141,6 +148,41 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onRese
               {data.summary.fullName} &lt;{data.summary.email}&gt;
             </span>
           </div>
+
+          {/* Identification Details */}
+          {data.summary.idType && (
+            <div className="border-b border-[#F0F0F0] pb-2.5 sm:pb-3 min-w-0">
+              <span className="block text-[11px] text-[#737373] uppercase tracking-wider mb-0.5 font-mono">
+                Identification
+              </span>
+              <span className="font-medium text-[#111111]">
+                {data.summary.idType} {data.summary.idNumber ? `(${data.summary.idNumber})` : ''}
+              </span>
+              <span className="block text-[10px] text-[#15803D] font-mono mt-0.5">
+                ✓ Document Encrypted & Verified
+              </span>
+            </div>
+          )}
+
+          {/* Digital Signature */}
+          {data.summary.signatureData && (
+            <div className="border-b border-[#F0F0F0] pb-2.5 sm:pb-3 min-w-0">
+              <span className="block text-[11px] text-[#737373] uppercase tracking-wider mb-0.5 font-mono">
+                Digital Signature
+              </span>
+              <div className="mt-1 flex items-center gap-2">
+                <img
+                  src={data.summary.signatureData}
+                  alt="Certified Signature"
+                  className="h-9 max-w-[140px] object-contain border border-[#E5E5E5] bg-white px-2 py-0.5 rounded-[2px]"
+                />
+                <div className="text-[10px] font-mono text-[#666666]">
+                  <span className="block font-medium text-[#111111]">{data.summary.signeeName || data.summary.fullName}</span>
+                  <span>Legally Executed</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

@@ -12,7 +12,9 @@ import {
   ExternalLink,
   Shield,
   Loader2,
-  Calendar
+  Calendar,
+  CreditCard,
+  PenTool
 } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
 
@@ -43,6 +45,18 @@ interface RecentSubmission {
     preferredDate?: string;
     attendees: string;
   };
+  identification?: {
+    idType: string;
+    idNumber: string;
+    idCountry: string;
+    hasDocument: boolean;
+  } | null;
+  signature?: {
+    signatureType: 'drawn' | 'typed';
+    signeeName: string;
+    signedAt: string;
+    hasSignature: boolean;
+  } | null;
 }
 
 interface OverviewViewProps {
@@ -394,6 +408,22 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                     <td className="px-4 py-3">
                       <div className="font-medium text-[#111111]">{item.personalInfo.fullName}</div>
                       <div className="text-[11px] text-[#666666] font-mono">{item.personalInfo.email}</div>
+                      {(item.identification?.idType || item.signature?.hasSignature) && (
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          {item.identification?.idType && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#444444] bg-[#F5F5F5] px-1.5 py-0.5 rounded-[2px] border border-[#E5E5E5]">
+                              <CreditCard className="w-2.5 h-2.5 text-[#6B1D2F]" />
+                              <span>{item.identification.idType}</span>
+                            </span>
+                          )}
+                          {item.signature?.hasSignature && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded-[2px] border border-[#BBF7D0]">
+                              <PenTool className="w-2.5 h-2.5 text-[#16A34A]" />
+                              <span>Signed</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-[#444444]">
                       {item.personalInfo.city}, {item.personalInfo.country}

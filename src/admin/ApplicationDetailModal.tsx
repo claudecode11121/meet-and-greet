@@ -16,7 +16,12 @@ import {
   CheckCircle2,
   Send,
   Loader2,
-  ExternalLink
+  ExternalLink,
+  CreditCard,
+  PenTool,
+  ZoomIn,
+  Lock,
+  Eye
 } from 'lucide-react';
 import { StatusBadge, VALID_STATUSES, StatusType } from './StatusBadge';
 
@@ -53,6 +58,20 @@ export interface ApplicationRecord {
     reason?: string;
     message?: string;
   };
+  identification?: {
+    idType: string;
+    idNumber: string;
+    idCountry: string;
+    idDocumentData?: string;
+    idFileName?: string;
+    idFileSize?: string;
+  };
+  signature?: {
+    signatureType: 'drawn' | 'typed';
+    signatureData: string;
+    signeeName: string;
+    signedAt: string;
+  };
   confirmations?: {
     confirmedAccurate: boolean;
     acknowledgedPrivacy: boolean;
@@ -88,6 +107,9 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   const [newNoteText, setNewNoteText] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [noteSuccessMessage, setNoteSuccessMessage] = useState<string | null>(null);
+
+  // Government ID Inspection Modal state
+  const [isInspectingId, setIsInspectingId] = useState(false);
 
   // Fetch application detail whenever referenceId changes
   useEffect(() => {
@@ -394,6 +416,153 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                 </div>
               </div>
 
+              {/* Government Identification & Vetting */}
+              <div className="border border-[#E5E5E5] bg-[#FFFFFF] p-5 rounded-xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-mono uppercase tracking-wider text-[#666666] font-semibold flex items-center gap-2">
+                    <CreditCard className="w-3.5 h-3.5 text-[#6B1D2F]" />
+                    <span>Government Identification & Vetting</span>
+                  </h3>
+                  {data.identification?.idDocumentData ? (
+                    <span className="text-[10px] font-mono text-[#15803D] bg-[#F0FDF4] px-2 py-0.5 border border-[#BBF7D0] rounded-xs inline-flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-[#16A34A]" />
+                      <span>ID Attached & Encrypted</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded-xs">
+                      Pre-verification record
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3 bg-[#FBFBFA] border border-[#EEEEEE] rounded-xs">
+                    <span className="text-[#777777] block text-[11px] mb-1">Document Type</span>
+                    <span className="font-medium text-[#111111]">
+                      {data.identification?.idType || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-[#FBFBFA] border border-[#EEEEEE] rounded-xs">
+                    <span className="text-[#777777] block text-[11px] mb-1">Document Number</span>
+                    <span className="font-mono font-medium text-[#111111]">
+                      {data.identification?.idNumber || '—'}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-[#FBFBFA] border border-[#EEEEEE] rounded-xs">
+                    <span className="text-[#777777] block text-[11px] mb-1">Issuing Jurisdiction</span>
+                    <span className="font-medium text-[#111111]">
+                      {data.identification?.idCountry || data.personalInfo.country || '—'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* ID Document Scan / Card Image */}
+                {data.identification?.idDocumentData ? (
+                  <div className="p-3 bg-[#FAF9F6] border border-[#EEEEEE] rounded-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        onClick={() => setIsInspectingId(true)}
+                        className="w-16 h-12 bg-white border border-[#D4D4D8] rounded-xs overflow-hidden shrink-0 cursor-pointer group relative shadow-2xs"
+                        title="Click to enlarge"
+                      >
+                        <img
+                          src={data.identification.idDocumentData}
+                          alt="Government ID thumbnail"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                        <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                          <ZoomIn className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-[#111111]">
+                          {data.identification.idFileName || 'Government ID Card Photo'}
+                        </div>
+                        <div className="text-[11px] font-mono text-[#666666]">
+                          {data.identification.idFileSize || 'Encrypted File'} • Photo Match Ready
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      id="btn-admin-inspect-id"
+                      onClick={() => setIsInspectingId(true)}
+                      className="btn-outline text-[11px] py-1.5 px-3 self-end sm:self-auto inline-flex items-center gap-1.5"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Inspect ID Document</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-[#FAFAFA] border border-dashed border-[#DDDDDD] rounded-xs text-center text-xs text-[#888888]">
+                    No government-issued ID image was provided for this application record.
+                  </div>
+                )}
+              </div>
+
+              {/* Legal Execution & Digital Signature */}
+              <div className="border border-[#E5E5E5] bg-[#FFFFFF] p-5 rounded-xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-mono uppercase tracking-wider text-[#666666] font-semibold flex items-center gap-2">
+                    <PenTool className="w-3.5 h-3.5 text-[#6B1D2F]" />
+                    <span>Legal Execution & Digital Signature</span>
+                  </h3>
+                  {data.signature?.signatureData ? (
+                    <span className="text-[10px] font-mono text-[#15803D] bg-[#F0FDF4] px-2 py-0.5 border border-[#BBF7D0] rounded-xs inline-flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-[#16A34A]" />
+                      <span>Legally Executed ({data.signature.signatureType})</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded-xs">
+                      Pre-verification record
+                    </span>
+                  )}
+                </div>
+
+                {data.signature?.signatureData ? (
+                  <div className="space-y-3">
+                    {/* Visual Signature Panel */}
+                    <div className="p-4 bg-[#FAF9F6] border border-[#E5E5E5] rounded-xs">
+                      <div className="flex items-baseline justify-between mb-2">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#777777]">
+                          Applicant Signature Record ({data.signature.signatureType === 'typed' ? 'Formal E-Sign' : 'Drawn Signature'})
+                        </span>
+                        <span className="text-[10px] font-mono text-[#6B1D2F]">
+                          Certified Verifiable
+                        </span>
+                      </div>
+                      <div className="min-h-[70px] bg-white border border-[#EAEAEA] p-3 rounded-xs flex items-center justify-center">
+                        <img
+                          src={data.signature.signatureData}
+                          alt="Applicant Signature"
+                          className="max-h-20 max-w-full object-contain"
+                        />
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-[11px] font-mono text-[#555555]">
+                        <span>Signee: <strong className="text-[#111111]">{data.signature.signeeName || data.personalInfo.fullName}</strong></span>
+                        <span>Executed: {new Date(data.signature.signedAt || data.submittedAt).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 bg-[#F9FAFB] border border-[#EEEEEE] rounded-xs text-[11px] text-[#666666] flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-[#16A34A] shrink-0" />
+                      <span>Affirmed under penalty of false representation with matching government ID declaration.</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-[#FAFAFA] border border-dashed border-[#DDDDDD] rounded-xs text-center text-xs text-[#888888]">
+                    No digital signature recorded for this candidate inquiry.
+                  </div>
+                )}
+              </div>
+
               {/* Status Update & Workflow Management */}
               <div className="border border-[#E5E5E5] bg-[#FFFFFF] p-5 rounded-xs space-y-4">
                 <div className="flex items-center justify-between">
@@ -631,6 +800,56 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* ID Inspection Full Lightbox Modal */}
+      {isInspectingId && data?.identification?.idDocumentData && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-60 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+        >
+          <div className="bg-white border border-[#E5E5E5] rounded-xs max-w-2xl w-full p-5 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#E5E5E5]">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-[#6B1D2F]" />
+                <span className="text-xs font-mono uppercase tracking-wider text-[#111111] font-semibold">
+                  Full Government ID Inspection — {data.personalInfo.fullName}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsInspectingId(false)}
+                className="text-[#888888] hover:text-[#111111] p-1"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="max-h-[75vh] overflow-auto bg-[#0A0A0A] p-3 rounded-xs flex items-center justify-center">
+              <img
+                src={data.identification.idDocumentData}
+                alt="Government ID Full Scan"
+                className="max-h-[68vh] max-w-full object-contain"
+              />
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-[#F0F0F0] flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+              <span className="text-[#666666]">
+                {data.identification.idType} • No: {data.identification.idNumber} • {data.identification.idCountry}
+              </span>
+              <button
+                type="button"
+                id="btn-admin-done-inspecting"
+                onClick={() => setIsInspectingId(false)}
+                className="btn-primary text-xs py-1.5 px-4"
+              >
+                Done Inspecting
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

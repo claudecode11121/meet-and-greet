@@ -14,9 +14,11 @@ The project features a public-facing editorial intake form and an enterprise-gra
 - **Editorial Brand Identity**: Restrained paper/charcoal palette with subtle burgundy accents (`#6B1D2F`), `DM Serif Display` typography paired with `Inter`, and sharp 2px corner radii.
 - **Fixed Celebrity Field**: Designated talent locked to **Keanu Reeves** under WME representation standards.
 - **Segmented Phone Prefix Selector**: Custom responsive dial code select with 100+ countries, preventing international prefix text cramping.
+- **Government-Issued Identification Verification**: Section 03 captures certified ID document type (*Driver's License*, *Passport*, *National Identity Card*, *State ID*, *Military ID*), document number, issuing jurisdiction, and high-resolution photo ID upload with instant preview and inspection lightbox.
+- **Dual-Modality Digital Signature Pad**: Section 04 provides an official legal execution pad supporting both smooth draw-to-sign on interactive HTML5 Canvas (mouse, touch, stylus) and formal typed e-signatures rendered in cursive typography, backed by a legal affirmation declaration under penalty of false representation.
 - **Real-Time Validation**: Instant inline validation and accessible ARIA attributes.
 - **Sticky Desktop Navigation**: The introduction and guidelines stay pinned alongside form fields while scrolling on desktop (`overflow-x: clip`), with zero horizontal overflow on mobile viewports (320px–430px).
-- **Confirmation State**: Generates a unique tracking reference code (`MG-XXXXXX`) with one-click clipboard copying.
+- **Confirmation State**: Generates a unique tracking reference code (`MG-XXXXXX`) with one-click clipboard copying, displaying ID verification certification and legal signature timestamp.
 
 ### 2. Enterprise Admin Dashboard (`/admin`)
 - **Secure Authentication**:
@@ -28,12 +30,15 @@ The project features a public-facing editorial intake form and an enterprise-gra
   - *Approved* is strictly kept distinct from *Confirmed*.
   - Clicking any metric card instantly filters the inquiries list.
 - **Request Management**:
-  - Real-time search across applicant name, email, city, country, and reference ID.
+  - Real-time search across applicant name, email, city, country, reference ID, and ID document numbers.
+  - Live table and card badges showing verified Government ID document types and Digital Signature execution status.
   - Filtering by application status and meeting format (*In-person*, *Virtual*, *No preference*).
   - Sorting by date or applicant name with pagination.
   - Desktop data table and mobile touch card layout (<768px).
 - **Application Detail Drawer**:
   - Complete fan profile, attendance size, preferred date, and fan statements ("Why Keanu Reeves?").
+  - Dedicated **Government Identification & Vetting** card displaying ID type, number, issuing jurisdiction, and an interactive full-resolution ID document inspection lightbox.
+  - Dedicated **Legal Execution & Digital Signature** card rendering the applicant's certified visual signature, signee name, timestamp, and legal attestation.
   - Status management workflow with required confirmation dialog for high-impact transitions (`Approved`, `Confirmed`, `Rejected`, `Cancelled`).
   - Historical status audit timeline tracking actor, timestamp, and justification reason.
   - Confidential staff internal notes thread with instant recording.
@@ -43,7 +48,7 @@ The project features a public-facing editorial intake form and an enterprise-gra
 - **Security Audit Trail**:
   - Live log tracking operator logins, status changes, internal notes, CSV exports, and configuration updates.
 - **Sanitized CSV Export**:
-  - One-click export of filtered applications.
+  - One-click export of filtered applications including Government ID Type, ID Document Number, Issuing Jurisdiction, ID Document Attached (Yes/No), Digital Signature Type, Signed By, and Timestamp.
   - Protection against spreadsheet formula injection (`=`, `+`, `-`, `@`).
 
 ---

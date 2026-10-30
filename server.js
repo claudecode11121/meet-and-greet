@@ -214,7 +214,8 @@ function requireAdminAuth(req, res, next) {
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Helper to normalize status strings
 const VALID_STATUSES = [
@@ -262,6 +263,8 @@ app.post('/api/submissions', (req, res) => {
       attendees,
       reason,
       message,
+      identification,
+      signature,
       confirmedAccurate,
       acknowledgedPrivacy
     } = req.body || {};
@@ -304,6 +307,39 @@ app.post('/api/submissions', (req, res) => {
 
     if (!attendees || typeof attendees !== 'string' || !attendees.trim()) {
       errors.attendees = 'Please select the number of attendees.';
+    }
+
+    // Government Identification Validation
+    const cleanIdType = identification && typeof identification.idType === 'string' ? identification.idType.trim() : '';
+    const cleanIdNumber = identification && typeof identification.idNumber === 'string' ? identification.idNumber.trim() : '';
+    const cleanIdCountry = identification && typeof identification.idCountry === 'string' ? identification.idCountry.trim() : (country ? country.trim() : '');
+    const cleanIdDocData = identification && typeof identification.idDocumentData === 'string' ? identification.idDocumentData.trim() : '';
+    const cleanIdFileName = identification && typeof identification.idFileName === 'string' ? identification.idFileName.trim() : '';
+    const cleanIdFileSize = identification && typeof identification.idFileSize === 'string' ? identification.idFileSize.trim() : '';
+
+    if (!cleanIdType) {
+      errors.idType = 'Government ID type is required.';
+    }
+    if (!cleanIdNumber || cleanIdNumber.length < 2) {
+      errors.idNumber = 'Government ID document number is required.';
+    }
+    if (!cleanIdCountry) {
+      errors.idCountry = 'ID issuing country is required.';
+    }
+    if (!cleanIdDocData) {
+      errors.idDocument = 'A photo or scan of your government-issued ID card is required.';
+    }
+
+    // Digital Signature Validation
+    const cleanSigType = signature && signature.signatureType === 'typed' ? 'typed' : 'drawn';
+    const cleanSigData = signature && typeof signature.signatureData === 'string' ? signature.signatureData.trim() : '';
+    const cleanSigneeName = signature && typeof signature.signeeName === 'string' ? signature.signeeName.trim() : (fullName ? fullName.trim() : '');
+
+    if (!cleanSigData || cleanSigData.length < 30) {
+      errors.signature = 'A digital signature (drawn or typed) is required to execute this application.';
+    }
+    if (!cleanSigneeName || cleanSigneeName.length < 2) {
+      errors.signeeName = 'Signee legal name is required.';
     }
 
     if (confirmedAccurate !== true) {
@@ -354,6 +390,20 @@ app.post('/api/submissions', (req, res) => {
         reason: reason ? reason.trim() : '',
         message: message ? message.trim() : ''
       },
+      identification: {
+        idType: cleanIdType,
+        idNumber: cleanIdNumber,
+        idCountry: cleanIdCountry,
+        idDocumentData: cleanIdDocData,
+        idFileName: cleanIdFileName,
+        idFileSize: cleanIdFileSize
+      },
+      signature: {
+        signatureType: cleanSigType,
+        signatureData: cleanSigData,
+        signeeName: cleanSigneeName,
+        signedAt: (signature && signature.signedAt) || new Date().toISOString()
+      },
       confirmations: {
         confirmedAccurate: true,
         acknowledgedPrivacy: true,
@@ -369,7 +419,7 @@ app.post('/api/submissions', (req, res) => {
     list.unshift(submissionRecord);
     saveSubmissionsList(list);
 
-    console.log(`[PUBLIC INTAKE] New Meet & Greet Request: ${referenceId} for Keanu Reeves by ${submissionRecord.personalInfo.fullName}`);
+    console.log(`[PUBLIC INTAKE] New Meet & Greet Request: ${referenceId} for Keanu Reeves by ${submissionRecord.personalInfo.fullName} (ID: ${cleanIdType}, Sig: ${cleanSigType})`);
 
     return res.status(201).json({
       success: true,
@@ -382,7 +432,14 @@ app.post('/api/submissions', (req, res) => {
         celebrityName: assignedCelebrity,
         meetingType: submissionRecord.meetAndGreetInfo.meetingType,
         attendees: submissionRecord.meetAndGreetInfo.attendees,
-        preferredDate: submissionRecord.meetAndGreetInfo.preferredDate
+        preferredDate: submissionRecord.meetAndGreetInfo.preferredDate,
+        idType: submissionRecord.identification.idType,
+        idNumber: submissionRecord.identification.idNumber,
+        hasIdDocument: Boolean(submissionRecord.identification.idDocumentData),
+        signatureType: submissionRecord.signature.signatureType,
+        signeeName: submissionRecord.signature.signeeName,
+        signatureData: submissionRecord.signature.signatureData,
+        signedAt: submissionRecord.signature.signedAt
       }
     });
   } catch (error) {
@@ -536,7 +593,10 @@ app.get('/api/admin/submissions', requireAdminAuth, (req, res) => {
         const email = (item.personalInfo?.email || '').toLowerCase();
         const city = (item.personalInfo?.city || '').toLowerCase();
         const country = (item.personalInfo?.country || '').toLowerCase();
-        return ref.includes(q) || name.includes(q) || email.includes(q) || city.includes(q) || country.includes(q);
+        const idNum = (item.identification?.idNumber || '').toLowerCase();
+        const idType = (item.identification?.idType || '').toLowerCase();
+        const signee = (item.signature?.signeeName || '').toLowerCase();
+        return ref.includes(q) || name.includes(q) || email.includes(q) || city.includes(q) || country.includes(q) || idNum.includes(q) || idType.includes(q) || signee.includes(q);
       });
     }
 
@@ -585,6 +645,18 @@ app.get('/api/admin/submissions', requireAdminAuth, (req, res) => {
       status: normalizeStatus(item.status),
       personalInfo: item.personalInfo,
       meetAndGreetInfo: item.meetAndGreetInfo,
+      identification: item.identification ? {
+        idType: item.identification.idType,
+        idNumber: item.identification.idNumber,
+        idCountry: item.identification.idCountry,
+        hasDocument: Boolean(item.identification.idDocumentData)
+      } : null,
+      signature: item.signature ? {
+        signatureType: item.signature.signatureType,
+        signeeName: item.signature.signeeName,
+        signedAt: item.signature.signedAt,
+        hasSignature: Boolean(item.signature.signatureData)
+      } : null,
       notesCount: (item.internalNotes || []).length
     }));
 
@@ -786,7 +858,14 @@ app.get('/api/admin/export/csv', requireAdminAuth, (req, res) => {
       'City',
       'Meeting Format',
       'Attendees',
-      'Preferred Date'
+      'Preferred Date',
+      'Government ID Type',
+      'ID Document Number',
+      'ID Issuing Authority',
+      'ID Document Attached',
+      'Digital Signature Type',
+      'Signed By',
+      'Signed At'
     ];
 
     const rows = [headers.join(',')];
@@ -804,7 +883,14 @@ app.get('/api/admin/export/csv', requireAdminAuth, (req, res) => {
         sanitizeCsvCell(item.personalInfo?.city || ''),
         sanitizeCsvCell(item.meetAndGreetInfo?.meetingType || ''),
         sanitizeCsvCell(item.meetAndGreetInfo?.attendees || ''),
-        sanitizeCsvCell(item.meetAndGreetInfo?.preferredDate || '')
+        sanitizeCsvCell(item.meetAndGreetInfo?.preferredDate || ''),
+        sanitizeCsvCell(item.identification?.idType || 'Not Provided'),
+        sanitizeCsvCell(item.identification?.idNumber || ''),
+        sanitizeCsvCell(item.identification?.idCountry || ''),
+        sanitizeCsvCell(item.identification?.idDocumentData ? 'Yes' : 'No'),
+        sanitizeCsvCell(item.signature?.signatureType || 'N/A'),
+        sanitizeCsvCell(item.signature?.signeeName || ''),
+        sanitizeCsvCell(item.signature?.signedAt || '')
       ];
       rows.push(row.join(','));
     }

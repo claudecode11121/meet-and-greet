@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, Lock, ShieldCheck } from 'lucide-react';
 import { COUNTRIES } from './data/countries';
 import { PrivacyModal } from './components/PrivacyModal';
 import { ConfirmationView, SubmissionResult } from './components/ConfirmationView';
+import { SignaturePad, SignatureData } from './components/SignaturePad';
+import { IdVerificationSection, IdentificationData, IdentificationErrors } from './components/IdVerificationSection';
 import { AdminLogin } from './admin/AdminLogin';
 import { AdminLayout } from './admin/AdminLayout';
 
@@ -28,6 +30,8 @@ interface FormData {
   attendees: string;
   reason: string;
   message: string;
+  identification: IdentificationData;
+  signature: SignatureData;
   confirmedAccurate: boolean;
   acknowledgedPrivacy: boolean;
 }
@@ -42,6 +46,12 @@ interface FormErrors {
   meetingType?: string;
   attendees?: string;
   preferredDate?: string;
+  idType?: string;
+  idNumber?: string;
+  idCountry?: string;
+  idDocument?: string;
+  signature?: string;
+  signeeName?: string;
   confirmedAccurate?: string;
   acknowledgedPrivacy?: string;
   general?: string;
@@ -61,6 +71,20 @@ const INITIAL_FORM_DATA: FormData = {
   attendees: '1 attendee',
   reason: '',
   message: '',
+  identification: {
+    idType: '',
+    idNumber: '',
+    idCountry: 'United States',
+    idDocumentData: '',
+    idFileName: '',
+    idFileSize: ''
+  },
+  signature: {
+    signatureType: 'drawn',
+    signatureData: '',
+    signeeName: '',
+    signedAt: ''
+  },
   confirmedAccurate: false,
   acknowledgedPrivacy: false,
 };
@@ -156,7 +180,7 @@ export const App: React.FC = () => {
   // Standard email format validation regex
   const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
-  const validateField = (name: keyof FormData, value: any): string | undefined => {
+  const validateField = (name: string, value: any): string | undefined => {
     switch (name) {
       case 'fullName':
         if (!value || typeof value !== 'string' || !value.trim()) {
@@ -219,6 +243,36 @@ export const App: React.FC = () => {
         }
         return undefined;
 
+      case 'idType':
+        if (!formData.identification.idType) {
+          return 'Government ID type is required.';
+        }
+        return undefined;
+
+      case 'idNumber':
+        if (!formData.identification.idNumber || formData.identification.idNumber.trim().length < 2) {
+          return 'Government ID document number is required.';
+        }
+        return undefined;
+
+      case 'idCountry':
+        if (!formData.identification.idCountry || !formData.identification.idCountry.trim()) {
+          return 'ID issuing country is required.';
+        }
+        return undefined;
+
+      case 'idDocument':
+        if (!formData.identification.idDocumentData) {
+          return 'A photo or scan of your government-issued ID card is required.';
+        }
+        return undefined;
+
+      case 'signature':
+        if (!formData.signature.signatureData || formData.signature.signatureData.length < 30) {
+          return 'A digital signature (drawn or typed) is required to execute this application.';
+        }
+        return undefined;
+
       case 'confirmedAccurate':
         if (!value) {
           return 'You must confirm that the submitted information is accurate.';
@@ -236,9 +290,15 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleBlur = (field: keyof FormData) => {
+  const handleBlur = (field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    const errorMsg = validateField(field, formData[field]);
+    let val: any;
+    if (field in formData) {
+      val = (formData as any)[field];
+    } else if (field in formData.identification) {
+      val = (formData.identification as any)[field];
+    }
+    const errorMsg = validateField(field, val);
     setErrors((prev) => ({
       ...prev,
       [field]: errorMsg,
@@ -256,6 +316,12 @@ export const App: React.FC = () => {
         if (found) {
           updated.countryCode = found.dialCode;
           updated.phoneCountryCode = found.code;
+          if (!prev.identification.idCountry || prev.identification.idCountry === 'United States') {
+            updated.identification = {
+              ...prev.identification,
+              idCountry: found.name
+            };
+          }
         }
       }
       return updated;
@@ -267,6 +333,40 @@ export const App: React.FC = () => {
         ...prev,
         [field]: errorMsg,
       }));
+    }
+  };
+
+  const handleIdentificationChange = (patch: Partial<IdentificationData>) => {
+    setFormData((prev) => ({
+      ...prev,
+      identification: {
+        ...prev.identification,
+        ...patch
+      }
+    }));
+
+    if (patch.idDocumentData) {
+      setErrors((prev) => ({ ...prev, idDocument: undefined }));
+    }
+    if (patch.idType) {
+      setErrors((prev) => ({ ...prev, idType: undefined }));
+    }
+    if (patch.idNumber) {
+      setErrors((prev) => ({ ...prev, idNumber: undefined }));
+    }
+    if (patch.idCountry) {
+      setErrors((prev) => ({ ...prev, idCountry: undefined }));
+    }
+  };
+
+  const handleSignatureChange = (sig: SignatureData) => {
+    setFormData((prev) => ({
+      ...prev,
+      signature: sig
+    }));
+
+    if (sig.signatureData && sig.signatureData.length > 30) {
+      setErrors((prev) => ({ ...prev, signature: undefined }));
     }
   };
 
@@ -283,7 +383,7 @@ export const App: React.FC = () => {
 
   const validateAll = (): boolean => {
     const newErrors: FormErrors = {};
-    const fieldsToValidate: (keyof FormData)[] = [
+    const fieldsToValidate: string[] = [
       'fullName',
       'email',
       'phone',
@@ -292,14 +392,25 @@ export const App: React.FC = () => {
       'celebrityName',
       'meetingType',
       'attendees',
+      'idType',
+      'idNumber',
+      'idCountry',
+      'idDocument',
+      'signature',
       'confirmedAccurate',
       'acknowledgedPrivacy',
     ];
 
     fieldsToValidate.forEach((field) => {
-      const error = validateField(field, formData[field]);
+      let val: any;
+      if (field in formData) {
+        val = (formData as any)[field];
+      } else if (field in formData.identification) {
+        val = (formData.identification as any)[field];
+      }
+      const error = validateField(field, val);
       if (error) {
-        newErrors[field] = error;
+        (newErrors as any)[field] = error;
       }
     });
 
@@ -317,7 +428,7 @@ export const App: React.FC = () => {
     e.preventDefault();
 
     if (!validateAll()) {
-      const firstError = document.querySelector('.has-error');
+      const firstError = document.querySelector('.has-error, [aria-invalid="true"]');
       if (firstError) {
         firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
@@ -344,6 +455,12 @@ export const App: React.FC = () => {
       attendees: formData.attendees,
       reason: formData.reason.trim(),
       message: formData.message.trim(),
+      identification: formData.identification,
+      signature: {
+        ...formData.signature,
+        signeeName: formData.signature.signeeName || formData.fullName.trim(),
+        signedAt: formData.signature.signedAt || new Date().toISOString()
+      },
       confirmedAccurate: formData.confirmedAccurate,
       acknowledgedPrivacy: formData.acknowledgedPrivacy,
     };
@@ -501,10 +618,19 @@ export const App: React.FC = () => {
 
                 <div className="space-y-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B1D2F] font-semibold block">
-                    03 / Discretion &amp; Confidentiality
+                    03 / Discretion & Confidentiality
                   </span>
                   <p className="text-xs sm:text-[13px] text-[#666666] leading-relaxed">
                     All fan information and submission records are maintained under strict non-disclosure protocol and are not shared with third parties.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B1D2F] font-semibold block">
+                    04 / Identity & Digital Execution
+                  </span>
+                  <p className="text-xs sm:text-[13px] text-[#666666] leading-relaxed">
+                    Attendees must upload a certified government-issued photo ID and affix a digital signature to ensure venue security clearance and identity veracity.
                   </p>
                 </div>
               </div>
@@ -540,7 +666,7 @@ export const App: React.FC = () => {
                     <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
                       Section 01 — Personal Information
                     </h2>
-                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold shrink-0">[ 01 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold shrink-0">[ 01 / 04 ]</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
@@ -712,9 +838,9 @@ export const App: React.FC = () => {
                 <div className="w-full min-w-0">
                   <div className="flex items-baseline justify-between pb-2.5 sm:pb-3 mb-5 sm:mb-6 border-b border-[#E5E5E5]">
                     <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
-                      Section 02 — Meet &amp; Greet Preferences
+                      Section 02 — Meet & Greet Preferences
                     </h2>
-                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold shrink-0">[ 02 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold shrink-0">[ 02 / 04 ]</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full min-w-0">
@@ -858,76 +984,110 @@ export const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Section 03: Confirmation */}
+                {/* Section 03: Identity Verification (Government-Issued ID) */}
                 <div className="w-full min-w-0">
                   <div className="flex items-baseline justify-between pb-2.5 sm:pb-3 mb-5 sm:mb-6 border-b border-[#E5E5E5]">
                     <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
-                      Section 03 — Confirmation
+                      Section 03 — Identity Verification & Government ID
                     </h2>
-                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold shrink-0">[ 03 / 03 ]</span>
+                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold shrink-0">[ 03 / 04 ]</span>
                   </div>
 
-                  <div className="space-y-4">
-                    {/* Checkbox 1: Accurate Information */}
-                    <div>
-                      <label className="flex items-start gap-3 cursor-pointer group py-1">
-                        <input
-                          type="checkbox"
-                          id="confirmedAccurate"
-                          checked={formData.confirmedAccurate}
-                          onChange={(e) => handleChange('confirmedAccurate', e.target.checked)}
-                          onBlur={() => handleBlur('confirmedAccurate')}
-                          className={`wme-checkbox ${errors.confirmedAccurate && touched.confirmedAccurate ? 'has-error' : ''}`}
-                          aria-invalid={!!errors.confirmedAccurate && touched.confirmedAccurate}
-                        />
-                        <span className="text-xs sm:text-sm text-[#333333] group-hover:text-[#111111] transition-colors leading-normal select-none">
-                          I confirm that the submitted information is accurate and truthful. <span className="text-[#888888]">*</span>
-                        </span>
-                      </label>
-                      {errors.confirmedAccurate && touched.confirmedAccurate && (
-                        <p className="mt-1 ml-7 text-xs text-[#B91C1C]">
-                          {errors.confirmedAccurate}
-                        </p>
-                      )}
-                    </div>
+                  <IdVerificationSection
+                    data={formData.identification}
+                    onChange={handleIdentificationChange}
+                    errors={{
+                      idType: errors.idType,
+                      idNumber: errors.idNumber,
+                      idCountry: errors.idCountry,
+                      idDocument: errors.idDocument
+                    }}
+                    touched={touched}
+                    onBlur={handleBlur}
+                  />
+                </div>
 
-                    {/* Checkbox 2: Privacy Policy */}
-                    <div>
-                      <label className="flex items-start gap-3 cursor-pointer group py-1">
-                        <input
-                          type="checkbox"
-                          id="acknowledgedPrivacy"
-                          checked={formData.acknowledgedPrivacy}
-                          onChange={(e) => handleChange('acknowledgedPrivacy', e.target.checked)}
-                          onBlur={() => handleBlur('acknowledgedPrivacy')}
-                          className={`wme-checkbox ${errors.acknowledgedPrivacy && touched.acknowledgedPrivacy ? 'has-error' : ''}`}
-                          aria-invalid={!!errors.acknowledgedPrivacy && touched.acknowledgedPrivacy}
-                        />
-                        <span className="text-xs sm:text-sm text-[#333333] group-hover:text-[#111111] transition-colors leading-normal select-none">
-                          I acknowledge and agree to the{' '}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setIsPrivacyModalOpen(true);
-                            }}
-                            className="underline underline-offset-4 decoration-[#888888] hover:decoration-[#6B1D2F] font-medium text-[#111111] hover:text-[#6B1D2F] transition-colors"
-                          >
-                            Privacy Policy
-                          </button>
-                          {' '}regarding the confidential processing of my inquiry. <span className="text-[#888888]">*</span>
-                        </span>
-                      </label>
-                      {errors.acknowledgedPrivacy && touched.acknowledgedPrivacy && (
-                        <p className="mt-1 ml-7 text-xs text-[#B91C1C]">
-                          {errors.acknowledgedPrivacy}
-                        </p>
-                      )}
-                    </div>
+                {/* Section 04: Legal Execution & Digital Signature */}
+                <div className="w-full min-w-0">
+                  <div className="flex items-baseline justify-between pb-2.5 sm:pb-3 mb-5 sm:mb-6 border-b border-[#E5E5E5]">
+                    <h2 className="text-xs font-mono uppercase tracking-[0.16em] text-[#111111] font-semibold">
+                      Section 04 — Confirmation & Digital Signature
+                    </h2>
+                    <span className="text-[10px] font-mono text-[#6B1D2F] font-semibold shrink-0">[ 04 / 04 ]</span>
+                  </div>
 
-                    {/* Notice */}
-                    <div className="pt-3 border-t border-[#F0F0F0] text-[11px] text-[#737373] leading-relaxed">
-                      Notice: Submitting this form expresses fan interest for consideration only and does not guarantee a meeting, booking, or reservation with Keanu Reeves. All inquiries are subject to review by WME and talent management.
+                  <div className="space-y-6">
+                    {/* Digital Signature Pad Component */}
+                    <SignaturePad
+                      fullName={formData.fullName}
+                      value={formData.signature}
+                      onChange={handleSignatureChange}
+                      error={errors.signature}
+                      touched={touched.signature}
+                    />
+
+                    <div className="space-y-4 pt-2 border-t border-[#F0F0F0]">
+                      {/* Checkbox 1: Accurate Information */}
+                      <div>
+                        <label className="flex items-start gap-3 cursor-pointer group py-1">
+                          <input
+                            type="checkbox"
+                            id="confirmedAccurate"
+                            checked={formData.confirmedAccurate}
+                            onChange={(e) => handleChange('confirmedAccurate', e.target.checked)}
+                            onBlur={() => handleBlur('confirmedAccurate')}
+                            className={`wme-checkbox ${errors.confirmedAccurate && touched.confirmedAccurate ? 'has-error' : ''}`}
+                            aria-invalid={!!errors.confirmedAccurate && touched.confirmedAccurate}
+                          />
+                          <span className="text-xs sm:text-sm text-[#333333] group-hover:text-[#111111] transition-colors leading-normal select-none">
+                            I confirm that the submitted information and attached identification are accurate and truthful. <span className="text-[#888888]">*</span>
+                          </span>
+                        </label>
+                        {errors.confirmedAccurate && touched.confirmedAccurate && (
+                          <p className="mt-1 ml-7 text-xs text-[#B91C1C]">
+                            {errors.confirmedAccurate}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Checkbox 2: Privacy Policy */}
+                      <div>
+                        <label className="flex items-start gap-3 cursor-pointer group py-1">
+                          <input
+                            type="checkbox"
+                            id="acknowledgedPrivacy"
+                            checked={formData.acknowledgedPrivacy}
+                            onChange={(e) => handleChange('acknowledgedPrivacy', e.target.checked)}
+                            onBlur={() => handleBlur('acknowledgedPrivacy')}
+                            className={`wme-checkbox ${errors.acknowledgedPrivacy && touched.acknowledgedPrivacy ? 'has-error' : ''}`}
+                            aria-invalid={!!errors.acknowledgedPrivacy && touched.acknowledgedPrivacy}
+                          />
+                          <span className="text-xs sm:text-sm text-[#333333] group-hover:text-[#111111] transition-colors leading-normal select-none">
+                            I acknowledge and agree to the{' '}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setIsPrivacyModalOpen(true);
+                              }}
+                              className="underline underline-offset-4 decoration-[#888888] hover:decoration-[#6B1D2F] font-medium text-[#111111] hover:text-[#6B1D2F] transition-colors"
+                            >
+                              Privacy Policy
+                            </button>
+                            {' '}regarding the confidential processing of my inquiry and identity verification. <span className="text-[#888888]">*</span>
+                          </span>
+                        </label>
+                        {errors.acknowledgedPrivacy && touched.acknowledgedPrivacy && (
+                          <p className="mt-1 ml-7 text-xs text-[#B91C1C]">
+                            {errors.acknowledgedPrivacy}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Notice */}
+                      <div className="pt-3 border-t border-[#F0F0F0] text-[11px] text-[#737373] leading-relaxed">
+                        Notice: Submitting this form expresses fan interest for consideration only and does not guarantee a meeting, booking, or reservation with Keanu Reeves. All inquiries and credentials are encrypted and subject to review by WME and talent management.
+                      </div>
                     </div>
                   </div>
                 </div>

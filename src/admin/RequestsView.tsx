@@ -12,7 +12,9 @@ import {
   MapPin,
   Mail,
   Loader2,
-  ExternalLink
+  ExternalLink,
+  CreditCard,
+  PenTool
 } from 'lucide-react';
 import { StatusBadge, VALID_STATUSES } from './StatusBadge';
 
@@ -32,6 +34,18 @@ interface SubmissionItem {
     preferredDate?: string;
     attendees: string;
   };
+  identification?: {
+    idType: string;
+    idNumber: string;
+    idCountry: string;
+    hasDocument: boolean;
+  } | null;
+  signature?: {
+    signatureType: 'drawn' | 'typed';
+    signeeName: string;
+    signedAt: string;
+    hasSignature: boolean;
+  } | null;
   notesCount: number;
 }
 
@@ -345,6 +359,22 @@ export const RequestsView: React.FC<RequestsViewProps> = ({
                       <td className="px-4 py-3.5">
                         <div className="font-medium text-[#111111]">{sub.personalInfo.fullName}</div>
                         <div className="text-[11px] text-[#666666] font-mono">{sub.personalInfo.email}</div>
+                        {(sub.identification?.idType || sub.signature?.hasSignature) && (
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                            {sub.identification?.idType && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#444444] bg-[#F5F5F5] px-1.5 py-0.5 rounded-[2px] border border-[#E5E5E5]">
+                                <CreditCard className="w-2.5 h-2.5 text-[#6B1D2F]" />
+                                <span>{sub.identification.idType}</span>
+                              </span>
+                            )}
+                            {sub.signature?.hasSignature && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded-[2px] border border-[#BBF7D0]">
+                                <PenTool className="w-2.5 h-2.5 text-[#16A34A]" />
+                                <span>Signed</span>
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3.5 text-[#444444]">
                         <div>{sub.personalInfo.city}</div>
@@ -412,6 +442,22 @@ export const RequestsView: React.FC<RequestsViewProps> = ({
                   <div>
                     <h3 className="font-medium text-[#111111] text-sm">{sub.personalInfo.fullName}</h3>
                     <p className="text-xs text-[#666666] font-mono">{sub.personalInfo.email}</p>
+                    {(sub.identification?.idType || sub.signature?.hasSignature) && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        {sub.identification?.idType && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#444444] bg-[#F5F5F5] px-1.5 py-0.5 rounded-[2px] border border-[#E5E5E5]">
+                            <CreditCard className="w-2.5 h-2.5 text-[#6B1D2F]" />
+                            <span>{sub.identification.idType}</span>
+                          </span>
+                        )}
+                        {sub.signature?.hasSignature && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded-[2px] border border-[#BBF7D0]">
+                            <PenTool className="w-2.5 h-2.5 text-[#16A34A]" />
+                            <span>Signed</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#555555]">
