@@ -1,5 +1,9 @@
 node_modules/
 dist/
 data/*.tmp.*
+*.sqlite
+*.sqlite-*
+.env
+.env.local
 .DS_Store
 *.log

@@ -57,7 +57,8 @@ The project features a public-facing editorial intake form and an enterprise-gra
 
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Lucide React, Vite 8
 - **Backend**: Node.js, Express 5, Native Crypto (`scrypt`, `createHmac`)
-- **Storage**: Persistent JSON stores in `data/` (`submissions.json`, `admins.json`, `audit_logs.json`, `settings.json`)
+- **Database & Storage**: Turso libSQL Cloud Database (`@libsql/client`) with automatic local SQLite fallback and dual JSON backup (`data/submissions.json`, `data/admins.json`, `data/audit_logs.json`, `data/settings.json`)
+- **Environment**: Configured via `.env` with `.env.example` template
 - **Testing**: Puppeteer Core automated E2E & cross-device responsiveness test suite
 
 ---

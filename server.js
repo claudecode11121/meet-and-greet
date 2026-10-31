@@ -1,9 +1,11 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import db from './src/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,9 +13,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Initialize Turso / libSQL Database (Cloud or Local Fallback)
+await db.initDatabase();
+
 // Determine data storage directory:
-// In serverless environments (e.g., Vercel / AWS Lambda), the root directory is read-only.
-// In such environments, we store state in `/tmp/wme-data` and seed initial files.
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
 const SOURCE_DATA_DIR = path.join(__dirname, 'data');
 const DATA_DIR = isServerless ? path.join('/tmp', 'wme-data') : SOURCE_DATA_DIR;
@@ -26,46 +29,6 @@ const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 // Session secret from environment or securely generated
 const SESSION_SECRET = process.env.SESSION_SECRET || 'wme-keanu-reeves-session-secret-key-2026';
 
-// Ensure data storage directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-
-// In serverless environments, copy existing seed data from repository if not yet in /tmp
-if (isServerless && fs.existsSync(SOURCE_DATA_DIR)) {
-  const seedFiles = ['submissions.json', 'admins.json', 'audit_logs.json', 'settings.json'];
-  for (const file of seedFiles) {
-    const src = path.join(SOURCE_DATA_DIR, file);
-    const dest = path.join(DATA_DIR, file);
-    if (fs.existsSync(src) && !fs.existsSync(dest)) {
-      try {
-        fs.copyFileSync(src, dest);
-      } catch (e) {
-        console.warn(`[WME Serverless] Could not seed ${file} to /tmp:`, e);
-      }
-    }
-  }
-}
-
-// Ensure required files exist
-if (!fs.existsSync(SUBMISSIONS_FILE)) {
-  fs.writeFileSync(SUBMISSIONS_FILE, JSON.stringify([], null, 2), 'utf-8');
-}
-if (!fs.existsSync(AUDIT_LOGS_FILE)) {
-  fs.writeFileSync(AUDIT_LOGS_FILE, JSON.stringify([], null, 2), 'utf-8');
-}
-if (!fs.existsSync(SETTINGS_FILE)) {
-  const initialSettings = {
-    intakeStatus: 'Active',
-    eventTitle: 'A Moment with Keanu Reeves',
-    agency: 'WME (William Morris Endeavor)',
-    coordinatorEmail: 'guest.relations@wmeagency.com',
-    capacityLimit: 25,
-    updatedAt: new Date().toISOString()
-  };
-  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(initialSettings, null, 2), 'utf-8');
-}
-
 // Cryptographic helpers for password hashing (using native crypto.scrypt)
 function hashPassword(password, salt) {
   return crypto.scryptSync(password, salt, 64).toString('hex');
@@ -76,87 +39,53 @@ function verifyPassword(password, salt, storedHash) {
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(storedHash, 'hex'));
 }
 
-// Initialize authorized admin account if none exists
-function initializeAdminAccount() {
-  let admins = [];
+// Initialize authorized admin account in database
+async function initializeAdminAccount() {
   try {
-    if (fs.existsSync(ADMINS_FILE)) {
-      admins = JSON.parse(fs.readFileSync(ADMINS_FILE, 'utf-8'));
+    let admins = await db.getAdmins();
+    if (!admins || admins.length === 0) {
+      const adminEmail = (process.env.ADMIN_EMAIL || 'admin@wmeagency.com').trim().toLowerCase();
+      const adminPassword = process.env.ADMIN_PASSWORD || 'KeanuMeet2026!WME';
+      const adminName = process.env.ADMIN_NAME || 'WME Guest Relations Lead';
+
+      const salt = crypto.randomBytes(16).toString('hex');
+      const passwordHash = hashPassword(adminPassword, salt);
+
+      const initialAdmin = {
+        id: `adm_${crypto.randomBytes(4).toString('hex')}`,
+        email: adminEmail,
+        fullName: adminName,
+        role: 'Administrator',
+        passwordHash,
+        salt,
+        createdAt: new Date().toISOString(),
+        lastLoginAt: null
+      };
+
+      await db.saveAdmin(initialAdmin);
+      console.log(`✦ Initialized Authorized Administrator in Turso Database: ${adminEmail}`);
     }
   } catch (err) {
-    console.error('Error reading admins file:', err);
-  }
-
-  if (!admins || admins.length === 0) {
-    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@wmeagency.com').trim().toLowerCase();
-    const adminPassword = process.env.ADMIN_PASSWORD || 'KeanuMeet2026!WME';
-    const adminName = process.env.ADMIN_NAME || 'WME Guest Relations Lead';
-
-    const salt = crypto.randomBytes(16).toString('hex');
-    const passwordHash = hashPassword(adminPassword, salt);
-
-    const initialAdmin = {
-      id: `adm_${crypto.randomBytes(4).toString('hex')}`,
-      email: adminEmail,
-      fullName: adminName,
-      role: 'Administrator',
-      passwordHash,
-      salt,
-      createdAt: new Date().toISOString(),
-      lastLoginAt: null
-    };
-
-    fs.writeFileSync(ADMINS_FILE, JSON.stringify([initialAdmin], null, 2), 'utf-8');
-    console.log(`✦ Initialized Authorized Administrator: ${adminEmail}`);
+    console.error('Error initializing admin account in db:', err);
   }
 }
-initializeAdminAccount();
+await initializeAdminAccount();
 
-// Helpers for reading/writing data
-function getSubmissions() {
-  try {
-    const raw = fs.readFileSync(SUBMISSIONS_FILE, 'utf-8');
-    return JSON.parse(raw);
-  } catch (err) {
-    console.error('Error reading submissions file:', err);
-    return [];
-  }
+// Helpers for reading/writing data via Turso Database
+async function getSubmissions() {
+  return await db.getSubmissions();
 }
 
-function saveSubmissionsList(list) {
-  const tempPath = `${SUBMISSIONS_FILE}.tmp.${Date.now()}`;
-  fs.writeFileSync(tempPath, JSON.stringify(list, null, 2), 'utf-8');
-  fs.renameSync(tempPath, SUBMISSIONS_FILE);
+async function saveSubmissionsList(list) {
+  return await db.saveSubmissionsList(list);
 }
 
-function getAuditLogs() {
-  try {
-    const raw = fs.readFileSync(AUDIT_LOGS_FILE, 'utf-8');
-    return JSON.parse(raw);
-  } catch (err) {
-    return [];
-  }
+async function getAuditLogs() {
+  return await db.getAuditLogs();
 }
 
-function recordAuditLog(actorEmail, action, targetReferenceId = null, details = {}) {
-  try {
-    const logs = getAuditLogs();
-    const logEntry = {
-      id: `log_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
-      timestamp: new Date().toISOString(),
-      actorEmail,
-      action,
-      targetReferenceId,
-      details
-    };
-    logs.unshift(logEntry);
-    if (logs.length > 500) logs.pop(); // keep last 500 logs
-    const tempPath = `${AUDIT_LOGS_FILE}.tmp.${Date.now()}`;
-    fs.writeFileSync(tempPath, JSON.stringify(logs, null, 2), 'utf-8');
-    fs.renameSync(tempPath, AUDIT_LOGS_FILE);
-  } catch (err) {
-    console.error('Error recording audit log:', err);
-  }
+async function recordAuditLog(actorEmail, action, targetReferenceId = null, details = {}) {
+  return await db.recordAuditLog(actorEmail, action, targetReferenceId, details);
 }
 
 // Session Token Generation & Verification
@@ -249,7 +178,7 @@ app.get('/api/health', (req, res) => {
 /* ==========================================================================
    PUBLIC INTAKE ENDPOINT
    ========================================================================== */
-app.post('/api/submissions', (req, res) => {
+app.post('/api/submissions', async (req, res) => {
   try {
     const {
       fullName,
@@ -415,9 +344,7 @@ app.post('/api/submissions', (req, res) => {
       }
     };
 
-    const list = getSubmissions();
-    list.unshift(submissionRecord);
-    saveSubmissionsList(list);
+    await db.saveSubmission(submissionRecord);
 
     console.log(`[PUBLIC INTAKE] New Meet & Greet Request: ${referenceId} for Keanu Reeves by ${submissionRecord.personalInfo.fullName} (ID: ${cleanIdType}, Sig: ${cleanSigType})`);
 
@@ -454,7 +381,7 @@ app.post('/api/submissions', (req, res) => {
 /* ==========================================================================
    ADMIN AUTHENTICATION ENDPOINTS
    ========================================================================== */
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', async (req, res) => {
   try {
     const { email, password } = req.body || {};
     if (!email || !password) {
@@ -465,14 +392,9 @@ app.post('/api/admin/login', (req, res) => {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    let admins = [];
-    if (fs.existsSync(ADMINS_FILE)) {
-      admins = JSON.parse(fs.readFileSync(ADMINS_FILE, 'utf-8'));
-    }
-
-    const admin = admins.find(a => a.email.toLowerCase() === cleanEmail);
+    const admin = await db.findAdminByEmail(cleanEmail);
     if (!admin) {
-      recordAuditLog(cleanEmail, 'LOGIN_FAILED', null, { reason: 'User not found' });
+      await recordAuditLog(cleanEmail, 'LOGIN_FAILED', null, { reason: 'User not found' });
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials. Access is restricted to authorized WME administrators.'
@@ -481,7 +403,7 @@ app.post('/api/admin/login', (req, res) => {
 
     const isValid = verifyPassword(password, admin.salt, admin.passwordHash);
     if (!isValid) {
-      recordAuditLog(cleanEmail, 'LOGIN_FAILED', null, { reason: 'Password mismatch' });
+      await recordAuditLog(cleanEmail, 'LOGIN_FAILED', null, { reason: 'Password mismatch' });
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials. Access is restricted to authorized WME administrators.'
@@ -490,10 +412,10 @@ app.post('/api/admin/login', (req, res) => {
 
     // Update last login
     admin.lastLoginAt = new Date().toISOString();
-    fs.writeFileSync(ADMINS_FILE, JSON.stringify(admins, null, 2), 'utf-8');
+    await db.saveAdmin(admin);
 
     const token = createSessionToken(admin);
-    recordAuditLog(admin.email, 'LOGIN_SUCCESS', null, { role: admin.role });
+    await recordAuditLog(admin.email, 'LOGIN_SUCCESS', null, { role: admin.role });
 
     return res.json({
       success: true,
@@ -530,9 +452,9 @@ app.post('/api/admin/logout', requireAdminAuth, (req, res) => {
 /* ==========================================================================
    ADMIN METRICS & OVERVIEW STATS
    ========================================================================== */
-app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
+app.get('/api/admin/stats', requireAdminAuth, async (req, res) => {
   try {
-    const list = getSubmissions();
+    const list = await getSubmissions();
 
     const counts = {
       total: list.length,
@@ -579,9 +501,9 @@ app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
 /* ==========================================================================
    ADMIN REQUEST MANAGEMENT & LISTING
    ========================================================================== */
-app.get('/api/admin/submissions', requireAdminAuth, (req, res) => {
+app.get('/api/admin/submissions', requireAdminAuth, async (req, res) => {
   try {
-    let list = getSubmissions();
+    let list = await getSubmissions();
     const { search, status, meetingType, sortBy = 'submittedAt', sortOrder = 'desc', page = 1, limit = 15 } = req.query;
 
     // Filter by search string
@@ -679,11 +601,10 @@ app.get('/api/admin/submissions', requireAdminAuth, (req, res) => {
 /* ==========================================================================
    APPLICATION DETAIL VIEW
    ========================================================================== */
-app.get('/api/admin/submissions/:referenceId', requireAdminAuth, (req, res) => {
+app.get('/api/admin/submissions/:referenceId', requireAdminAuth, async (req, res) => {
   try {
     const { referenceId } = req.params;
-    const list = getSubmissions();
-    const item = list.find(s => s.referenceId.toLowerCase() === referenceId.toLowerCase());
+    const item = await db.getSubmissionById(referenceId);
 
     if (!item) {
       return res.status(404).json({ success: false, error: 'Application not found.' });
@@ -707,7 +628,7 @@ app.get('/api/admin/submissions/:referenceId', requireAdminAuth, (req, res) => {
 /* ==========================================================================
    STATUS UPDATE & AUDIT HISTORY
    ========================================================================== */
-app.patch('/api/admin/submissions/:referenceId/status', requireAdminAuth, (req, res) => {
+app.patch('/api/admin/submissions/:referenceId/status', requireAdminAuth, async (req, res) => {
   try {
     const { referenceId } = req.params;
     const { status, reason = '' } = req.body || {};
@@ -720,7 +641,7 @@ app.patch('/api/admin/submissions/:referenceId/status', requireAdminAuth, (req, 
       });
     }
 
-    const list = getSubmissions();
+    const list = await getSubmissions();
     const index = list.findIndex(s => s.referenceId.toLowerCase() === referenceId.toLowerCase());
     if (index === -1) {
       return res.status(404).json({ success: false, error: 'Application not found.' });
@@ -738,9 +659,9 @@ app.patch('/api/admin/submissions/:referenceId/status', requireAdminAuth, (req, 
       reason: reason.trim()
     });
 
-    saveSubmissionsList(list);
+    await saveSubmissionsList(list);
 
-    recordAuditLog(req.admin.email, 'STATUS_CHANGE', referenceId, {
+    await recordAuditLog(req.admin.email, 'STATUS_CHANGE', referenceId, {
       fromStatus: previousStatus,
       toStatus: targetStatus,
       reason: reason.trim()
@@ -763,7 +684,7 @@ app.patch('/api/admin/submissions/:referenceId/status', requireAdminAuth, (req, 
 /* ==========================================================================
    INTERNAL ADMINISTRATIVE NOTES
    ========================================================================== */
-app.post('/api/admin/submissions/:referenceId/notes', requireAdminAuth, (req, res) => {
+app.post('/api/admin/submissions/:referenceId/notes', requireAdminAuth, async (req, res) => {
   try {
     const { referenceId } = req.params;
     const { text } = req.body || {};
@@ -772,7 +693,7 @@ app.post('/api/admin/submissions/:referenceId/notes', requireAdminAuth, (req, re
       return res.status(400).json({ success: false, error: 'Note text cannot be empty.' });
     }
 
-    const list = getSubmissions();
+    const list = await getSubmissions();
     const index = list.findIndex(s => s.referenceId.toLowerCase() === referenceId.toLowerCase());
     if (index === -1) {
       return res.status(404).json({ success: false, error: 'Application not found.' });
@@ -789,9 +710,9 @@ app.post('/api/admin/submissions/:referenceId/notes', requireAdminAuth, (req, re
     };
 
     list[index].internalNotes.unshift(newNote);
-    saveSubmissionsList(list);
+    await saveSubmissionsList(list);
 
-    recordAuditLog(req.admin.email, 'ADD_INTERNAL_NOTE', referenceId, {
+    await recordAuditLog(req.admin.email, 'ADD_INTERNAL_NOTE', referenceId, {
       noteId: newNote.id,
       preview: newNote.text.slice(0, 40)
     });
@@ -810,9 +731,9 @@ app.post('/api/admin/submissions/:referenceId/notes', requireAdminAuth, (req, re
 /* ==========================================================================
    SECURE CSV EXPORT WITH FORMULA INJECTION DEFENSE
    ========================================================================== */
-app.get('/api/admin/export/csv', requireAdminAuth, (req, res) => {
+app.get('/api/admin/export/csv', requireAdminAuth, async (req, res) => {
   try {
-    let list = getSubmissions();
+    let list = await getSubmissions();
     const { search, status, meetingType } = req.query;
 
     if (search && typeof search === 'string' && search.trim()) {
@@ -898,7 +819,7 @@ app.get('/api/admin/export/csv', requireAdminAuth, (req, res) => {
     const csvContent = rows.join('\r\n');
     const filename = `wme-keanu-reeves-inquiries-${new Date().toISOString().split('T')[0]}.csv`;
 
-    recordAuditLog(req.admin.email, 'EXPORT_CSV', null, {
+    await recordAuditLog(req.admin.email, 'EXPORT_CSV', null, {
       exportedRows: list.length,
       filters: { search, status, meetingType }
     });
@@ -915,30 +836,24 @@ app.get('/api/admin/export/csv', requireAdminAuth, (req, res) => {
 /* ==========================================================================
    AUDIT LOGS & EVENT SETTINGS
    ========================================================================== */
-app.get('/api/admin/audit-logs', requireAdminAuth, (req, res) => {
-  const logs = getAuditLogs().slice(0, 100);
+app.get('/api/admin/audit-logs', requireAdminAuth, async (req, res) => {
+  const logs = (await getAuditLogs()).slice(0, 100);
   res.json({ success: true, logs });
 });
 
-app.get('/api/admin/event-settings', requireAdminAuth, (req, res) => {
+app.get('/api/admin/event-settings', requireAdminAuth, async (req, res) => {
   try {
-    let settings = {};
-    if (fs.existsSync(SETTINGS_FILE)) {
-      settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
-    }
+    const settings = await db.getSettings();
     res.json({ success: true, settings });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to read event settings.' });
   }
 });
 
-app.put('/api/admin/event-settings', requireAdminAuth, (req, res) => {
+app.put('/api/admin/event-settings', requireAdminAuth, async (req, res) => {
   try {
     const { intakeStatus, coordinatorEmail, capacityLimit } = req.body || {};
-    let settings = {};
-    if (fs.existsSync(SETTINGS_FILE)) {
-      settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
-    }
+    let settings = await db.getSettings();
 
     if (intakeStatus) settings.intakeStatus = intakeStatus;
     if (coordinatorEmail) settings.coordinatorEmail = coordinatorEmail;
@@ -946,8 +861,8 @@ app.put('/api/admin/event-settings', requireAdminAuth, (req, res) => {
     settings.updatedAt = new Date().toISOString();
     settings.updatedBy = req.admin.email;
 
-    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8');
-    recordAuditLog(req.admin.email, 'UPDATE_EVENT_SETTINGS', null, settings);
+    await db.saveSettings(settings);
+    await recordAuditLog(req.admin.email, 'UPDATE_EVENT_SETTINGS', null, settings);
 
     res.json({ success: true, settings });
   } catch (err) {
