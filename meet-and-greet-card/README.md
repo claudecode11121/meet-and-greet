@@ -26,15 +26,33 @@ This standalone VIP Access Credential was generated using the verified submissio
 
 ---
 
+## 💾 Ready-to-Use Download Files
+
+The card is downloadable in multiple formats right from the web page or directly from this folder:
+
+| File Name | Format | Description |
+|---|---|---|
+| [`brenda-wright-vip-pass-complete.png`](file:///home/david/Desktop/card%20meet%20and%20f=greet/brenda-wright-vip-pass-complete.png) | High-Res PNG (1900×1700) | **Complete Badge Presentation** with Front and Back side-by-side on obsidian luxury background. |
+| [`brenda-wright-vip-pass.pdf`](file:///home/david/Desktop/card%20meet%20and%20f=greet/brenda-wright-vip-pass.pdf) | 300 DPI PDF | **Printable 2-Page Pass PDF** (Page 1 = Front, Page 2 = Back). |
+| [`brenda-wright-vip-pass-front.png`](file:///home/david/Desktop/card%20meet%20and%20f=greet/brenda-wright-vip-pass-front.png) | High-Res PNG (880×1440) | **Front Credential Only** with lanyard notch, portrait, barcode, QR code & signature. |
+| [`brenda-wright-vip-pass-back.png`](file:///home/david/Desktop/card%20meet%20and%20f=greet/brenda-wright-vip-pass-back.png) | High-Res PNG (880×1440) | **Back Credential Only** with magnetic stripe, terms & personal statement. |
+| [`pass-data.json`](file:///home/david/Desktop/card%20meet%20and%20f=greet/pass-data.json) | JSON Data | Full structured data manifest. |
+
+---
+
 ## 📁 File Structure
 
 ```text
 card meet and f=greet/
-├── index.html                  # Interactive 3D Credential Pass application
-├── styles.css                  # Obsidian & Metallic Gold luxury styling + print styles
-├── app.js                      # 3D parallax tilt, card flip, inspect modal & print handlers
-├── pass-data.json              # Full structured JSON manifest of the credential
-├── README.md                   # Documentation and usage guide
+├── index.html                           # Interactive 3D Credential Pass application
+├── styles.css                           # Obsidian & Metallic Gold luxury styling + print styles
+├── app.js                               # 3D parallax tilt, card flip, inspect modal & download handlers
+├── pass-data.json                       # Full structured JSON manifest of the credential
+├── brenda-wright-vip-pass-complete.png  # Complete side-by-side high-res badge
+├── brenda-wright-vip-pass.pdf           # Printable 300 DPI 2-page pass PDF
+├── brenda-wright-vip-pass-front.png     # Front face high-res PNG
+├── brenda-wright-vip-pass-back.png      # Back face high-res PNG
+├── README.md                            # Documentation and usage guide
 └── assets/
     ├── brenda_badge_photo.png           # Extracted and enhanced portrait badge photo
     ├── brenda_signature_transparent.png # Extracted digital signature with alpha channel
@@ -45,10 +63,9 @@ card meet and f=greet/
 
 ---
 
-## 🚀 How to View and Use
+## 🚀 How to View and Download
 
-1. **Open Directly:** Double-click `index.html` in your file manager or right-click and choose any modern web browser (Chrome, Firefox, Safari, Edge).
-2. **Interactive 3D Flip:** Click anywhere on the badge or press the **Spacebar** / **Flip Credential** button to view the back of the card with the magnetic stripe, terms, and passholder statement.
-3. **Inspect ID Document:** Click the **Inspect ID** button to preview the verified Florida driver's license intake.
-4. **Print Physical Badge:** Click **Print Pass** (or press `Ctrl+P` / `Cmd+P`). The layout automatically optimizes for standard CR80 VIP badge card stock.
-5. **Download Manifest:** Click **Pass Manifest** to download the raw JSON credential data.
+1. **One-Click Download from Browser:** Open [`index.html`](file:///home/david/Desktop/card%20meet%20and%20f=greet/index.html) and click **"Download PNG"** or **"Download PDF"** in the top control bar.
+2. **Interactive 3D Flip:** Click anywhere on the badge or press **Spacebar** / **Flip Pass** to view the back.
+3. **Inspect ID Document:** Click **Inspect ID** to preview the verified Florida driver's license intake.
+4. **Direct File Access:** The high-res images (`.png`) and printable PDF (`.pdf`) are saved directly in this folder.
