@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIP Meet & Greet Access Pass — Keanu Reeves | WME</title>
+  <meta name="description" content="Official VIP Meet & Greet Credential for Keanu Reeves, accredited by WME (William Morris Endeavor) for passholder Brenda Wright.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Agency & Security Header -->
+  <header class="app-header">
+    <div class="brand-lockup">
+      <span class="brand-wme">WME</span>
+      <span class="brand-sub">William Morris Endeavor · Talent Accreditation</span>
+    </div>
+    <div class="header-status">
+      <span class="status-dot"></span>
+      <span>ACCREDITED VIP PASS // VERIFIED</span>
+    </div>
+  </header>
+
+  <!-- Interactive Controls Bar -->
+  <nav class="controls-bar" aria-label="Credential Controls">
+    <button class="btn btn-gold" id="flipBtn" type="button" title="Flip Card to View Back">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+      </svg>
+      Flip Credential
+    </button>
+    <button class="btn btn-outline" id="printBtn" type="button" title="Print CR80 VIP Badge">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+        <rect x="6" y="14" width="12" height="8"></rect>
+      </svg>
+      Print Pass
+    </button>
+    <button class="btn btn-outline" id="inspectIdBtn" type="button" title="Inspect Encrypted Florida Driver's License">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+        <line x1="7" y1="8" x2="17" y2="8"></line>
+        <line x1="7" y1="12" x2="11" y2="12"></line>
+      </svg>
+      Inspect ID
+    </button>
+    <button class="btn btn-outline" id="exportBtn" type="button" title="Download Security JSON Manifest">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      Pass Manifest
+    </button>
+  </nav>
+
+  <!-- 3D Interactive Credential Badge Stage -->
+  <main class="credential-stage">
+    <div class="card-container" id="cardContainer" tabindex="0" role="region" aria-label="VIP Meet and Greet Badge (Click to Flip)">
+      
+      <!-- Top Lanyard Notch -->
+      <div class="lanyard-slot" aria-hidden="true"></div>
+
+      <!-- Holographic Security Overlay -->
+      <div class="hologram-overlay" id="hologramOverlay" aria-hidden="true"></div>
+
+      <!-- FRONT FACE -->
+      <article class="card-face card-front">
+        
+        <!-- Header: Agency & Access Tier -->
+        <header class="card-header">
+          <div class="agency-row">
+            <div class="agency-title">
+              WME
+              <span>WILLIAM MORRIS ENDEAVOR</span>
+            </div>
+            <span class="badge-tag">VIP ACCESS</span>
+          </div>
+
+          <!-- Talent Banner -->
+          <div class="talent-banner">
+            <div class="talent-info">
+              <span class="talent-label">DESIGNATED TALENT</span>
+              <h1 class="talent-name">Keanu Reeves</h1>
+            </div>
+            <span class="talent-type">EXCLUSIVE GUEST</span>
+          </div>
+        </header>
+
+        <!-- Body: Passholder Photo & Verified Information -->
+        <section class="card-body">
+          <div class="photo-and-title">
+            <div class="photo-wrapper">
+              <img class="passholder-photo" src="assets/brenda_badge_photo.png" alt="Accredited Passholder Brenda Wright">
+              <span class="photo-verified-badge">GOV ID VERIFIED</span>
+            </div>
+            
+            <div class="passholder-details">
+              <div class="passholder-name-group">
+                <span class="label-micro">OFFICIAL PASSHOLDER</span>
+                <h2 class="passholder-name">Brenda Wright</h2>
+                <span class="vip-tier-badge">GREEN ROOM VIP</span>
+              </div>
+
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="label-micro">DATE</span>
+                  <span class="info-val gold">NOV 3, 2026</span>
+                </div>
+                <div class="info-item">
+                  <span class="label-micro">FORMAT</span>
+                  <span class="info-val">IN-PERSON (1)</span>
+                </div>
+                <div class="info-item">
+                  <span class="label-micro">LOCATION</span>
+                  <span class="info-val">RUSKIN, FL · USA</span>
+                </div>
+                <div class="info-item">
+                  <span class="label-micro">CALL TIME</span>
+                  <span class="info-val gold">19:30 PST</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Digital Signature & Security Medallion -->
+          <div class="verification-strip">
+            <div class="sig-box">
+              <span class="label-micro">PASSHOLDER DIGITAL SIGNATURE</span>
+              <img class="sig-img" src="assets/brenda_signature_transparent.png" alt="Digital Signature of Brenda Wright">
+              <span class="sig-date">AFFIXED: OCT 31, 2026 // WME E-SIGN</span>
+            </div>
+            <div class="hologram-medallion" aria-label="WME Security Hologram Seal">
+              <span>WME<br>SECURE<br>AUTH</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Footer: Machine Scannable Barcode & QR Code -->
+        <footer class="card-footer">
+          <div class="barcode-col">
+            <img class="barcode-img" src="assets/barcode.png" alt="Barcode for credential accreditation">
+            <span class="barcode-serial">WME-KR26-0813-VIP</span>
+          </div>
+          <div class="qr-col" title="Scan to verify pass credentials online">
+            <img class="qr-img" src="assets/qr_code.png" alt="QR Code for secure verification">
+          </div>
+        </footer>
+
+      </article>
+
+      <!-- BACK FACE -->
+      <article class="card-face card-back">
+        
+        <header class="card-back-header">
+          <div class="agency-row">
+            <div class="agency-title">
+              WME
+              <span>TALENT SECURITY PROTOCOL</span>
+            </div>
+            <span class="badge-tag">NON-TRANSFERABLE</span>
+          </div>
+          <div class="mag-stripe" aria-hidden="true"></div>
+        </header>
+
+        <section class="card-back-body">
+          <h3 class="terms-header">CREDENTIAL TERMS &amp; CONDITIONS</h3>
+          <ul class="terms-list">
+            <li>Holder must present government-issued Florida photo identification matching credential name upon entry.</li>
+            <li>Grants designated VIP passholder Brenda Wright admission for one (1) to the private Keanu Reeves talent suite.</li>
+            <li>Strictly non-transferable. Commercial resale, replication, or unauthorized transfer immediately invalidates access.</li>
+            <li>Identity and security intake authenticated via AES-256 standard and retained strictly under WME non-disclosure.</li>
+            <li>Subject to executive security escort, talent rider terms, and private lounge venue protocols.</li>
+          </ul>
+
+          <div class="fan-dedication-box">
+            <span class="fan-dedication-label">PASSHOLDER PERSONAL STATEMENT:</span>
+            <blockquote class="fan-dedication-text">
+              "I love him and going to spend the rest of our life's together"
+            </blockquote>
+          </div>
+        </section>
+
+        <footer class="card-back-footer">
+          <div class="agency-seal">
+            <div class="seal-icon">★</div>
+            <div>
+              WILLIAM MORRIS ENDEAVOR<br>
+              <span style="color: #71717a">BEVERLY HILLS · NEW YORK · LONDON</span>
+            </div>
+          </div>
+          <div style="text-align: right">
+            REF: WME-KR26-0813<br>
+            <span style="color: #4ade80; font-weight: 700;">STATUS: ACCREDITED</span>
+          </div>
+        </footer>
+
+      </article>
+
+    </div>
+  </main>
+
+  <p style="margin-top: 24px; font-size: 11px; color: #71717a; font-family: 'JetBrains Mono', monospace; text-align: center;">
+    Tip: Click credential or use Spacebar to flip between Front and Back • Optimized for CR80 VIP Badge Print
+  </p>
+
+  <!-- Florida Driver's License Modal -->
+  <div class="modal-backdrop" id="idModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content">
+      <button class="modal-close" id="modalCloseBtn" aria-label="Close modal">&times;</button>
+      <h3 class="modal-title" id="modalTitle">Encrypted ID Intake Verification</h3>
+      <p style="font-size: 11px; color: #a1a1aa; margin-bottom: 14px; font-family: 'JetBrains Mono', monospace;">
+        STATE OF FLORIDA DRIVER LICENSE // INTAKE STATUS: ENCRYPTED READY
+      </p>
+      <img class="license-preview-img" src="assets/license_upscaled.png" alt="Florida Driver License Preview">
+      <div style="display: flex; justify-content: space-between; font-size: 10px; color: #a1a1aa; font-family: 'JetBrains Mono', monospace; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+        <span>PASSHOLDER: BRENDA WRIGHT</span>
+        <span>JURISDICTION: FLORIDA, USA</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
