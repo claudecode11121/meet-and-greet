@@ -14,7 +14,11 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Initialize Turso / libSQL Database (Cloud or Local Fallback)
-await db.initDatabase();
+try {
+  await db.initDatabase();
+} catch (dbErr) {
+  console.error('[WME Server] Database initialization notice:', dbErr.message);
+}
 
 // Determine data storage directory:
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
@@ -69,7 +73,11 @@ async function initializeAdminAccount() {
     console.error('Error initializing admin account in db:', err);
   }
 }
-await initializeAdminAccount();
+try {
+  await initializeAdminAccount();
+} catch (adminErr) {
+  console.error('[WME Server] Admin initialization notice:', adminErr.message);
+}
 
 // Helpers for reading/writing data via Turso Database
 async function getSubmissions() {
@@ -143,6 +151,15 @@ function requireAdminAuth(req, res, next) {
 
 // Middleware
 app.use(cors());
+
+// Normalize req.url if rewritten by Vercel serverless functions
+app.use((req, res, next) => {
+  if (req.originalUrl && req.originalUrl.startsWith('/api') && !req.url.startsWith('/api')) {
+    req.url = req.originalUrl;
+  }
+  next();
+});
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
@@ -340,7 +357,10 @@ app.post('/api/submissions', async (req, res) => {
       },
       metadata: {
         userAgent: req.headers['user-agent'] || 'unknown',
-        ipAddress: req.ip || req.connection.remoteAddress || 'unknown'
+        ipAddress: (req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) ||
+                   (req.socket && req.socket.remoteAddress) ||
+                   (req.connection && req.connection.remoteAddress) ||
+                   'unknown'
       }
     };
 

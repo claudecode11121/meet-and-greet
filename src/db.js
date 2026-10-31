@@ -7,10 +7,22 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure project data folder exists
-const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, '..', 'data'));
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+// Default Turso Cloud Database Configuration (used if environment variables are not set in Vercel)
+const DEFAULT_TURSO_URL = 'libsql://logistics-logistics.aws-us-east-2.turso.io';
+const DEFAULT_TURSO_TOKEN = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODkyNTc2NjUsImlkIjoiMDFhMDk3ZTMtYjkwMS03NDA0LTliZWMtNWMzZmRiMzE2Mjg4Iiwia2lkIjoiOFpDM0pCdDBCSGE5YXp0bzdDT1V2c0tBLThFSm9ISURmbHUzV3lVYnNrTSIsInJpZCI6IjBhM2QzYjVkLTM1NWYtNDE2My04Y2I2LTczNTQ4YzMyOTE5ZiJ9.xFYSNxHpbkz-c3b6u7z31LC2A1iXIeh_cJKv17gpEiEDAmiMYOEqETPRBWqTPOWJ56atoKQPigpTieYc7_3VCw';
+
+// Detect Serverless environment (Vercel / AWS Lambda) where filesystem is read-only except /tmp
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
+const DATA_DIR = isServerless
+  ? path.join('/tmp', 'wme-data')
+  : path.resolve(process.env.DATA_DIR || path.join(__dirname, '..', 'data'));
+
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch (e) {
+  console.warn('[WME DB] Could not create local data directory:', e.message);
 }
 
 let client = null;
@@ -20,6 +32,11 @@ let isInitialized = false;
 
 function getLocalClient() {
   if (!localClient) {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+    } catch {}
     const localDbPath = 'file:' + path.join(DATA_DIR, 'meet-greet-db.sqlite');
     localClient = createClient({ url: localDbPath });
   }
@@ -34,8 +51,12 @@ async function execute(queryObj) {
     try {
       return await client.execute(queryObj);
     } catch (err) {
-      console.warn(`✦ Turso Cloud query notice (${err.message}). Using local libSQL replica.`);
-      return await getLocalClient().execute(queryObj);
+      console.warn(`✦ Turso Cloud query notice (${err.message}). Attempting local libSQL fallback.`);
+      try {
+        return await getLocalClient().execute(queryObj);
+      } catch (localErr) {
+        throw err; // Preserve original cloud error if local also fails
+      }
     }
   }
   return await getLocalClient().execute(queryObj);
@@ -88,37 +109,53 @@ async function ensureTables(targetClient) {
  * Initialize connection to Turso cloud database or local libSQL fallback.
  */
 export async function initDatabase() {
-  if (isInitialized) return client || getLocalClient();
+  if (isInitialized) return isCloud ? client : localClient;
 
-  const local = getLocalClient();
-  await ensureTables(local);
+  const cloudUrl = process.env.DATABASE_URL || DEFAULT_TURSO_URL;
+  const authToken = process.env.DATABASE_AUTH_TOKEN || DEFAULT_TURSO_TOKEN;
 
-  const cloudUrl = process.env.DATABASE_URL;
-  const authToken = process.env.DATABASE_AUTH_TOKEN;
-
-  if (cloudUrl && cloudUrl.startsWith('libsql://')) {
+  if (cloudUrl && (cloudUrl.startsWith('libsql://') || cloudUrl.startsWith('https://'))) {
     try {
       console.log(`✦ Connecting to Turso Cloud Database: ${cloudUrl}`);
       const testClient = createClient({
         url: cloudUrl,
         authToken: authToken,
-        fetch: (url, opts) => fetch(url, { ...opts, signal: AbortSignal.timeout(5000) })
+        fetch: (url, opts) => fetch(url, { ...opts, signal: AbortSignal.timeout(6000) })
       });
       await testClient.execute("SELECT 1 AS connected;");
       client = createClient({ url: cloudUrl, authToken: authToken });
       isCloud = true;
       await ensureTables(client);
       console.log('✓ Successfully connected to Turso Cloud Database!');
+      
+      // Migrate initial seed data from JSON files if database tables are currently empty
+      try {
+        await migrateFromJsonFiles();
+      } catch (migErr) {
+        console.warn('[WME DB] Seed migration note:', migErr.message);
+      }
+
+      isInitialized = true;
+      return client;
     } catch (err) {
-      console.warn(`✦ Turso Cloud notice (${err.message}). Local libSQL active.`);
+      console.warn(`✦ Turso Cloud connection notice (${err.message}). Attempting local libSQL fallback.`);
     }
   }
 
-  // Migrate initial seed data from JSON files if database tables are currently empty
-  await migrateFromJsonFiles();
-
-  isInitialized = true;
-  return isCloud ? client : local;
+  // Fallback to local SQLite only if cloud is unreachable or not configured
+  try {
+    const local = getLocalClient();
+    await ensureTables(local);
+    try {
+      await migrateFromJsonFiles();
+    } catch {}
+    isInitialized = true;
+    return local;
+  } catch (err) {
+    console.error('✦ Local libSQL fallback error:', err.message);
+    isInitialized = true;
+    return null;
+  }
 }
 
 /**
