@@ -23,23 +23,33 @@
 
   <!-- Interactive Controls Bar -->
   <nav class="controls-bar" aria-label="Credential Controls">
-    <button class="btn btn-gold" id="flipBtn" type="button" title="Flip Card to View Back">
+    <button class="btn btn-gold" id="flipBtn" type="button" title="Flip Card to View Back (or press Spacebar)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
       </svg>
       Flip Pass
     </button>
 
-    <a class="btn btn-gold" href="brenda-wright-vip-pass-complete.png" download="WME-VIP-Pass-Brenda-Wright.png" title="Download High-Resolution Badge PNG">
+    <!-- Direct Download Buttons -->
+    <button class="btn btn-gold" id="downloadFrontBtn" type="button" title="Download Front Card PNG">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
         <polyline points="7 10 12 15 17 10"></polyline>
         <line x1="12" y1="15" x2="12" y2="3"></line>
       </svg>
-      Download PNG
-    </a>
+      Download Front
+    </button>
 
-    <a class="btn btn-outline" href="brenda-wright-vip-pass.pdf" download="WME-VIP-Pass-Brenda-Wright.pdf" title="Download Printable Pass PDF">
+    <button class="btn btn-outline" id="downloadBackBtn" type="button" title="Download Back Card PNG">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      Download Back
+    </button>
+
+    <button class="btn btn-outline" id="downloadPdfBtn" type="button" title="Download Printable PDF (2-Pages)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
         <polyline points="14 2 14 8 20 8"></polyline>
@@ -47,15 +57,14 @@
         <line x1="16" y1="17" x2="8" y2="17"></line>
       </svg>
       Download PDF
-    </a>
+    </button>
 
-    <button class="btn btn-outline" id="printBtn" type="button" title="Print CR80 VIP Badge">
+    <button class="btn btn-outline" id="photoToggleBtn" type="button" title="Toggle between Driver's License Crop and Verified Biometric Emblem">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6 9 6 2 18 2 18 9"></polyline>
-        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-        <rect x="6" y="14" width="12" height="8"></rect>
+        <circle cx="12" cy="8" r="4"></circle>
+        <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path>
       </svg>
-      Print
+      Toggle Photo Style
     </button>
 
     <button class="btn btn-outline" id="inspectIdBtn" type="button" title="Inspect Encrypted Florida Driver's License">
@@ -65,14 +74,6 @@
         <line x1="7" y1="12" x2="11" y2="12"></line>
       </svg>
       Inspect ID
-    </button>
-
-    <button class="btn btn-outline" id="exportBtn" type="button" title="Download Security JSON Manifest">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="16 18 22 12 16 6"></polyline>
-        <polyline points="8 6 2 12 8 18"></polyline>
-      </svg>
-      JSON Data
     </button>
   </nav>
 
@@ -113,8 +114,8 @@
         <section class="card-body">
           <div class="photo-and-title">
             <div class="photo-wrapper">
-              <img class="passholder-photo" src="assets/brenda_badge_photo.png" alt="Accredited Passholder Brenda Wright">
-              <span class="photo-verified-badge">GOV ID VERIFIED</span>
+              <img class="passholder-photo" id="passholderPhoto" src="assets/brenda_badge_avatar.png" alt="Accredited Passholder Brenda Wright">
+              <span class="photo-verified-badge" id="photoVerifiedBadge">GOV ID VERIFIED</span>
             </div>
             
             <div class="passholder-details">

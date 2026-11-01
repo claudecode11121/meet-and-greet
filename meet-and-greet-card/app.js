@@ -91,6 +91,77 @@ document.addEventListener('DOMContentLoaded', () => {
     window.print();
   });
 
+  // Direct File Downloader Helper
+  function triggerDownload(url, filename) {
+    fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error('Network error');
+        return res.blob();
+      })
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+      })
+      .catch(() => {
+        // Fallback for file:// or direct link
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+  }
+
+  // Download Front PNG
+  const downloadFrontBtn = document.getElementById('downloadFrontBtn');
+  downloadFrontBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    triggerDownload('brenda-wright-vip-pass-front.png', 'Brenda-Wright-VIP-Pass-Front.png');
+  });
+
+  // Download Back PNG
+  const downloadBackBtn = document.getElementById('downloadBackBtn');
+  downloadBackBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    triggerDownload('brenda-wright-vip-pass-back.png', 'Brenda-Wright-VIP-Pass-Back.png');
+  });
+
+  // Download PDF
+  const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+  downloadPdfBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    triggerDownload('brenda-wright-vip-pass.pdf', 'Brenda-Wright-VIP-Meet-Greet-Pass.pdf');
+  });
+
+  // Toggle Photo Style (Biometric Security Emblem vs Driver's License Document Crop)
+  const photoToggleBtn = document.getElementById('photoToggleBtn');
+  const passholderPhoto = document.getElementById('passholderPhoto');
+  const photoVerifiedBadge = document.getElementById('photoVerifiedBadge');
+  let isAvatarMode = true;
+
+  photoToggleBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isAvatarMode = !isAvatarMode;
+    if (isAvatarMode) {
+      passholderPhoto.src = 'assets/brenda_badge_avatar.png';
+      if (photoVerifiedBadge) photoVerifiedBadge.textContent = 'GOV ID VERIFIED';
+    } else {
+      passholderPhoto.src = 'assets/brenda_badge_photo.png';
+      if (photoVerifiedBadge) photoVerifiedBadge.textContent = 'FLORIDA DL CROP';
+    }
+  });
+
   // Modal: Inspect Florida Driver's License
   function openModal() {
     if (idModal) idModal.classList.add('is-active');
