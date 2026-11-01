@@ -91,35 +91,69 @@ document.addEventListener('DOMContentLoaded', () => {
     window.print();
   });
 
-  // Direct File Downloader Helper
-  function triggerDownload(url, filename) {
-    fetch(url)
+  // Reliable File Downloader (Direct Blob / In-Memory Stream)
+  function downloadBlob(blob, filename) {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    }, 250);
+  }
+
+  function downloadBase64(base64Data, filename, mimeType = 'application/octet-stream') {
+    try {
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mimeType });
+      downloadBlob(blob, filename);
+    } catch (err) {
+      console.warn('Base64 decode fallback:', err);
+      // Fallback data-url download WITHOUT target="_blank"
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = `data:${mimeType};base64,${base64Data}`;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => document.body.removeChild(a), 250);
+    }
+  }
+
+  function triggerDownload(key, fallbackUrl, filename, mimeType = 'application/octet-stream') {
+    // 1. If pre-bundled offline data is present (works 100% on file://, no CORS, no new tab)
+    if (window.PASS_DOWNLOADS && window.PASS_DOWNLOADS[key]) {
+      downloadBase64(window.PASS_DOWNLOADS[key], filename, mimeType);
+      return;
+    }
+
+    // 2. If running under HTTP server, try fetch
+    fetch(fallbackUrl)
       .then(res => {
-        if (!res.ok) throw new Error('Network error');
+        if (!res.ok) throw new Error('Network error: ' + res.status);
         return res.blob();
       })
       .then(blob => {
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(blobUrl);
-        }, 100);
+        downloadBlob(blob, filename);
       })
       .catch(() => {
-        // Fallback for file:// or direct link
+        // Direct download link WITHOUT target="_blank"
         const a = document.createElement('a');
-        a.href = url;
+        a.style.display = 'none';
+        a.href = fallbackUrl;
         a.download = filename;
-        a.target = '_blank';
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        setTimeout(() => document.body.removeChild(a), 250);
       });
   }
 
@@ -127,21 +161,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const downloadFrontBtn = document.getElementById('downloadFrontBtn');
   downloadFrontBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
-    triggerDownload('brenda-wright-vip-pass-front.png', 'Brenda-Wright-VIP-Pass-Front.png');
+    triggerDownload('frontPng', 'brenda-wright-vip-pass-front.png', 'Brenda-Wright-VIP-Pass-Front.png', 'image/png');
   });
 
   // Download Back PNG
   const downloadBackBtn = document.getElementById('downloadBackBtn');
   downloadBackBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
-    triggerDownload('brenda-wright-vip-pass-back.png', 'Brenda-Wright-VIP-Pass-Back.png');
+    triggerDownload('backPng', 'brenda-wright-vip-pass-back.png', 'Brenda-Wright-VIP-Pass-Back.png', 'image/png');
+  });
+
+  // Download Complete Presentation PNG
+  const downloadCompleteBtn = document.getElementById('downloadCompleteBtn');
+  downloadCompleteBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    triggerDownload('completePng', 'brenda-wright-vip-pass-complete.png', 'Brenda-Wright-VIP-Pass-Complete.png', 'image/png');
   });
 
   // Download PDF
   const downloadPdfBtn = document.getElementById('downloadPdfBtn');
   downloadPdfBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
-    triggerDownload('brenda-wright-vip-pass.pdf', 'Brenda-Wright-VIP-Meet-Greet-Pass.pdf');
+    triggerDownload('pdf', 'brenda-wright-vip-pass.pdf', 'Brenda-Wright-VIP-Meet-Greet-Pass.pdf', 'application/pdf');
   });
 
   // Toggle Photo Style (VIP Portrait Photo vs Security Emblem)

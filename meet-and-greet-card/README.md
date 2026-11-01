@@ -65,7 +65,7 @@ card meet and f=greet/
 
 ## 🚀 How to View and Download
 
-1. **One-Click Download from Browser:** Open [`index.html`](file:///home/david/Desktop/card%20meet%20and%20f=greet/index.html) and click **"Download PNG"** or **"Download PDF"** in the top control bar.
+1. **Instant Direct Download from Browser:** Open [`index.html`](file:///home/david/Desktop/card%20meet%20and%20f=greet/index.html) and click **"Download Front"**, **"Download Back"**, **"Download Both"**, or **"Download PDF"** in the top control bar to save the high-res files directly to your device without opening new browser tabs.
 2. **Interactive 3D Flip:** Click anywhere on the badge or press **Spacebar** / **Flip Pass** to view the back.
 3. **Inspect ID Document:** Click **Inspect ID** to preview the verified Florida driver's license intake.
 4. **Direct File Access:** The high-res images (`.png`) and printable PDF (`.pdf`) are saved directly in this folder.
