@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     triggerDownload('brenda-wright-vip-pass.pdf', 'Brenda-Wright-VIP-Meet-Greet-Pass.pdf');
   });
 
-  // Toggle Photo Style (Driver's License Photo vs Biometric Security Emblem)
+  // Toggle Photo Style (VIP Portrait Photo vs Security Emblem)
   const photoToggleBtn = document.getElementById('photoToggleBtn');
   const passholderPhoto = document.getElementById('passholderPhoto');
   const photoVerifiedBadge = document.getElementById('photoVerifiedBadge');
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (photoVerifiedBadge) photoVerifiedBadge.textContent = 'SECURITY EMBLEM';
     } else {
       passholderPhoto.src = 'assets/brenda_badge_photo.png';
-      if (photoVerifiedBadge) photoVerifiedBadge.textContent = 'FLORIDA DL VERIFIED';
+      if (photoVerifiedBadge) photoVerifiedBadge.textContent = 'VIP PHOTO VERIFIED';
     }
   });
 
