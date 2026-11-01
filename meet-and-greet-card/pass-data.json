@@ -2,6 +2,7 @@
   "credential": {
     "passId": "WME-KR26-0813-VIP",
     "serialNumber": "8136-1310-3120-2611",
+    "activationPin": "813-026",
     "barcodeString": "*WME-KR26-BW813*",
     "qrVerificationUrl": "https://meet-and-greet-eta.vercel.app/verify?ref=WME-KR26-0813-VIP&guest=Brenda+Wright",
     "accessTier": "VIP ALL-ACCESS / GREEN ROOM",
@@ -37,6 +38,8 @@
   },
   "security": {
     "accreditationCode": "VIP-ACCRED-0813",
+    "activationPin": "813-026",
+    "pinStatus": "ACTIVE & PENDING VENUE SCAN",
     "encryptionStandard": "AES-256 Encrypted Identification Intake",
     "biometricClearance": "Facial Match & Photo ID Certified",
     "venueRules": [

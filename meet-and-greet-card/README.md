@@ -23,6 +23,7 @@ This standalone VIP Access Credential was generated using the verified submissio
 - **Government ID:** Florida Driver's License (Photo verified & securely encrypted)
 - **Digital Signature:** Brenda Wright (E-Sign Affixed: October 31, 2026)
 - **Access Tier:** Green Room / VIP All-Access
+- **Pass Activation PIN:** `813-026` (Authenticated & Synced for Biometric / Venue Admittance)
 
 ---
 
