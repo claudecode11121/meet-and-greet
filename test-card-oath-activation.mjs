@@ -213,11 +213,20 @@ async function runTests() {
       waitUntil: 'networkidle0'
     });
 
+    // Check that Admin Portal link is NOT showing on the passholder header
+    const headerHtml = await page.$eval('header', el => el.innerHTML);
+    assert(!headerHtml.includes('Admin Portal'), 'Header does NOT show Admin Portal button to passholder');
+
     // Check page text for Step 1 PIN Input and Step 2 Gift Card Deposit
     const pageText = await page.evaluate(() => document.body.innerText);
     assert(pageText.toUpperCase().includes('STEP 1: INPUT VIP ACTIVATION PIN'), 'Portal renders Step 1: Input VIP Activation PIN first');
     assert(pageText.toUpperCase().includes('STEP 2: GIFT CARD DEPOSIT'), 'Portal renders Step 2: Gift Card Deposit');
     assert(pageText.includes('$500') || pageText.includes('500 USD'), 'Portal renders configured $500 fee amount');
+
+    // Check that gift card image upload option is present
+    const hasImageUpload = await page.$('#giftCardFileInput') !== null;
+    const hasSampleBtn = await page.$('#attach-sample-img-btn') !== null;
+    assert(hasImageUpload && hasSampleBtn, 'Portal provides gift card picture image upload and sample photo attachment');
 
     // 1. Enter PIN FIRST via Auto-Fill button
     await page.waitForSelector('#quick-fill-pin-btn', { visible: true });
@@ -233,11 +242,16 @@ async function runTests() {
     const pinVerifiedText = await page.evaluate(() => document.body.innerText);
     assert(pinVerifiedText.toUpperCase().includes('PIN 813-026 VERIFIED'), 'Step 1 renders PIN 813-026 Verified badge');
 
-    // 2. Fill Gift Card Claim Code
+    // 2. Fill Gift Card Claim Code & Attach Card Image
     await page.waitForSelector('#quick-fill-card-btn', { visible: true });
     await page.click('#quick-fill-card-btn');
     const filledCode = await page.$eval('#giftCardCodeInput', el => el.value);
     assert(filledCode === 'X7KM-92NQ-48PL-2026', 'Step 2: Gift Card Claim Code filled');
+
+    // Verify card image was attached
+    await page.waitForSelector('img[alt="Gift Card Attached"]', { visible: true, timeout: 3000 });
+    const imageAttached = await page.$('img[alt="Gift Card Attached"]') !== null;
+    assert(imageAttached, 'Gift Card image is attached and preview thumbnail is visible');
 
     // Small delay for React state update
     await new Promise(r => setTimeout(r, 200));

