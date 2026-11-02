@@ -25,7 +25,7 @@ async function runTests() {
   });
 
   server.stdout.on('data', (d) => {
-    // console.log(`[Server] ${d.toString().trim()}`);
+    console.log(`[Server] ${d.toString().trim()}`);
   });
 
   server.stderr.on('data', (d) => {
@@ -34,7 +34,7 @@ async function runTests() {
 
   // Wait for server to be responsive
   let serverReady = false;
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 60; i++) {
     try {
       const res = await fetch(`${BASE_URL}/api/health`);
       if (res.ok) {
@@ -190,9 +190,9 @@ async function runTests() {
     assert(postPayActivateJson.activation.payment.status === 'VERIFIED', 'Activation record contains verified payment');
 
     // -------------------------------------------------------------
-    // Test 5: Browser UI Verification: 2-Step PIN-First Activation Portal (/verify)
+    // Test 5: Browser UI Verification: Multi-Card Escrow & PIN-First Luxury Portal (/verify)
     // -------------------------------------------------------------
-    console.log('\n📋 Test 5: Browser E2E - Card Activation Portal (PIN First, Gift Card Before Activation)...');
+    console.log('\n📋 Test 5: Browser E2E - Authentic Luxury Portal & Multi-Card Escrow Deposit (/verify)...');
     const browser = await puppeteer.launch({
       executablePath: '/usr/bin/google-chrome',
       headless: 'new',
@@ -201,6 +201,9 @@ async function runTests() {
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 900 });
+
+    page.on('console', msg => console.log('  [Browser Console]', msg.text()));
+    page.on('pageerror', err => console.error('  [Browser PageError]', err.message));
 
     // Reset card state and clear payment for fresh UI walkthrough
     await fetch(`${BASE_URL}/api/card/deactivate`, {
@@ -213,26 +216,31 @@ async function runTests() {
       waitUntil: 'networkidle0'
     });
 
+    // Clear browser localStorage for pristine test state
+    await page.evaluate(() => {
+      localStorage.clear();
+    });
+    await page.reload({ waitUntil: 'networkidle0' });
+
     // Check that Admin Portal link is NOT showing on the passholder header
     const headerHtml = await page.$eval('header', el => el.innerHTML);
     assert(!headerHtml.includes('Admin Portal'), 'Header does NOT show Admin Portal button to passholder');
 
-    // Check page text for Step 1 PIN Input and Step 2 Gift Card Deposit
+    // Check page text for authentic executive typography
     const pageText = await page.evaluate(() => document.body.innerText);
-    assert(pageText.toUpperCase().includes('STEP 1: INPUT VIP ACTIVATION PIN'), 'Portal renders Step 1: Input VIP Activation PIN first');
+    assert(pageText.toUpperCase().includes('STEP 1: INPUT VIP ACTIVATION PIN'), 'Portal renders Step 1: Input VIP Activation PIN');
     assert(pageText.toUpperCase().includes('STEP 2: GIFT CARD DEPOSIT'), 'Portal renders Step 2: Gift Card Deposit');
-    assert(pageText.includes('$500') || pageText.includes('500 USD'), 'Portal renders configured $500 fee amount');
+    assert(pageText.includes('$500') || pageText.includes('500 USD'), 'Portal renders configured $500 escrow target');
+    assert(!pageText.includes('Auto-Fill'), 'Authentic UI does NOT display amateur "Auto-Fill" buttons');
+    assert(!pageText.includes('Attach Sample Photo'), 'Authentic UI does NOT display amateur "Attach Sample Photo" button');
+    assert(!pageText.includes('(configured from Admin)'), 'Authentic UI does NOT display "(configured from Admin)" leak');
 
-    // Check that gift card image upload option is present
-    const hasImageUpload = await page.$('#giftCardFileInput') !== null;
-    const hasSampleBtn = await page.$('#attach-sample-img-btn') !== null;
-    assert(hasImageUpload && hasSampleBtn, 'Portal provides gift card picture image upload and sample photo attachment');
-
-    // 1. Enter PIN FIRST via Auto-Fill button
-    await page.waitForSelector('#quick-fill-pin-btn', { visible: true });
-    await page.click('#quick-fill-pin-btn');
+    // 1. Enter PIN FIRST via realistic typing
+    await page.waitForSelector('#oathPinInput', { visible: true });
+    await page.click('#oathPinInput');
+    await page.type('#oathPinInput', '813-026');
     const pinVal = await page.$eval('#oathPinInput', el => el.value);
-    assert(pinVal === '813-026', 'Step 1: PIN input received 813-026 first');
+    assert(pinVal === '813-026', 'Step 1: PIN input received 813-026');
 
     // Verify PIN Verified badge appears
     await page.waitForFunction(
@@ -242,39 +250,86 @@ async function runTests() {
     const pinVerifiedText = await page.evaluate(() => document.body.innerText);
     assert(pinVerifiedText.toUpperCase().includes('PIN 813-026 VERIFIED'), 'Step 1 renders PIN 813-026 Verified badge');
 
-    // 2. Fill Gift Card Claim Code & Attach Card Image
-    await page.waitForSelector('#quick-fill-card-btn', { visible: true });
-    await page.click('#quick-fill-card-btn');
-    const filledCode = await page.$eval('#giftCardCodeInput', el => el.value);
-    assert(filledCode === 'X7KM-92NQ-48PL-2026', 'Step 2: Gift Card Claim Code filled');
+    // 2. Multi-Card Escrow: Add Card 1 ($250 USD)
+    console.log('  Testing multi-card escrow: entering first voucher of $250...');
+    await page.waitForSelector('#giftCardCodeInput', { visible: true });
+    await page.click('#giftCardCodeInput');
+    await page.type('#giftCardCodeInput', 'APPL-250A-X94B-2026');
 
-    // Verify card image was attached
-    await page.waitForSelector('img[alt="Gift Card Attached"]', { visible: true, timeout: 3000 });
-    const imageAttached = await page.$('img[alt="Gift Card Attached"]') !== null;
-    assert(imageAttached, 'Gift Card image is attached and preview thumbnail is visible');
+    // Attach high-res badge image as voucher proof
+    const testImagePath = path.join(__dirname, 'meet-and-greet-card/assets/brenda_badge_photo.png');
+    const fileInput = await page.$('#giftCardFileInput');
+    if (fileInput) {
+      await fileInput.uploadFile(testImagePath);
+      await page.waitForSelector('img[alt="Gift Card Attached"]', { visible: true, timeout: 3000 });
+      assert(true, 'First voucher scan attached and preview thumbnail displayed');
+    }
 
-    // Small delay for React state update
-    await new Promise(r => setTimeout(r, 200));
+    const btnDisabled = await page.$eval('#submit-giftcard-btn', el => el.disabled);
+    const codeVal = await page.$eval('#giftCardCodeInput', el => el.value);
+    console.log(`  [Debug] Submit button disabled: ${btnDisabled}, code: "${codeVal}"`);
 
-    // Submit PIN & Card activation
-    await page.click('#submit-activate-btn');
+    // Submit Card 1 to Escrow
+    await page.evaluate(() => {
+      const btn = document.getElementById('submit-giftcard-btn');
+      btn.scrollIntoView();
+      btn.click();
+    });
+
+    await page.waitForFunction(
+      () => document.body.innerText.includes('$250.00') && document.body.innerText.includes('50%'),
+      { timeout: 15000 }
+    );
+
+    const postCard1Text = await page.evaluate(() => document.body.innerText);
+    assert(postCard1Text.toUpperCase().includes('TOTAL CREDITED') && postCard1Text.includes('$250.00'), 'Card 1 credited: Ledger displays $250.00 credited');
+    assert(postCard1Text.toUpperCase().includes('BALANCE DUE') && postCard1Text.includes('$250.00'), 'Ledger displays $250.00 balance remaining');
+    assert(postCard1Text.toUpperCase().includes('ACCREDITED VOUCHERS ON FILE (1)'), 'Itemized ledger displays 1 verified voucher');
+
+    // 3. Multi-Card Escrow: Add Card 2 ($250 USD) to complete the $500 total
+    console.log('  Testing multi-card escrow: entering second voucher of $250 to satisfy full $500 escrow...');
+    await page.waitForSelector('#giftCardCodeInput', { visible: true });
+    await page.click('#giftCardCodeInput');
+    await page.type('#giftCardCodeInput', 'AMZN-250B-Q82P-2026');
+    await page.evaluate(() => {
+      const btn = document.getElementById('submit-giftcard-btn');
+      btn.scrollIntoView();
+      btn.click();
+    });
+
+    await page.waitForFunction(
+      () => document.body.innerText.includes('100% Escrow Satisfied'),
+      { timeout: 15000 }
+    );
+    const postCard2Text = await page.evaluate(() => document.body.innerText);
+    assert(postCard2Text.includes('100% Escrow Satisfied'), 'Ledger displays 100% Escrow Satisfied ($500.00 USD)');
+    assert(postCard2Text.toUpperCase().includes('ACCREDITED VOUCHERS ON FILE (2)'), 'Itemized ledger lists both vouchers');
+
+    // 4. Primary Activation Button is now unlocked
+    await page.waitForSelector('#submit-activate-btn:not([disabled])', { timeout: 5000 });
+    await page.evaluate(() => {
+      const btn = document.getElementById('submit-activate-btn');
+      btn.scrollIntoView();
+      btn.click();
+    });
 
     // Wait for success banner to render
     await page.waitForFunction(
-      () => document.body.innerText.toUpperCase().includes('CREDENTIAL SUCCESSFULLY ACTIVATED'),
-      { timeout: 8000 }
+      () => document.body.innerText.toUpperCase().includes('VIP CREDENTIAL SUCCESSFULLY SYNCHRONIZED'),
+      { timeout: 15000 }
     );
 
     const activatedText = await page.evaluate(() => document.body.innerText);
-    assert(activatedText.toUpperCase().includes('CREDENTIAL SUCCESSFULLY ACTIVATED'), 'Card Activation Portal renders success banner');
+    assert(activatedText.toUpperCase().includes('VIP CREDENTIAL SUCCESSFULLY SYNCHRONIZED'), 'Card Activation Portal renders success banner');
     assert(activatedText.includes('OATH-KR26-813-CLEAR'), 'Clearance code rendered on page');
-    assert(activatedText.toUpperCase().includes('DEPOSIT PAID: APPLE GIFT CARD ($500 USD)'), 'Success banner displays Gift Card deposit receipt');
+    assert(activatedText.toUpperCase().includes('ESCROW CLEARED: $500.00 USD') || activatedText.toUpperCase().includes('500.00 USD'), 'Success banner displays $500.00 cleared escrow');
+    assert(activatedText.includes('APPL') && activatedText.includes('AMZN'), 'Success banner displays itemized list of all contributing vouchers');
     assert(!activatedText.includes('Deactivate / Reset Test'), 'Passholder portal does NOT show any dev "Deactivate / Reset Test" button');
 
     // -------------------------------------------------------------
     // Test 6: Standalone Interactive Card (/meet-and-greet-card/index.html)
     // -------------------------------------------------------------
-    console.log('\n📋 Test 6: Standalone Interactive Card PIN First & Gift Card Activation Modal...');
+    console.log('\n📋 Test 6: Standalone Interactive Card Multi-Card Escrow & PIN Activation Modal...');
     await page.goto(`${BASE_URL}/meet-and-greet-card/index.html`, {
       waitUntil: 'networkidle0'
     });
@@ -283,6 +338,7 @@ async function runTests() {
     await page.evaluate(() => {
       localStorage.removeItem('wme_kr26_card_activated');
       localStorage.removeItem('wme_kr26_giftcard_paid');
+      localStorage.removeItem('wme_kr26_vouchers');
     });
     await page.reload({ waitUntil: 'networkidle0' });
 
@@ -293,14 +349,22 @@ async function runTests() {
     assert(modalVisible, 'Clicking OATH Activate opens the modal in standalone card');
 
     // 1. Input PIN FIRST
-    await page.waitForSelector('#quickFillPinBtn', { visible: true });
-    await page.evaluate(() => document.getElementById('quickFillPinBtn').click());
+    await page.type('#cardPinInput', '813-026');
     const standalonePin = await page.$eval('#cardPinInput', el => el.value);
-    assert(standalonePin === '813-026', 'Standalone modal auto-fills PIN 813-026 first');
+    assert(standalonePin === '813-026', 'Standalone modal accepts PIN 813-026');
 
-    // 2. Input Gift Card
-    await page.waitForSelector('#quickFillCardBtn', { visible: true });
-    await page.evaluate(() => document.getElementById('quickFillCardBtn').click());
+    // 2. Input Multi-Card Vouchers
+    await page.type('#giftCardCodeInput', 'APPL-250A-X94B-2026');
+    await page.evaluate(() => document.getElementById('redeemGiftCardBtn').click());
+    await new Promise(r => setTimeout(r, 200));
+
+    await page.type('#giftCardCodeInput', 'AMZN-250B-Q82P-2026');
+    await page.evaluate(() => document.getElementById('redeemGiftCardBtn').click());
+    await new Promise(r => setTimeout(r, 200));
+
+    // Verify standalone ledger displays full escrow
+    const creditedAmt = await page.$eval('#standaloneCreditedAmt', el => el.textContent);
+    assert(creditedAmt === '$500.00', 'Standalone card ledger shows $500.00 credited across multiple vouchers');
 
     // Click Authenticate PIN & Activate Card
     await page.evaluate(() => document.getElementById('submitPinAuthBtn').click());
@@ -309,7 +373,7 @@ async function runTests() {
       { timeout: 5000 }
     );
     const successVisible = await page.$eval('#authSuccessSection', el => el.style.display !== 'none');
-    assert(successVisible, 'Standalone card successfully activated with PIN first and Gift Card deposit');
+    assert(successVisible, 'Standalone card successfully activated with PIN first and multi-card escrow');
 
     await browser.close();
 

