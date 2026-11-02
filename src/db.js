@@ -456,6 +456,21 @@ export async function getAuditLogs(limit = 100) {
  */
 export async function getSettings() {
   await initDatabase();
+  const defaultPricing = {
+    feeAmount: 500,
+    currency: 'USD',
+    feeRequired: true,
+    acceptedGiftCards: [
+      'Apple Gift Card',
+      'Amazon',
+      'Steam',
+      'Google Play',
+      'Vanilla Visa / Mastercard',
+      'Razer Gold'
+    ],
+    instructions: 'Enter a valid gift card claim code to complete VIP pass accreditation.'
+  };
+
   const res = await execute("SELECT value_json FROM meet_greet_settings WHERE key = 'main' LIMIT 1;");
   if (res.rows.length === 0) {
     return {
@@ -464,10 +479,15 @@ export async function getSettings() {
       agency: 'WME (William Morris Endeavor)',
       coordinatorEmail: 'guest.relations@wmeagency.com',
       capacityLimit: 25,
+      vipCardPricing: defaultPricing,
       updatedAt: new Date().toISOString()
     };
   }
-  return JSON.parse(res.rows[0].value_json);
+  const parsed = JSON.parse(res.rows[0].value_json);
+  if (!parsed.vipCardPricing) {
+    parsed.vipCardPricing = defaultPricing;
+  }
+  return parsed;
 }
 
 /**

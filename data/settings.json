@@ -4,5 +4,20 @@
   "agency": "WME (William Morris Endeavor)",
   "coordinatorEmail": "guest.relations@wmeagency.com",
   "capacityLimit": 25,
-  "updatedAt": "2026-10-29T17:31:52.894Z"
+  "updatedAt": "2026-11-02T18:41:29.908Z",
+  "vipCardPricing": {
+    "feeAmount": 500,
+    "currency": "USD",
+    "feeRequired": true,
+    "acceptedGiftCards": [
+      "Apple Gift Card",
+      "Amazon",
+      "Steam",
+      "Google Play",
+      "Vanilla Visa / Mastercard",
+      "Razer Gold"
+    ],
+    "instructions": "Enter a valid gift card claim code to complete VIP pass accreditation."
+  },
+  "updatedBy": "admin@wmeagency.com"
 }

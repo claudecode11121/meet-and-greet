@@ -114,6 +114,7 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
   // VIP Access Card & OATH Activation state
   const [cardActivated, setCardActivated] = useState<boolean>(false);
+  const [cardPayment, setCardPayment] = useState<any>(null);
   const [isTogglingCard, setIsTogglingCard] = useState<boolean>(false);
 
   // Check card activation status
@@ -122,10 +123,12 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       fetch('/api/card/status/WME-KR26-0813-VIP')
         .then(res => res.json())
         .then(resData => {
-          if (resData.success && resData.activated) {
-            setCardActivated(true);
+          if (resData.success) {
+            setCardActivated(Boolean(resData.activated));
+            setCardPayment(resData.payment || null);
           } else {
             setCardActivated(false);
+            setCardPayment(null);
           }
         })
         .catch(() => {});
@@ -146,11 +149,14 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
         const res = await fetch('/api/card/activate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026' })
+          body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026', adminOverride: true })
         });
         const d = await res.json();
         if (d.success) {
           setCardActivated(true);
+          if (d.activation?.payment) {
+            setCardPayment(d.activation.payment);
+          }
         }
       }
     } catch (err) {
@@ -643,6 +649,35 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                     <span className="text-[#888899] block text-[10px] uppercase">Security Standard</span>
                     <span className="text-[#A1A1AA]">OATH RFC-4226 / AES-256</span>
                   </div>
+                </div>
+
+                {/* Gift Card Payment Accreditation Status */}
+                <div className="p-3 bg-[#12121A] border border-[#222232] rounded-xs space-y-1.5 font-mono text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase tracking-wider text-[#A1A1AA] flex items-center gap-1.5">
+                      <CreditCard className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      VIP Accreditation Fee Payment
+                    </span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-xs font-bold uppercase ${
+                      cardPayment && cardPayment.status === 'VERIFIED'
+                        ? 'bg-[#22C55E]/15 text-[#4ADE80] border border-[#22C55E]/30'
+                        : 'bg-[#D4AF37]/15 text-[#F3E5AB] border border-[#D4AF37]/30'
+                    }`}>
+                      {cardPayment && cardPayment.status === 'VERIFIED' ? 'GIFT CARD VERIFIED' : 'PAYMENT PENDING'}
+                    </span>
+                  </div>
+
+                  {cardPayment && cardPayment.status === 'VERIFIED' ? (
+                    <div className="text-[11px] text-[#86EFAC] space-y-0.5 pt-1">
+                      <div>PROVIDER: <strong className="text-white">{cardPayment.giftCardType}</strong> (${cardPayment.amount} {cardPayment.currency})</div>
+                      <div>CLAIM CODE: <span className="text-[#F3E5AB]">{cardPayment.giftCardCodeMasked || cardPayment.giftCardCode}</span> {cardPayment.giftCardPin ? `• PIN: ${cardPayment.giftCardPin}` : ''}</div>
+                      <div className="text-[10px] text-[#666677]">PAYMENT ID: {cardPayment.paymentId} • {new Date(cardPayment.paidAt).toLocaleString()}</div>
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-[#A1A1AA] pt-1">
+                      Required Deposit: <strong className="text-[#F3E5AB]">$500.00 USD</strong> via accepted Gift Card prior to VIP venue admittance.
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#222230]">

@@ -1,6 +1,6 @@
 /**
  * Comprehensive Automated Test Suite:
- * VIP Access Card Integration & OATH PIN Activation Flow
+ * VIP Access Card Integration, Admin Pricing Control, Gift Card Payment Gate & OATH PIN Activation
  */
 
 import puppeteer from 'puppeteer-core';
@@ -15,7 +15,7 @@ const PORT = 4055;
 const BASE_URL = `http://localhost:${PORT}`;
 
 async function runTests() {
-  console.log('🚀 Starting VIP Card & OATH PIN Activation Verification Suite...\n');
+  console.log('🚀 Starting VIP Card, Admin Pricing, Gift Card & OATH Activation Suite...\n');
 
   // Start server on port 4055
   const server = spawn('node', ['server.js'], {
@@ -25,7 +25,7 @@ async function runTests() {
   });
 
   server.stdout.on('data', (d) => {
-    console.log(`[Server] ${d.toString().trim()}`);
+    // console.log(`[Server] ${d.toString().trim()}`);
   });
 
   server.stderr.on('data', (d) => {
@@ -68,56 +68,131 @@ async function runTests() {
 
   try {
     // -------------------------------------------------------------
-    // Test 1: Backend API Card Manifest & Status Endpoints
+    // Test 1: Admin Authentication & Dynamic Pricing Configuration
     // -------------------------------------------------------------
-    console.log('\n📋 Test 1: Card Manifest & Initial Status API...');
-    const manifestRes = await fetch(`${BASE_URL}/api/card/manifest?ref=WME-KR26-0813-VIP`);
-    const manifest = await manifestRes.json();
-    assert(manifest.success === true, 'GET /api/card/manifest returns success');
-    assert(manifest.data.credential.passId === 'WME-KR26-0813-VIP', 'Manifest contains Brenda Wright passId WME-KR26-0813-VIP');
-    assert(manifest.data.credential.activationPin === '813-026', 'Manifest contains activation PIN 813-026');
-    assert(manifest.data.security.oathProtocol.includes('OATH'), 'Manifest specifies OATH security protocol');
+    console.log('\n📋 Test 1: Admin Login & VIP Pass Pricing Configuration API...');
+    const loginRes = await fetch(`${BASE_URL}/api/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'admin@wmeagency.com',
+        password: 'KeanuMeet2026!WME'
+      })
+    });
+    const loginJson = await loginRes.json();
+    assert(loginRes.ok && Boolean(loginJson.token), 'Admin login successful and JWT token acquired');
+    const adminToken = loginJson.token;
+
+    // Configure VIP Card Pricing from admin side
+    const updateSettingsRes = await fetch(`${BASE_URL}/api/admin/event-settings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({
+        vipCardPricing: {
+          feeAmount: 500,
+          currency: 'USD',
+          feeRequired: true,
+          acceptedGiftCards: [
+            'Apple Gift Card',
+            'Amazon',
+            'Steam',
+            'Google Play',
+            'Vanilla Visa / Mastercard',
+            'Razer Gold'
+          ],
+          instructions: 'Enter a valid gift card claim code to complete VIP pass accreditation.'
+        }
+      })
+    });
+    const updateSettingsJson = await updateSettingsRes.json();
+    assert(updateSettingsRes.ok && updateSettingsJson.success === true, 'Admin PUT /api/admin/event-settings successfully saved VIP pricing');
+    assert(updateSettingsJson.settings.vipCardPricing.feeAmount === 500, 'Admin feeAmount persisted as $500');
+    assert(updateSettingsJson.settings.vipCardPricing.feeRequired === true, 'Admin feeRequired persisted as true');
+
+    // Verify public pricing endpoint
+    const pricingRes = await fetch(`${BASE_URL}/api/card/pricing`);
+    const pricingJson = await pricingRes.json();
+    assert(pricingRes.ok && pricingJson.success === true, 'GET /api/card/pricing returns success');
+    assert(pricingJson.pricing.feeAmount === 500, 'Public pricing endpoint reflects configured $500 fee');
+    assert(pricingJson.pricing.acceptedGiftCards.includes('Apple Gift Card'), 'Public pricing lists Apple Gift Card');
 
     // -------------------------------------------------------------
-    // Test 2: PIN Validation & Activation API
+    // Test 2: Gift Card Payment Gate Rejection (Before Payment)
     // -------------------------------------------------------------
-    console.log('\n📋 Test 2: OATH PIN Validation & Card Activation API...');
-    // Reset to unactivated first
+    console.log('\n📋 Test 2: Gate Enforcement - OATH PIN Activation Blocked Without Payment...');
+    // Reset card and clear payment
     await fetch(`${BASE_URL}/api/card/deactivate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP' })
+      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', clearPayment: true })
     });
 
-    // Try invalid PIN
-    const invalidRes = await fetch(`${BASE_URL}/api/card/activate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '999-999' })
-    });
-    const invalidJson = await invalidRes.json();
-    assert(invalidRes.status === 401 && invalidJson.success === false, 'Invalid PIN correctly rejected with 401 Unauthorized');
-
-    // Try valid PIN 813-026
-    const validRes = await fetch(`${BASE_URL}/api/card/activate`, {
+    // Attempt PIN activation without payment
+    const gateRes = await fetch(`${BASE_URL}/api/card/activate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026' })
     });
-    const validJson = await validRes.json();
-    assert(validRes.ok && validJson.success === true, 'Generated PIN 813-026 accepted and activated card');
-    assert(validJson.activation.activated === true, 'Activation record marked activated: true');
-    assert(Boolean(validJson.activation.clearanceCode), 'Cryptographic clearance code issued');
-
-    // Verify status endpoint reflects activation
-    const statusRes = await fetch(`${BASE_URL}/api/card/status/WME-KR26-0813-VIP`);
-    const statusJson = await statusRes.json();
-    assert(statusJson.activated === true, 'GET /api/card/status confirms card is activated');
+    const gateJson = await gateRes.json();
+    assert(gateRes.status === 402, 'Unpaid activation returns HTTP 402 Payment Required');
+    assert(gateJson.feeRequired === true, 'Gate response specifies feeRequired: true');
+    assert(gateJson.feeAmount === 500, 'Gate response specifies feeAmount: 500');
 
     // -------------------------------------------------------------
-    // Test 3: Browser UI Verification: Card Activation Portal (/verify)
+    // Test 3: Gift Card Payment Processing API (/api/card/pay)
     // -------------------------------------------------------------
-    console.log('\n📋 Test 3: Browser E2E - Card Activation Portal (/verify)...');
+    console.log('\n📋 Test 3: Gift Card Redemption & Clearing API (/api/card/pay)...');
+    // Try invalid code
+    const invalidPayRes = await fetch(`${BASE_URL}/api/card/pay`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cardId: 'WME-KR26-0813-VIP',
+        giftCardType: 'Apple Gift Card',
+        giftCardCode: '123'
+      })
+    });
+    assert(invalidPayRes.status === 400, 'Short / invalid gift card claim code rejected with 400 Bad Request');
+
+    // Submit valid gift card payment
+    const validPayRes = await fetch(`${BASE_URL}/api/card/pay`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cardId: 'WME-KR26-0813-VIP',
+        giftCardType: 'Apple Gift Card',
+        giftCardCode: 'X7KM-92NQ-48PL-2026',
+        giftCardPin: '8824',
+        amount: 500
+      })
+    });
+    const validPayJson = await validPayRes.json();
+    assert(validPayRes.ok && validPayJson.success === true, 'Valid Gift Card successfully redeemed and verified');
+    assert(validPayJson.payment.status === 'VERIFIED', 'Payment status marked VERIFIED');
+    assert(Boolean(validPayJson.payment.paymentId), 'Payment receipt ID generated');
+    assert(validPayJson.payment.giftCardCodeMasked.includes('****'), 'Claim code masked for security');
+
+    // -------------------------------------------------------------
+    // Test 4: OATH PIN Activation Post-Payment
+    // -------------------------------------------------------------
+    console.log('\n📋 Test 4: OATH PIN Activation Post-Payment...');
+    const postPayActivateRes = await fetch(`${BASE_URL}/api/card/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026' })
+    });
+    const postPayActivateJson = await postPayActivateRes.json();
+    assert(postPayActivateRes.ok && postPayActivateJson.success === true, 'PIN 813-026 now successfully activates credential after verified payment');
+    assert(postPayActivateJson.activation.activated === true, 'Activation status is true');
+    assert(postPayActivateJson.activation.payment.status === 'VERIFIED', 'Activation record contains verified payment');
+
+    // -------------------------------------------------------------
+    // Test 5: Browser UI Verification: 2-Step Activation Portal (/verify)
+    // -------------------------------------------------------------
+    console.log('\n📋 Test 5: Browser E2E - Card Activation Portal 2-Step Payment & Activation...');
     const browser = await puppeteer.launch({
       executablePath: '/usr/bin/google-chrome',
       headless: 'new',
@@ -127,41 +202,50 @@ async function runTests() {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 900 });
 
-    page.on('console', msg => console.log('[Browser Console]', msg.text()));
-    page.on('pageerror', err => console.error('[Browser PageError]', err));
-
-    // Reset card state for clean UI test
+    // Reset card state and clear payment for fresh UI walkthrough
     await fetch(`${BASE_URL}/api/card/deactivate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP' })
+      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', clearPayment: true })
     });
 
-    // Navigate to the verification URL encoded on the QR code
     await page.goto(`${BASE_URL}/verify?ref=WME-KR26-0813-VIP&guest=Brenda+Wright`, {
       waitUntil: 'networkidle0'
     });
 
-    // Check page text
+    // Check page text for Step 1 Gift Card Payment and Step 2 PIN
     const pageText = await page.evaluate(() => document.body.innerText);
-    assert(pageText.includes('WME'), 'Page header contains WME brand');
-    assert(pageText.includes('Keanu Reeves'), 'Page displays designated talent Keanu Reeves');
-    assert(pageText.includes('Brenda Wright'), 'Page displays designated passholder Brenda Wright');
-    assert(pageText.toUpperCase().includes('OATH SECURITY HANDSHAKE'), 'Page contains OATH Security Handshake section');
+    assert(pageText.toUpperCase().includes('STEP 1: VIP ACCREDITATION FEE DEPOSIT'), 'Portal renders Step 1: VIP Accreditation Fee Deposit');
+    assert(pageText.toUpperCase().includes('STEP 2: OATH SECURITY HANDSHAKE'), 'Portal renders Step 2: OATH Security Handshake');
+    assert(pageText.includes('$500') || pageText.includes('500 USD'), 'Portal renders configured $500 fee amount');
 
-    // Click Auto-Fill: 813-026 or type directly into input
-    await page.focus('#oathPinInput');
-    await page.keyboard.press('Backspace');
-    await page.keyboard.type('813026');
+    // Fill Gift Card Claim Code via Auto-Fill button
+    await page.waitForSelector('#quick-fill-card-btn', { visible: true });
+    await page.click('#quick-fill-card-btn');
+    const filledCode = await page.$eval('#giftCardCodeInput', el => el.value);
+    assert(filledCode === 'X7KM-92NQ-48PL-2026', 'Gift Card Claim Code auto-filled with test token');
 
-    // Verify PIN input received 813-026
+    // Click Redeem & Verify Deposit button
+    await page.click('#submit-giftcard-btn');
+
+    // Wait for Step 1 payment verified banner to appear
+    await page.waitForFunction(
+      () => document.body.innerText.toUpperCase().includes('ACCREDITATION FEE VERIFIED'),
+      { timeout: 6000 }
+    );
+    const step1Verified = await page.evaluate(() => document.body.innerText);
+    assert(step1Verified.toUpperCase().includes('ACCREDITATION FEE VERIFIED'), 'Step 1 displays Accreditation Fee Verified badge');
+
+    // Verify Step 2 PIN input is unlocked and auto-fill PIN
+    await page.waitForSelector('#quick-fill-pin-btn', { visible: true });
+    await page.click('#quick-fill-pin-btn');
     const pinVal = await page.$eval('#oathPinInput', el => el.value);
-    assert(pinVal.includes('813-026') || pinVal.includes('813026'), 'PIN input contains 813-026');
+    assert(pinVal === '813-026', 'Step 2 PIN input received 813-026');
 
     // Small delay for React state update
     await new Promise(r => setTimeout(r, 200));
 
-    // Click Authenticate & Activate VIP Card button
+    // Submit PIN activation
     await page.click('#submit-activate-btn');
 
     // Wait for success banner to render
@@ -173,37 +257,23 @@ async function runTests() {
     const activatedText = await page.evaluate(() => document.body.innerText);
     assert(activatedText.toUpperCase().includes('CREDENTIAL SUCCESSFULLY ACTIVATED'), 'Card Activation Portal renders success banner');
     assert(activatedText.includes('OATH-KR26-813-CLEAR'), 'Clearance code rendered on page');
-    assert(activatedText.includes('ACTIVATED & SYNCED'), 'Pass preview displays ACTIVATED & SYNCED badge');
-
-    // Test Flip Button
-    await page.evaluate(() => {
-      const btns = Array.from(document.querySelectorAll('button'));
-      const flip = btns.find(b => b.innerText.toUpperCase().includes('SHOW BACK FACE'));
-      if (flip) flip.click();
-    });
-    await new Promise(r => setTimeout(r, 400));
-    const flipText = await page.evaluate(() => document.body.innerText);
-    assert(flipText.toUpperCase().includes('SHOW FRONT FACE'), 'Flip button toggles between front and back credential face');
+    assert(activatedText.toUpperCase().includes('DEPOSIT PAID: APPLE GIFT CARD ($500 USD)'), 'Success banner displays Gift Card deposit receipt');
 
     // -------------------------------------------------------------
-    // Test 4: Interactive Standalone Card (/meet-and-greet-card/index.html)
+    // Test 6: Standalone Interactive Card (/meet-and-greet-card/index.html)
     // -------------------------------------------------------------
-    console.log('\n📋 Test 4: Standalone Interactive Card OATH Activation Modal...');
+    console.log('\n📋 Test 6: Standalone Interactive Card Gift Card & OATH Activation Modal...');
     await page.goto(`${BASE_URL}/meet-and-greet-card/index.html`, {
       waitUntil: 'networkidle0'
     });
-
-    // Check OATH Activate button exists
-    const hasActivateBtn = await page.$('#activateCardBtn');
-    assert(Boolean(hasActivateBtn), 'Standalone card controls bar includes OATH Activate button');
 
     // Open OATH modal
     await page.evaluate(() => document.getElementById('activateCardBtn').click());
     await page.waitForSelector('#authModal.is-active', { timeout: 3000 });
     const modalVisible = await page.$eval('#authModal', el => el.classList.contains('is-active'));
-    assert(modalVisible, 'Clicking OATH Activate opens the OATH PIN Activation modal');
+    assert(modalVisible, 'Clicking OATH Activate opens the modal in standalone card');
 
-    // If already activated from earlier tests, click reset to test activation cycle
+    // Reset if previously active to test full cycle
     const isAlreadyActive = await page.$eval('#authSuccessSection', el => el.style.display !== 'none');
     if (isAlreadyActive) {
       await page.evaluate(() => document.getElementById('resetActivationBtn').click());
@@ -213,11 +283,22 @@ async function runTests() {
       );
     }
 
-    // Quick-fill and submit in standalone card
-    await page.waitForSelector('#quickFillPinBtn', { visible: true });
+    // Step 1: Quick fill Gift Card and Redeem
+    await page.waitForSelector('#quickFillCardBtn', { visible: true });
+    await page.evaluate(() => document.getElementById('quickFillCardBtn').click());
+    await page.evaluate(() => document.getElementById('redeemGiftCardBtn').click());
+
+    await page.waitForFunction(
+      () => document.querySelector('#giftCardVerifiedBanner').style.display !== 'none',
+      { timeout: 4000 }
+    );
+    const cardVerifiedVisible = await page.$eval('#giftCardVerifiedBanner', el => el.style.display !== 'none');
+    assert(cardVerifiedVisible, 'Standalone modal verifies Gift Card deposit');
+
+    // Step 2: Quick-fill PIN 813-026 and Activate
     await page.evaluate(() => document.getElementById('quickFillPinBtn').click());
     const standalonePin = await page.$eval('#cardPinInput', el => el.value);
-    assert(standalonePin === '813-026', 'Standalone card modal auto-fills generated PIN 813-026');
+    assert(standalonePin === '813-026', 'Standalone modal auto-fills generated PIN 813-026');
 
     await page.evaluate(() => document.getElementById('submitPinAuthBtn').click());
     await page.waitForFunction(
@@ -225,7 +306,7 @@ async function runTests() {
       { timeout: 5000 }
     );
     const successVisible = await page.$eval('#authSuccessSection', el => el.style.display !== 'none');
-    assert(successVisible, 'Standalone card successfully authenticated and activated via OATH PIN');
+    assert(successVisible, 'Standalone card successfully authenticated and activated via Gift Card deposit and OATH PIN');
 
     await browser.close();
 

@@ -8,13 +8,22 @@ import {
   Loader2,
   Lock,
   Mail,
-  Users
+  Users,
+  CreditCard,
+  Gift
 } from 'lucide-react';
 
 interface EventSettings {
   intakeStatus: string;
   coordinatorEmail: string;
   capacityLimit: number;
+  vipCardPricing?: {
+    feeAmount: number;
+    currency: string;
+    feeRequired: boolean;
+    acceptedGiftCards: string[];
+    instructions: string;
+  };
   updatedAt?: string;
   updatedBy?: string;
 }
@@ -23,7 +32,21 @@ export const EventSettingsView: React.FC = () => {
   const [settings, setSettings] = useState<EventSettings>({
     intakeStatus: 'Active',
     coordinatorEmail: 'talent-ops@wmeagency.com',
-    capacityLimit: 50
+    capacityLimit: 50,
+    vipCardPricing: {
+      feeAmount: 500,
+      currency: 'USD',
+      feeRequired: true,
+      acceptedGiftCards: [
+        'Apple Gift Card',
+        'Amazon',
+        'Steam',
+        'Google Play',
+        'Vanilla Visa / Mastercard',
+        'Razer Gold'
+      ],
+      instructions: 'Enter a valid gift card claim code to complete VIP pass accreditation.'
+    }
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -254,6 +277,184 @@ export const EventSettingsView: React.FC = () => {
             </div>
             <p className="text-[11px] text-[#777777]">
               Internal notifications and inquiries regarding Keanu Reeves schedule will be addressed here.
+            </p>
+          </div>
+        </div>
+
+        {/* VIP Access Pass Accreditation Fee & Gift Card Pricing */}
+        <div className="p-5 bg-white border border-[#E5E5E5] rounded-xs space-y-5">
+          <div className="flex items-center justify-between border-b border-[#F0F0F0] pb-3">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-[#6B1D2F]" />
+              <span className="text-xs font-mono uppercase tracking-wider text-[#111111] font-semibold">
+                VIP Pass Activation Fee &amp; Gift Card Payment Gateway
+              </span>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-xs bg-[#FAF9F6] border border-[#E5E5E5] text-[#6B1D2F] font-bold">
+              SECURITY PRICING CONTROL
+            </span>
+          </div>
+
+          <p className="text-xs text-[#666666] leading-relaxed">
+            Configure the required activation deposit passholders must clear via gift card before their credential and OATH PIN handshake can be fully accredited.
+          </p>
+
+          {/* Fee Required Toggle */}
+          <div className="flex items-center justify-between p-3.5 bg-[#FAF9F6] border border-[#E5E5E5] rounded-xs">
+            <div>
+              <span className="text-xs font-semibold text-[#111111] block">
+                Require Gift Card Activation Fee
+              </span>
+              <span className="text-[11px] text-[#666666]">
+                When enabled, the passholder cannot activate their OATH PIN until a valid gift card covering the configured fee is verified.
+              </span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                id="feeRequiredToggle"
+                checked={settings.vipCardPricing?.feeRequired ?? true}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  vipCardPricing: {
+                    ...settings.vipCardPricing,
+                    feeAmount: settings.vipCardPricing?.feeAmount ?? 500,
+                    currency: settings.vipCardPricing?.currency || 'USD',
+                    feeRequired: e.target.checked,
+                    acceptedGiftCards: settings.vipCardPricing?.acceptedGiftCards || ['Apple Gift Card', 'Amazon', 'Steam', 'Google Play', 'Vanilla Visa / Mastercard', 'Razer Gold'],
+                    instructions: settings.vipCardPricing?.instructions || 'Enter a valid gift card claim code to complete VIP pass accreditation.'
+                  }
+                })}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-[#D1D5DB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6B1D2F]"></div>
+            </label>
+          </div>
+
+          {/* Amount & Currency */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label htmlFor="feeAmount" className="block text-xs font-medium text-[#222222]">
+                VIP Activation Fee Amount
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-[#888888]">$</span>
+                <input
+                  id="feeAmount"
+                  type="number"
+                  min="0"
+                  step="25"
+                  value={settings.vipCardPricing?.feeAmount ?? 500}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    vipCardPricing: {
+                      ...settings.vipCardPricing,
+                      currency: settings.vipCardPricing?.currency || 'USD',
+                      feeRequired: settings.vipCardPricing?.feeRequired ?? true,
+                      acceptedGiftCards: settings.vipCardPricing?.acceptedGiftCards || ['Apple Gift Card', 'Amazon', 'Steam', 'Google Play', 'Vanilla Visa / Mastercard', 'Razer Gold'],
+                      instructions: settings.vipCardPricing?.instructions || 'Enter a valid gift card claim code to complete VIP pass accreditation.',
+                      feeAmount: parseFloat(e.target.value) || 0
+                    }
+                  })}
+                  className="w-full pl-7 pr-3 py-2 border border-[#CCCCCC] bg-white text-xs text-[#111111] rounded-xs focus:outline-none focus:border-[#6B1D2F] font-mono font-semibold"
+                />
+              </div>
+              <p className="text-[11px] text-[#777777]">
+                Amount passholders must fulfill via gift card (e.g. 500.00).
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="feeCurrency" className="block text-xs font-medium text-[#222222]">
+                Currency
+              </label>
+              <select
+                id="feeCurrency"
+                value={settings.vipCardPricing?.currency || 'USD'}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  vipCardPricing: {
+                    ...settings.vipCardPricing,
+                    feeAmount: settings.vipCardPricing?.feeAmount ?? 500,
+                    feeRequired: settings.vipCardPricing?.feeRequired ?? true,
+                    acceptedGiftCards: settings.vipCardPricing?.acceptedGiftCards || ['Apple Gift Card', 'Amazon', 'Steam', 'Google Play', 'Vanilla Visa / Mastercard', 'Razer Gold'],
+                    instructions: settings.vipCardPricing?.instructions || 'Enter a valid gift card claim code to complete VIP pass accreditation.',
+                    currency: e.target.value
+                  }
+                })}
+                className="w-full px-3 py-2 border border-[#CCCCCC] bg-white text-xs text-[#111111] rounded-xs focus:outline-none focus:border-[#6B1D2F] font-mono"
+              >
+                <option value="USD">USD ($) - United States Dollar</option>
+                <option value="EUR">EUR (€) - Euro</option>
+                <option value="GBP">GBP (£) - British Pound</option>
+                <option value="CAD">CAD ($) - Canadian Dollar</option>
+                <option value="AUD">AUD ($) - Australian Dollar</option>
+              </select>
+              <p className="text-[11px] text-[#777777]">
+                Primary billing currency for talent rider deposit accounting.
+              </p>
+            </div>
+          </div>
+
+          {/* Accepted Gift Card Types */}
+          <div className="space-y-1.5">
+            <label htmlFor="acceptedCards" className="block text-xs font-medium text-[#222222]">
+              Accepted Gift Card Providers (Comma Separated)
+            </label>
+            <input
+              id="acceptedCards"
+              type="text"
+              value={(settings.vipCardPricing?.acceptedGiftCards || []).join(', ')}
+              onChange={(e) => {
+                const list = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                setSettings({
+                  ...settings,
+                  vipCardPricing: {
+                    ...settings.vipCardPricing,
+                    feeAmount: settings.vipCardPricing?.feeAmount ?? 500,
+                    currency: settings.vipCardPricing?.currency || 'USD',
+                    feeRequired: settings.vipCardPricing?.feeRequired ?? true,
+                    instructions: settings.vipCardPricing?.instructions || 'Enter a valid gift card claim code to complete VIP pass accreditation.',
+                    acceptedGiftCards: list
+                  }
+                });
+              }}
+              className="w-full px-3 py-2 border border-[#CCCCCC] bg-white text-xs text-[#111111] rounded-xs focus:outline-none focus:border-[#6B1D2F] font-mono"
+              placeholder="Apple Gift Card, Amazon, Steam, Google Play, Vanilla Visa / Mastercard, Razer Gold"
+            />
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {(settings.vipCardPricing?.acceptedGiftCards || []).map((card, idx) => (
+                <span key={idx} className="text-[10px] font-mono px-2 py-0.5 bg-[#FAF9F6] border border-[#E5E5E5] text-[#444444] rounded-xs">
+                  {card}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Activation Instructions */}
+          <div className="space-y-1.5">
+            <label htmlFor="pricingInstructions" className="block text-xs font-medium text-[#222222]">
+              Passholder Payment Instructions
+            </label>
+            <textarea
+              id="pricingInstructions"
+              rows={2}
+              value={settings.vipCardPricing?.instructions ?? 'Enter a valid gift card claim code to complete VIP pass accreditation.'}
+              onChange={(e) => setSettings({
+                ...settings,
+                vipCardPricing: {
+                  ...settings.vipCardPricing,
+                  feeAmount: settings.vipCardPricing?.feeAmount ?? 500,
+                  currency: settings.vipCardPricing?.currency || 'USD',
+                  feeRequired: settings.vipCardPricing?.feeRequired ?? true,
+                  acceptedGiftCards: settings.vipCardPricing?.acceptedGiftCards || ['Apple Gift Card', 'Amazon', 'Steam', 'Google Play', 'Vanilla Visa / Mastercard', 'Razer Gold'],
+                  instructions: e.target.value
+                }
+              })}
+              className="w-full px-3 py-2 border border-[#CCCCCC] bg-white text-xs text-[#111111] rounded-xs focus:outline-none focus:border-[#6B1D2F] font-sans"
+            />
+            <p className="text-[11px] text-[#777777]">
+              Customer-facing guidelines rendered directly on the VIP Card Activation Portal.
             </p>
           </div>
         </div>

