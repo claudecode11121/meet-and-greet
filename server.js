@@ -1297,6 +1297,28 @@ app.post('/api/card/deactivate', async (req, res) => {
       payment: clearPayment ? null : (activation.payment || null)
     };
     await db.saveCardActivation(cardId, deactivationRecord);
+
+    // Sync deactivation to submission record
+    (async () => {
+      try {
+        const allSubs = await db.getSubmissions();
+        const sub = allSubs.find(s => 
+          (s.cardActivation && s.cardActivation.cardId === cardId) ||
+          s.referenceId === cardId ||
+          s.referenceId === 'MG-EA9A71'
+        );
+        if (sub) {
+          sub.cardActivation = deactivationRecord;
+          if (clearPayment) {
+            sub.cardPayment = null;
+          }
+          await db.saveSubmission(sub);
+        }
+      } catch (e) {
+        console.warn('[WME Server] Background deactivation sync notice:', e.message);
+      }
+    })();
+
     await recordAuditLog(
       'system.oath@wmeagency.com',
       'VIP_PASS_OATH_DEACTIVATED',

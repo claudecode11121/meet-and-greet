@@ -133,7 +133,7 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
   // Check card activation status
   useEffect(() => {
-    if (referenceId) {
+    if (referenceId && isOpen) {
       const cardRef = data?.cardActivation?.cardId || 'WME-KR26-0813-VIP';
       fetch(`/api/card/status/${encodeURIComponent(cardRef)}`)
         .then(res => res.json())
@@ -147,29 +147,61 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
         })
         .catch(() => {});
     }
-  }, [referenceId, isOpen, data]);
+  }, [referenceId, isOpen]);
+
+  // Sync state if application data is loaded
+  useEffect(() => {
+    if (data?.cardActivation?.activated !== undefined) {
+      setCardActivated(Boolean(data.cardActivation.activated));
+    }
+  }, [data?.cardActivation?.activated]);
 
   const handleToggleCardActivation = async () => {
     setIsTogglingCard(true);
+    const targetCardId = data?.cardActivation?.cardId || 'WME-KR26-0813-VIP';
     try {
       if (cardActivated) {
-        await fetch('/api/card/deactivate', {
+        const res = await fetch('/api/card/deactivate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP' })
+          body: JSON.stringify({ cardId: targetCardId })
         });
-        setCardActivated(false);
+        const resData = await res.json();
+        if (resData.success) {
+          setCardActivated(false);
+          if (data) {
+            setData({
+              ...data,
+              cardActivation: {
+                ...(data.cardActivation || {}),
+                activated: false,
+                deactivatedAt: new Date().toISOString()
+              }
+            });
+          }
+        }
       } else {
         const res = await fetch('/api/card/activate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026', adminOverride: true })
+          body: JSON.stringify({ cardId: targetCardId, pin: '813-026', adminOverride: true })
         });
         const d = await res.json();
         if (d.success) {
           setCardActivated(true);
           if (d.activation?.payment) {
             setCardPayment(d.activation.payment);
+          }
+          if (data) {
+            setData({
+              ...data,
+              cardActivation: {
+                ...(data.cardActivation || {}),
+                ...d.activation,
+                activated: true
+              },
+              cardPayment: d.activation?.payment || data.cardPayment
+            });
           }
         }
       }
@@ -641,7 +673,7 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
               {/* VIP Access Card & OATH Activation */}
               {(() => {
                 const activePayment = cardPayment || data?.cardPayment || data?.cardActivation?.payment || null;
-                const activeCardActivated = cardActivated || Boolean(data?.cardActivation?.activated);
+                const activeCardActivated = cardActivated;
                 const activeCardId = data?.cardActivation?.cardId || 'WME-KR26-0813-VIP';
                 const activePin = data?.cardActivation?.pin || '813-026';
 
