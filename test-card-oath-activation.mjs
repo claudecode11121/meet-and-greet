@@ -269,6 +269,7 @@ async function runTests() {
     assert(activatedText.toUpperCase().includes('CREDENTIAL SUCCESSFULLY ACTIVATED'), 'Card Activation Portal renders success banner');
     assert(activatedText.includes('OATH-KR26-813-CLEAR'), 'Clearance code rendered on page');
     assert(activatedText.toUpperCase().includes('DEPOSIT PAID: APPLE GIFT CARD ($500 USD)'), 'Success banner displays Gift Card deposit receipt');
+    assert(!activatedText.includes('Deactivate / Reset Test'), 'Passholder portal does NOT show any dev "Deactivate / Reset Test" button');
 
     // -------------------------------------------------------------
     // Test 6: Standalone Interactive Card (/meet-and-greet-card/index.html)
@@ -278,21 +279,18 @@ async function runTests() {
       waitUntil: 'networkidle0'
     });
 
+    // Reset localStorage before test walkthrough
+    await page.evaluate(() => {
+      localStorage.removeItem('wme_kr26_card_activated');
+      localStorage.removeItem('wme_kr26_giftcard_paid');
+    });
+    await page.reload({ waitUntil: 'networkidle0' });
+
     // Open OATH modal
     await page.evaluate(() => document.getElementById('activateCardBtn').click());
     await page.waitForSelector('#authModal.is-active', { timeout: 3000 });
     const modalVisible = await page.$eval('#authModal', el => el.classList.contains('is-active'));
     assert(modalVisible, 'Clicking OATH Activate opens the modal in standalone card');
-
-    // Reset if previously active to test full cycle
-    const isAlreadyActive = await page.$eval('#authSuccessSection', el => el.style.display !== 'none');
-    if (isAlreadyActive) {
-      await page.evaluate(() => document.getElementById('resetActivationBtn').click());
-      await page.waitForFunction(
-        () => document.querySelector('#authInputSection').style.display !== 'none',
-        { timeout: 3000 }
-      );
-    }
 
     // 1. Input PIN FIRST
     await page.waitForSelector('#quickFillPinBtn', { visible: true });

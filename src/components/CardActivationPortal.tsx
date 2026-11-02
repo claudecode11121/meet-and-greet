@@ -944,22 +944,14 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="pt-1">
                     <button
                       type="button"
                       onClick={() => triggerDirectDownload(pdfFile, 'Brenda-Wright-VIP-Meet-Greet-Pass.pdf')}
-                      className="flex-1 py-2.5 bg-[#D4AF37] text-black font-mono text-xs uppercase tracking-wider font-semibold rounded-[2px] hover:bg-[#F3E5AB] transition-colors flex items-center justify-center gap-1.5"
+                      className="w-full py-3 bg-[#D4AF37] text-black font-mono text-xs uppercase tracking-wider font-semibold rounded-[2px] hover:bg-[#F3E5AB] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
                     >
                       <Download className="w-3.5 h-3.5" />
-                      <span>Download PDF</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDeactivate}
-                      className="px-3 py-2 text-[#888899] hover:text-[#DC2626] font-mono text-[10px] uppercase border border-[#262633] hover:border-[#DC2626]/40 rounded-[2px] transition-colors"
-                      title="Deactivate pass for testing"
-                    >
-                      Deactivate / Reset Test
+                      <span>Download Printable VIP Pass (PDF)</span>
                     </button>
                   </div>
                 </div>
