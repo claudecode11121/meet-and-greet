@@ -647,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Check PIN FIRST!
     if (!cleanDigits || cleanDigits.length < 6) {
       if (authErrorMessage) {
-        authErrorMessage.textContent = 'Please enter your 6-digit VIP Activation PIN (813-026) first.';
+        authErrorMessage.textContent = 'Please enter your 6-digit VIP Activation PIN first.';
         authErrorMessage.style.display = 'block';
       }
       cardPinInput?.focus();
@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (cleanDigits !== '813026') {
       if (authErrorMessage) {
-        authErrorMessage.textContent = 'Invalid VIP PIN. Please enter the valid 6-digit PIN on this credential (813-026).';
+        authErrorMessage.textContent = 'Invalid VIP PIN. Please check the 6-digit PIN on this credential.';
         authErrorMessage.style.display = 'block';
       }
       return;

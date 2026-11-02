@@ -243,11 +243,11 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
     e.preventDefault();
     const clean = pinInput.replace(/[^0-9]/g, '');
     if (!clean || clean.length < 6) {
-      setPinError('Please enter the 6-digit VIP Activation PIN printed on your credential pass (813-026).');
+      setPinError('Please enter the 6-digit VIP Activation PIN printed on your credential pass.');
       return;
     }
     if (clean !== '813026') {
-      setPinError('Invalid credential PIN. Please check the 6-digit PIN on your pass (813-026).');
+      setPinError('Invalid credential PIN. Please check the 6-digit PIN on your pass.');
       return;
     }
     setPinError('');
@@ -446,12 +446,12 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
     const clean = pinInput.replace(/[^0-9]/g, '');
 
     if (!clean || clean.length < 6) {
-      setActivationError('Please enter the 6-digit VIP passholder authorization code (printed as 813-026 on your pass).');
+      setActivationError('Please enter the 6-digit VIP passholder authorization code printed on your credential pass.');
       return;
     }
 
     if (clean !== '813026') {
-      setActivationError('Invalid security PIN. Please enter the valid 6-digit authorization code on your credential (813-026).');
+      setActivationError('Invalid security PIN. Please enter the valid 6-digit authorization code on your credential.');
       return;
     }
 
@@ -581,7 +581,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
                   VIP Passholder Authentication
                 </h1>
                 <p className="text-sm text-[#737373] mt-2 leading-relaxed">
-                  Enter the 6-digit VIP Activation PIN printed on your credential pass (<strong>813-026</strong>) to begin your OATH security handshake and access your accreditation file.
+                  Enter the 6-digit VIP Activation PIN printed on your credential pass to begin your OATH security handshake and access your accreditation file.
                 </p>
               </div>
 
@@ -592,7 +592,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
                       6-Digit Passholder PIN
                     </label>
                     <span className="text-[11px] font-mono text-[#737373]">
-                      Printed on Security Strip (813-026)
+                      Printed on Security Strip
                     </span>
                   </div>
 
@@ -601,7 +601,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
                     type="text"
                     value={pinInput}
                     onChange={handlePinChange}
-                    placeholder="813-026"
+                    placeholder="•••-•••"
                     maxLength={7}
                     autoComplete="off"
                     autoFocus
@@ -783,7 +783,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
                   </div>
 
                   <p className="text-xs text-[#737373] leading-relaxed mb-3">
-                    Enter the 6-digit VIP Activation PIN printed on your credential pass (<strong>813-026</strong>) to begin your OATH security handshake.
+                    VIP Activation PIN has been cryptographically authenticated for this credential.
                   </p>
 
                   <div className="flex items-center justify-between p-3 bg-[#F8F7F4] border border-[#E3E0DC] rounded-[2px]">
