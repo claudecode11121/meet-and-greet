@@ -326,7 +326,7 @@ async function runTests() {
     await page.waitForSelector('#escrow-pending-admin-box', { timeout: 8000 });
     const boxText = await page.$eval('#escrow-pending-admin-box', el => el.innerText);
     console.log('  [Debug boxText]:', boxText.replace(/\n/g, ' '));
-    assert(boxText.includes('Escrow') && boxText.includes('Admin'), 'Passholder sees Escrow Complete • Awaiting WME Admin Verification');
+    assert(boxText.toUpperCase().includes('ESCROW') && boxText.toUpperCase().includes('ADMIN'), 'Passholder sees Escrow Complete • Awaiting WME Admin Verification');
     const wholePageText = await page.evaluate(() => document.body.innerText);
     assert(!wholePageText.includes('Authenticate PIN & Activate VIP Card'), 'Passholder portal does NOT allow self-activation');
 

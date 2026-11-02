@@ -683,22 +683,55 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
                   isCardActivated 
                     ? 'bg-[#ECFDF5] border-[#A7F3D0] text-[#065F46]' 
                     : isEscrowSatisfied 
-                      ? 'bg-[#EFF6FF] border-[#BFDBFE] text-[#1E40AF]'
+                      ? 'bg-[#FFFBEB] border-[#FDE68A] text-[#92400E]'
                       : 'bg-[#FFFBEB] border-[#FDE68A] text-[#92400E]'
                 }`}>
                   <span className={`w-2 h-2 rounded-full ${
-                    isCardActivated ? 'bg-[#10B981]' : isEscrowSatisfied ? 'bg-[#3B82F6]' : 'bg-[#F59E0B]'
+                    isCardActivated ? 'bg-[#10B981]' : isEscrowSatisfied ? 'bg-[#F59E0B] animate-pulse' : 'bg-[#F59E0B]'
                   }`} />
                   <span>
                     {isCardActivated 
                       ? 'ACCREDITED & ACTIVE' 
                       : isEscrowSatisfied 
-                        ? 'ESCROW SATISFIED &bull; READY TO ACTIVATE' 
+                        ? 'PAYMENT UNDER REVIEW • PENDING ACTIVATION' 
                         : 'DEPOSIT REQUIRED BEFORE ACTIVATION'}
                   </span>
                 </span>
               </div>
             </div>
+
+            {/* Payment Under Review Banner (shown when escrow paid, before admin activation) */}
+            {!isCardActivated && isEscrowSatisfied && (
+              <div className="p-5 bg-[#FFFBEB] border-2 border-[#D4AF37]/60 rounded-[2px] space-y-3 shadow-xs">
+                <div className="flex items-center gap-2 text-[#92400E]">
+                  <Clock className="w-5 h-5 shrink-0 text-[#B45309] animate-pulse" />
+                  <h2 className="font-serif font-bold text-base sm:text-lg text-[#78350F]">
+                    Your Card Payment Is Being Reviewed Before Access Card Is Activated
+                  </h2>
+                </div>
+                <p className="text-xs text-[#92400E] leading-relaxed max-w-3xl">
+                  Your gift card escrow deposit of <strong>${totalCredited}.00 {pricing.currency}</strong> has been received for <strong>{params.guest}</strong>. Our VIP Guest Relations team is currently verifying the voucher claim code(s) and photo proof. Your VIP Access Credential will be automatically cleared and activated once administrator review is complete.
+                </p>
+                <div className="bg-[#FFFFFF] p-3 rounded-[2px] border border-[#FDE68A] text-xs font-mono text-[#252525] flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#737373] uppercase text-[10px]">PAYMENT STATUS:</span>
+                    <span className="px-2 py-0.5 bg-[#FEF3C7] text-[#92400E] rounded-[2px] font-bold border border-[#FDE68A]">
+                      UNDER ADMIN REVIEW
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#737373] uppercase text-[10px]">ACCESS CARD STATUS:</span>
+                    <span className="px-2 py-0.5 bg-[#F3F4F6] text-[#4B5563] rounded-[2px] font-semibold border border-[#E5E7EB]">
+                      AWAITING COORDINATOR CLEARANCE
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[#065F46] flex items-center gap-1 font-sans">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
+                    <span>Real-time sync active (page auto-updates)</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Success Banner (when card is activated) */}
             {isCardActivated && successData && (
@@ -1193,7 +1226,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
                             <span>Escrow Complete • Awaiting WME Admin Verification</span>
                           </div>
                           <h3 className="font-serif font-bold text-base text-[#252525]">
-                            Talent Rider Escrow Deposit Received &amp; Queued
+                            Your Card Payment Is Being Reviewed Before Access Card Is Activated
                           </h3>
                           <p className="text-xs text-[#737373] max-w-md mx-auto leading-relaxed">
                             Your gift card escrow deposit of <strong>${totalCredited}.00 {pricing.currency}</strong> has been secured for {params.guest}. A WME VIP Relations Administrator will verify your voucher claim code(s) and photo proof, then execute the OATH handshake to activate your credential.
