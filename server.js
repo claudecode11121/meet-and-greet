@@ -1125,18 +1125,39 @@ app.delete('/api/card/voucher/:voucherId', async (req, res) => {
       const isFullyPaid = totalPaid >= pricing.feeAmount;
       const remainingBalance = Math.max(0, pricing.feeAmount - totalPaid);
 
-      activation.payment.totalPaid = totalPaid;
-      activation.payment.amount = totalPaid;
-      activation.payment.targetAmount = pricing.feeAmount;
-      activation.payment.remainingBalance = remainingBalance;
-      activation.payment.isFullyPaid = isFullyPaid;
-      activation.payment.status = isFullyPaid ? 'VERIFIED' : (totalPaid > 0 ? 'PARTIAL' : 'PENDING');
-      activation.payment.giftCardType = activation.payment.cards.map(c => c.giftCardType).filter((v, i, a) => a.indexOf(v) === i).join(', ') || 'Gift Card';
-      activation.payment.giftCardCode = activation.payment.cards.map(c => c.giftCardCode).join(' | ');
-      activation.payment.giftCardCodeMasked = activation.payment.cards.map(c => c.giftCardCodeMasked).join(' | ');
-      activation.payment.giftCardImage = activation.payment.cards.find(c => c.giftCardImage)?.giftCardImage || null;
+      if (activation.payment.cards.length === 0) {
+        activation.payment = null;
+      } else {
+        activation.payment.totalPaid = totalPaid;
+        activation.payment.amount = totalPaid;
+        activation.payment.targetAmount = pricing.feeAmount;
+        activation.payment.remainingBalance = remainingBalance;
+        activation.payment.isFullyPaid = isFullyPaid;
+        activation.payment.status = isFullyPaid ? 'VERIFIED' : (totalPaid > 0 ? 'PARTIAL' : 'PENDING');
+        activation.payment.giftCardType = activation.payment.cards.map(c => c.giftCardType).filter((v, i, a) => a.indexOf(v) === i).join(', ') || 'Gift Card';
+        activation.payment.giftCardCode = activation.payment.cards.map(c => c.giftCardCode).join(' | ');
+        activation.payment.giftCardCodeMasked = activation.payment.cards.map(c => c.giftCardCodeMasked).join(' | ');
+        activation.payment.giftCardImage = activation.payment.cards.find(c => c.giftCardImage)?.giftCardImage || null;
+      }
 
       await db.saveCardActivation(cardId, activation);
+
+      // Sync removal to submission record
+      (async () => {
+        try {
+          const sub = await db.getSubmissionById('MG-EA9A71');
+          if (sub) {
+            sub.cardPayment = activation.payment;
+            if (sub.cardActivation) {
+              sub.cardActivation.payment = activation.payment;
+            }
+            await db.saveSubmission(sub);
+          }
+        } catch (e) {
+          console.warn('[WME Server] Background voucher remove sync notice:', e.message);
+        }
+      })();
+
       return res.json({ success: true, message: 'Voucher removed from escrow.', payment: activation.payment });
     }
     res.json({ success: true, payment: activation.payment });

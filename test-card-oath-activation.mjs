@@ -396,6 +396,13 @@ async function runTests() {
     const successVisible = await page.$eval('#authSuccessSection', el => el.style.display !== 'none');
     assert(successVisible, 'Standalone card successfully activated with PIN first and multi-card escrow');
 
+    // Cleanup: Reset card and clear test payment so database starts clean
+    await fetch(`${BASE_URL}/api/card/deactivate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', clearPayment: true })
+    });
+
     await browser.close();
 
     console.log(`\n======================================================`);

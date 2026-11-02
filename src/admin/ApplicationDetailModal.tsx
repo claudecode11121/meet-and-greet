@@ -156,6 +156,39 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
     }
   }, [data?.cardActivation?.activated]);
 
+  const handleClearEscrow = async () => {
+    const targetCardId = data?.cardActivation?.cardId || 'WME-KR26-0813-VIP';
+    setIsTogglingCard(true);
+    try {
+      const res = await fetch('/api/card/deactivate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardId: targetCardId, clearPayment: true })
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        setCardPayment(null);
+        setCardActivated(false);
+        if (data) {
+          setData({
+            ...data,
+            cardPayment: null,
+            cardActivation: {
+              ...(data.cardActivation || {}),
+              activated: false,
+              payment: null,
+              deactivatedAt: new Date().toISOString()
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to clear escrow:', err);
+    } finally {
+      setIsTogglingCard(false);
+    }
+  };
+
   const handleToggleCardActivation = async () => {
     setIsTogglingCard(true);
     const targetCardId = data?.cardActivation?.cardId || 'WME-KR26-0813-VIP';
@@ -875,27 +908,40 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
 
-                      <button
-                        type="button"
-                        onClick={handleToggleCardActivation}
-                        disabled={isTogglingCard}
-                        className={`text-xs font-mono uppercase tracking-wider px-3 py-1.5 rounded-xs transition-colors font-semibold flex items-center gap-1.5 ${
-                          activeCardActivated
-                            ? 'bg-[#1C1C24] text-[#A1A1AA] hover:text-[#DC2626] border border-[#333344]'
-                            : 'bg-[#D4AF37] text-black hover:bg-[#F3E5AB]'
-                        }`}
-                      >
-                        {isTogglingCard ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : activeCardActivated ? (
-                          <span>Deactivate Pass</span>
-                        ) : (
-                          <>
-                            <KeyRound className="w-3.5 h-3.5" />
-                            <span>Activate via PIN {activePin}</span>
-                          </>
+                      <div className="flex items-center gap-2">
+                        {Boolean(activePayment) && (
+                          <button
+                            type="button"
+                            onClick={handleClearEscrow}
+                            disabled={isTogglingCard}
+                            className="text-xs font-mono uppercase tracking-wider px-3 py-1.5 rounded-xs transition-colors font-medium text-[#A1A1AA] hover:text-[#EF4444] border border-[#333344] bg-[#14141A] cursor-pointer"
+                            title="Reset all escrow deposits on this credential"
+                          >
+                            Reset Escrow ($0)
+                          </button>
                         )}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={handleToggleCardActivation}
+                          disabled={isTogglingCard}
+                          className={`text-xs font-mono uppercase tracking-wider px-3 py-1.5 rounded-xs transition-colors font-semibold flex items-center gap-1.5 ${
+                            activeCardActivated
+                              ? 'bg-[#1C1C24] text-[#A1A1AA] hover:text-[#DC2626] border border-[#333344]'
+                              : 'bg-[#D4AF37] text-black hover:bg-[#F3E5AB]'
+                          }`}
+                        >
+                          {isTogglingCard ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : activeCardActivated ? (
+                            <span>Deactivate Pass</span>
+                          ) : (
+                            <>
+                              <KeyRound className="w-3.5 h-3.5" />
+                              <span>Activate via PIN {activePin}</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
