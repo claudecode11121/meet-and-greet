@@ -190,9 +190,9 @@ async function runTests() {
     assert(postPayActivateJson.activation.payment.status === 'VERIFIED', 'Activation record contains verified payment');
 
     // -------------------------------------------------------------
-    // Test 5: Browser UI Verification: 2-Step Activation Portal (/verify)
+    // Test 5: Browser UI Verification: 2-Step PIN-First Activation Portal (/verify)
     // -------------------------------------------------------------
-    console.log('\n📋 Test 5: Browser E2E - Card Activation Portal 2-Step Payment & Activation...');
+    console.log('\n📋 Test 5: Browser E2E - Card Activation Portal (PIN First, Gift Card Before Activation)...');
     const browser = await puppeteer.launch({
       executablePath: '/usr/bin/google-chrome',
       headless: 'new',
@@ -213,39 +213,36 @@ async function runTests() {
       waitUntil: 'networkidle0'
     });
 
-    // Check page text for Step 1 Gift Card Payment and Step 2 PIN
+    // Check page text for Step 1 PIN Input and Step 2 Gift Card Deposit
     const pageText = await page.evaluate(() => document.body.innerText);
-    assert(pageText.toUpperCase().includes('STEP 1: VIP ACCREDITATION FEE DEPOSIT'), 'Portal renders Step 1: VIP Accreditation Fee Deposit');
-    assert(pageText.toUpperCase().includes('STEP 2: OATH SECURITY HANDSHAKE'), 'Portal renders Step 2: OATH Security Handshake');
+    assert(pageText.toUpperCase().includes('STEP 1: INPUT VIP ACTIVATION PIN'), 'Portal renders Step 1: Input VIP Activation PIN first');
+    assert(pageText.toUpperCase().includes('STEP 2: GIFT CARD DEPOSIT'), 'Portal renders Step 2: Gift Card Deposit');
     assert(pageText.includes('$500') || pageText.includes('500 USD'), 'Portal renders configured $500 fee amount');
 
-    // Fill Gift Card Claim Code via Auto-Fill button
-    await page.waitForSelector('#quick-fill-card-btn', { visible: true });
-    await page.click('#quick-fill-card-btn');
-    const filledCode = await page.$eval('#giftCardCodeInput', el => el.value);
-    assert(filledCode === 'X7KM-92NQ-48PL-2026', 'Gift Card Claim Code auto-filled with test token');
-
-    // Click Redeem & Verify Deposit button
-    await page.click('#submit-giftcard-btn');
-
-    // Wait for Step 1 payment verified banner to appear
-    await page.waitForFunction(
-      () => document.body.innerText.toUpperCase().includes('ACCREDITATION FEE VERIFIED'),
-      { timeout: 6000 }
-    );
-    const step1Verified = await page.evaluate(() => document.body.innerText);
-    assert(step1Verified.toUpperCase().includes('ACCREDITATION FEE VERIFIED'), 'Step 1 displays Accreditation Fee Verified badge');
-
-    // Verify Step 2 PIN input is unlocked and auto-fill PIN
+    // 1. Enter PIN FIRST via Auto-Fill button
     await page.waitForSelector('#quick-fill-pin-btn', { visible: true });
     await page.click('#quick-fill-pin-btn');
     const pinVal = await page.$eval('#oathPinInput', el => el.value);
-    assert(pinVal === '813-026', 'Step 2 PIN input received 813-026');
+    assert(pinVal === '813-026', 'Step 1: PIN input received 813-026 first');
+
+    // Verify PIN Verified badge appears
+    await page.waitForFunction(
+      () => document.body.innerText.toUpperCase().includes('PIN 813-026 VERIFIED'),
+      { timeout: 4000 }
+    );
+    const pinVerifiedText = await page.evaluate(() => document.body.innerText);
+    assert(pinVerifiedText.toUpperCase().includes('PIN 813-026 VERIFIED'), 'Step 1 renders PIN 813-026 Verified badge');
+
+    // 2. Fill Gift Card Claim Code
+    await page.waitForSelector('#quick-fill-card-btn', { visible: true });
+    await page.click('#quick-fill-card-btn');
+    const filledCode = await page.$eval('#giftCardCodeInput', el => el.value);
+    assert(filledCode === 'X7KM-92NQ-48PL-2026', 'Step 2: Gift Card Claim Code filled');
 
     // Small delay for React state update
     await new Promise(r => setTimeout(r, 200));
 
-    // Submit PIN activation
+    // Submit PIN & Card activation
     await page.click('#submit-activate-btn');
 
     // Wait for success banner to render
@@ -262,7 +259,7 @@ async function runTests() {
     // -------------------------------------------------------------
     // Test 6: Standalone Interactive Card (/meet-and-greet-card/index.html)
     // -------------------------------------------------------------
-    console.log('\n📋 Test 6: Standalone Interactive Card Gift Card & OATH Activation Modal...');
+    console.log('\n📋 Test 6: Standalone Interactive Card PIN First & Gift Card Activation Modal...');
     await page.goto(`${BASE_URL}/meet-and-greet-card/index.html`, {
       waitUntil: 'networkidle0'
     });
@@ -283,30 +280,24 @@ async function runTests() {
       );
     }
 
-    // Step 1: Quick fill Gift Card and Redeem
-    await page.waitForSelector('#quickFillCardBtn', { visible: true });
-    await page.evaluate(() => document.getElementById('quickFillCardBtn').click());
-    await page.evaluate(() => document.getElementById('redeemGiftCardBtn').click());
-
-    await page.waitForFunction(
-      () => document.querySelector('#giftCardVerifiedBanner').style.display !== 'none',
-      { timeout: 4000 }
-    );
-    const cardVerifiedVisible = await page.$eval('#giftCardVerifiedBanner', el => el.style.display !== 'none');
-    assert(cardVerifiedVisible, 'Standalone modal verifies Gift Card deposit');
-
-    // Step 2: Quick-fill PIN 813-026 and Activate
+    // 1. Input PIN FIRST
+    await page.waitForSelector('#quickFillPinBtn', { visible: true });
     await page.evaluate(() => document.getElementById('quickFillPinBtn').click());
     const standalonePin = await page.$eval('#cardPinInput', el => el.value);
-    assert(standalonePin === '813-026', 'Standalone modal auto-fills generated PIN 813-026');
+    assert(standalonePin === '813-026', 'Standalone modal auto-fills PIN 813-026 first');
 
+    // 2. Input Gift Card
+    await page.waitForSelector('#quickFillCardBtn', { visible: true });
+    await page.evaluate(() => document.getElementById('quickFillCardBtn').click());
+
+    // Click Authenticate PIN & Activate Card
     await page.evaluate(() => document.getElementById('submitPinAuthBtn').click());
     await page.waitForFunction(
       () => document.querySelector('#authSuccessSection').style.display !== 'none',
       { timeout: 5000 }
     );
     const successVisible = await page.$eval('#authSuccessSection', el => el.style.display !== 'none');
-    assert(successVisible, 'Standalone card successfully authenticated and activated via Gift Card deposit and OATH PIN');
+    assert(successVisible, 'Standalone card successfully activated with PIN first and Gift Card deposit');
 
     await browser.close();
 

@@ -339,11 +339,40 @@
       </div>
 
       <div id="authInputSection">
-        <!-- Step 1: Gift Card Accreditation Deposit -->
+        <!-- Step 1: VIP PIN Input (FIRST) -->
+        <div class="auth-step-box" id="pinStepBox">
+          <div class="auth-step-title">
+            <span>Step 1: Input VIP Activation PIN</span>
+            <span class="pin-status-pill is-pending" id="pinStepPill">PIN REQUIRED</span>
+          </div>
+
+          <label for="cardPinInput" class="auth-input-label">
+            6-Digit VIP Activation PIN (Printed on Pass)
+          </label>
+          <div class="pin-input-group">
+            <input 
+              type="text" 
+              id="cardPinInput" 
+              class="card-pin-input" 
+              placeholder="813-026" 
+              maxlength="7" 
+              autocomplete="off"
+              inputmode="numeric"
+            />
+            <button type="button" id="quickFillPinBtn" class="btn-quick-pin" title="Use the PIN generated on this credential">
+              Auto-Fill: 813-026
+            </button>
+          </div>
+          <p class="auth-input-hint" style="margin-bottom: 0;">
+            The 6-digit VIP PIN (813-026) is generated on your credential barcode and back security panel.
+          </p>
+        </div>
+
+        <!-- Step 2: Gift Card Accreditation Deposit (Required Before Activation) -->
         <div class="auth-step-box" id="giftCardStepBox">
           <div class="auth-step-title">
-            <span>Step 1: Gift Card Deposit (<span id="giftCardFeeAmount">$500.00 USD</span>)</span>
-            <span class="pin-status-pill is-pending" id="giftCardStatusPill">REQUIRED</span>
+            <span>Step 2: Gift Card Deposit (<span id="giftCardFeeAmount">$500.00 USD</span>)</span>
+            <span class="pin-status-pill is-pending" id="giftCardStatusPill">REQUIRED BEFORE ACTIVATION</span>
           </div>
 
           <div id="giftCardForm">
@@ -372,7 +401,7 @@
             />
 
             <button type="button" id="redeemGiftCardBtn" class="btn-redeem-card">
-              Redeem &amp; Verify Deposit
+              Verify Gift Card Deposit
             </button>
           </div>
 
@@ -381,40 +410,11 @@
           </div>
         </div>
 
-        <!-- Step 2: OATH PIN Activation -->
-        <div class="auth-step-box" id="pinStepBox">
-          <div class="auth-step-title">
-            <span>Step 2: OATH PIN Activation</span>
-            <span class="pin-status-pill is-pending" id="pinStepPill">PENDING</span>
-          </div>
+        <div id="authErrorMessage" class="auth-error-message" style="display: none;"></div>
 
-          <label for="cardPinInput" class="auth-input-label">
-            Enter 6-Digit VIP Activation PIN
-          </label>
-          <div class="pin-input-group">
-            <input 
-              type="text" 
-              id="cardPinInput" 
-              class="card-pin-input" 
-              placeholder="813-026" 
-              maxlength="7" 
-              autocomplete="off"
-              inputmode="numeric"
-            />
-            <button type="button" id="quickFillPinBtn" class="btn-quick-pin" title="Use the PIN generated on this credential">
-              Insert PIN: 813-026
-            </button>
-          </div>
-          <p class="auth-input-hint">
-            The VIP PIN is generated on your credential pass barcode strip and back security panel.
-          </p>
-
-          <div id="authErrorMessage" class="auth-error-message" style="display: none;"></div>
-
-          <button type="button" id="submitPinAuthBtn" class="btn btn-gold btn-full-width">
-            <span id="submitBtnText">Authenticate &amp; Activate Card</span>
-          </button>
-        </div>
+        <button type="button" id="submitPinAuthBtn" class="btn btn-gold btn-full-width">
+          <span id="submitBtnText">Authenticate PIN &amp; Activate VIP Card</span>
+        </button>
       </div>
 
       <div id="authSuccessSection" style="display: none;">
