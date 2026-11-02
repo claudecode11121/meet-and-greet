@@ -322,13 +322,24 @@ async function runTests() {
     assert(postCard2Text.includes('100% Escrow Satisfied'), 'Ledger displays 100% Escrow Satisfied ($500.00 USD)');
     assert(postCard2Text.toUpperCase().includes('ACCREDITED VOUCHERS ON FILE (2)'), 'Itemized ledger lists both vouchers');
 
-    // 4. Primary Activation Button is now unlocked
-    await page.waitForSelector('#submit-activate-btn:not([disabled])', { timeout: 5000 });
-    const btnHtml = await page.$eval('#submit-activate-btn', el => el.outerHTML);
-    console.log('  [Debug] submit-activate-btn:', btnHtml);
-    await page.click('#submit-activate-btn');
+    // 4. Passholder sees Escrow Complete & Awaiting Admin Clearance (No self-activation)
+    await page.waitForSelector('#escrow-pending-admin-box', { timeout: 8000 });
+    const boxText = await page.$eval('#escrow-pending-admin-box', el => el.innerText);
+    console.log('  [Debug boxText]:', boxText.replace(/\n/g, ' '));
+    assert(boxText.includes('Escrow') && boxText.includes('Admin'), 'Passholder sees Escrow Complete • Awaiting WME Admin Verification');
+    const wholePageText = await page.evaluate(() => document.body.innerText);
+    assert(!wholePageText.includes('Authenticate PIN & Activate VIP Card'), 'Passholder portal does NOT allow self-activation');
 
-    // Wait for success banner to render
+    // 5. Admin verifies escrow deposit and activates credential via PIN 813-026
+    const adminActivateRes = await fetch(`${BASE_URL}/api/card/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026', adminOverride: true })
+    });
+    const adminActivateJson = await adminActivateRes.json();
+    assert(adminActivateRes.ok && adminActivateJson.success === true, 'Admin alone clears and activates VIP pass via PIN');
+
+    // 6. Real-time sync: Portal auto-updates with cleared accreditation
     try {
       await page.waitForFunction(
         () => document.body.innerText.toUpperCase().includes('VIP CREDENTIAL SUCCESSFULLY SYNCHRONIZED'),

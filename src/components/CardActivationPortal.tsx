@@ -17,7 +17,9 @@ import {
   Plus, 
   Receipt,
   ArrowRight,
-  FileText
+  FileText,
+  Clock,
+  Lock
 } from 'lucide-react';
 
 interface CardActivationPortalProps {
@@ -226,6 +228,29 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
       setCardAmountInput(String(remainingBalance));
     }
   }, [remainingBalance]);
+
+  // Real-time synchronization: poll status while escrow is satisfied and awaiting admin activation
+  useEffect(() => {
+    if (isCardActivated || !isEscrowSatisfied) return;
+
+    const interval = setInterval(() => {
+      fetch(`/api/card/status/${encodeURIComponent(params.ref)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.activated && data.activation) {
+            setSuccessData(data.activation);
+            setIsPinAuthenticated(true);
+            if (data.activation.payment) {
+              setPaymentData(data.activation.payment);
+            }
+            localStorage.setItem(`wme_card_active_${params.ref}`, JSON.stringify(data.activation));
+          }
+        })
+        .catch(() => {});
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isCardActivated, isEscrowSatisfied, params.ref]);
 
   // Handle PIN Input formatting
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1153,34 +1178,32 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
                     </div>
                   )}
 
-                  {/* Primary Activation Button */}
+                  {/* Escrow Status & Admin Clearance Notice */}
                   {!isCardActivated && (
                     <div className="pt-2 border-t border-[#E3E0DC]">
-                      <button
-                        type="button"
-                        id="submit-activate-btn"
-                        onClick={handleActivateCard}
-                        disabled={isActivating || !isPinValid || !isEscrowSatisfied}
-                        className={`w-full py-3.5 px-4 font-sans text-xs uppercase tracking-wider font-semibold rounded-[2px] shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${
-                          isPinValid && isEscrowSatisfied
-                            ? 'bg-[#713B45] hover:bg-[#592E36] text-white'
-                            : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
-                        }`}
-                      >
-                        {isActivating ? (
-                          <>
-                            <RotateCw className="w-4 h-4 animate-spin text-white" />
-                            <span>Authenticating OATH Clearance...</span>
-                          </>
-                        ) : !isEscrowSatisfied ? (
-                          <span>Deposit Remaining Escrow (${remainingBalance}.00 Due) to Unlock</span>
-                        ) : (
-                          <>
-                            <ShieldCheck className="w-4 h-4" />
-                            <span>Authenticate PIN &amp; Activate VIP Card</span>
-                          </>
-                        )}
-                      </button>
+                      {!isEscrowSatisfied ? (
+                        <div className="w-full py-3 px-4 bg-[#F8F7F4] border border-[#E3E0DC] text-[#737373] text-xs font-mono uppercase tracking-wider rounded-[2px] flex items-center justify-center gap-2">
+                          <Lock className="w-4 h-4 text-[#A1A1AA]" />
+                          <span>Deposit Remaining Escrow (${remainingBalance}.00 Due) to Complete Requirement</span>
+                        </div>
+                      ) : (
+                        <div id="escrow-pending-admin-box" className="bg-[#FAF9F6] border-2 border-[#D4AF37]/50 rounded-[2px] p-5 text-center space-y-2.5 shadow-xs">
+                          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#856404] text-xs font-mono font-bold uppercase rounded-[2px]">
+                            <Clock className="w-3.5 h-3.5 text-[#B45309] animate-pulse" />
+                            <span>Escrow Complete • Awaiting WME Admin Verification</span>
+                          </div>
+                          <h3 className="font-serif font-bold text-base text-[#252525]">
+                            Talent Rider Escrow Deposit Received &amp; Queued
+                          </h3>
+                          <p className="text-xs text-[#737373] max-w-md mx-auto leading-relaxed">
+                            Your gift card escrow deposit of <strong>${totalCredited}.00 {pricing.currency}</strong> has been secured for {params.guest}. A WME VIP Relations Administrator will verify your voucher claim code(s) and photo proof, then execute the OATH handshake to activate your credential.
+                          </p>
+                          <div className="pt-2 border-t border-[#E3E0DC] flex items-center justify-center gap-2 text-[11px] font-mono text-[#065F46]">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
+                            <span>Accreditation File Synchronized &bull; Awaiting Administrator Activation</span>
+                          </div>
+                        </div>
+                      )}
 
                       <p className="text-[11px] font-mono text-[#737373] text-center pt-2">
                         Initiative for Open AuTHentication (OATH) &bull; RFC-4226 &amp; AES-256 VIP Standard
