@@ -1,0 +1,54 @@
+{
+  "credential": {
+    "passId": "WME-KR26-0813-VIP",
+    "serialNumber": "8136-1310-3120-2611",
+    "activationPin": "813-026",
+    "barcodeString": "*WME-KR26-BW813*",
+    "qrVerificationUrl": "https://meet-and-greet-eta.vercel.app/verify?ref=WME-KR26-0813-VIP&guest=Brenda+Wright",
+    "accessTier": "VIP ALL-ACCESS / GREEN ROOM",
+    "status": "ACCREDITED & CONFIRMED",
+    "issueDate": "2026-10-31",
+    "validUntil": "2026-11-04T02:00:00Z"
+  },
+  "event": {
+    "talentName": "Keanu Reeves",
+    "agency": "WME (William Morris Endeavor)",
+    "agencyOffices": "Beverly Hills · New York · London · Nashville",
+    "title": "A Moment with Keanu Reeves",
+    "format": "In-Person Meet & Greet",
+    "eventDate": "Tuesday, November 3, 2026",
+    "callTime": "19:30 PST (Private Session)",
+    "venueArea": "VIP Talent Suite · Private Green Room Lounge",
+    "admittance": "1 Attendee (Admit One)"
+  },
+  "passholder": {
+    "fullName": "Brenda Wright",
+    "email": "brenda202612345@gmail.com",
+    "phone": "+1 (813) 613-1031",
+    "country": "United States",
+    "city": "Ruskin",
+    "state": "Florida",
+    "idType": "Driver's License",
+    "idJurisdiction": "State of Florida, USA",
+    "idStatus": "Verified & AES-256 Encrypted",
+    "signature": "Brenda Wright",
+    "signatureType": "Digital E-Sign Affixed",
+    "signatureDate": "October 31, 2026",
+    "fanStatement": "I love him and going to spend the rest of our life's together"
+  },
+  "security": {
+    "accreditationCode": "VIP-ACCRED-0813",
+    "activationPin": "813-026",
+    "pinStatus": "ACTIVE & PENDING VENUE SCAN",
+    "oathProtocol": "OATH RFC-4226 / AES-256 Token Sync",
+    "activationMethod": "Card Activation via Generated OATH PIN (813-026)",
+    "encryptionStandard": "AES-256 Encrypted Identification Intake",
+    "biometricClearance": "Facial Match & Photo ID Certified",
+    "venueRules": [
+      "Official photo ID matching this credential required at venue entry",
+      "Credential must be worn visibly at all times in talent security zones",
+      "Strictly non-transferable; duplication or unauthorized resale voids pass",
+      "Photography and recording governed by WME VIP talent rider"
+    ]
+  }
+}

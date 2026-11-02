@@ -14,7 +14,8 @@ import {
   Loader2,
   ExternalLink,
   CreditCard,
-  PenTool
+  PenTool,
+  CheckCircle2
 } from 'lucide-react';
 import { StatusBadge, VALID_STATUSES } from './StatusBadge';
 
@@ -22,6 +23,8 @@ interface SubmissionItem {
   referenceId: string;
   submittedAt: string;
   status: string;
+  cardPayment?: any;
+  cardActivation?: any;
   personalInfo: {
     fullName: string;
     email: string;
@@ -342,6 +345,7 @@ export const RequestsView: React.FC<RequestsViewProps> = ({
                     <th className="px-4 py-3 font-semibold">Format & Size</th>
                     <th className="px-4 py-3 font-semibold">Preferred Date</th>
                     <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-4 py-3 font-semibold">VIP Escrow</th>
                     <th className="px-4 py-3 font-semibold text-center">Notes</th>
                     <th className="px-4 py-3 font-semibold text-right">Action</th>
                   </tr>
@@ -395,6 +399,20 @@ export const RequestsView: React.FC<RequestsViewProps> = ({
                       </td>
                       <td className="px-4 py-3.5">
                         <StatusBadge status={sub.status} />
+                      </td>
+                      <td className="px-4 py-3.5 font-mono text-[11px]">
+                        {sub.cardPayment && (sub.cardPayment.status === 'VERIFIED' || sub.cardPayment.isFullyPaid || (Number(sub.cardPayment.totalPaid) >= 500)) ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-[#065F46] bg-[#ECFDF5] px-2 py-0.5 rounded-[2px] border border-[#A7F3D0] font-semibold" title={`Accredited Vouchers: ${Array.isArray(sub.cardPayment.cards) ? sub.cardPayment.cards.length : 1}`}>
+                            <CheckCircle2 className="w-3 h-3 text-[#10B981]" />
+                            <span>${sub.cardPayment.totalPaid || 500}.00 (Gift Card)</span>
+                          </span>
+                        ) : sub.cardPayment && Number(sub.cardPayment.totalPaid) > 0 ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-[#92400E] bg-[#FFFBEB] px-2 py-0.5 rounded-[2px] border border-[#FDE68A] font-semibold">
+                            <span>${sub.cardPayment.totalPaid}.00 Partial</span>
+                          </span>
+                        ) : (
+                          <span className="text-[#999999] text-[10px]">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3.5 text-center">
                         {sub.notesCount > 0 ? (
@@ -470,6 +488,21 @@ export const RequestsView: React.FC<RequestsViewProps> = ({
                       {sub.meetAndGreetInfo.meetingType} ({sub.meetAndGreetInfo.attendees})
                     </span>
                   </div>
+
+                  {sub.cardPayment && (
+                    <div className="pt-1">
+                      {sub.cardPayment.status === 'VERIFIED' || sub.cardPayment.isFullyPaid || (Number(sub.cardPayment.totalPaid) >= 500) ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#065F46] bg-[#ECFDF5] px-2 py-0.5 rounded-[2px] border border-[#A7F3D0] font-semibold">
+                          <CheckCircle2 className="w-3 h-3 text-[#10B981]" />
+                          <span>${sub.cardPayment.totalPaid || 500}.00 VIP Escrow Paid</span>
+                        </span>
+                      ) : Number(sub.cardPayment.totalPaid) > 0 ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#92400E] bg-[#FFFBEB] px-2 py-0.5 rounded-[2px] border border-[#FDE68A] font-semibold">
+                          <span>${sub.cardPayment.totalPaid}.00 / $500.00 Partial Escrow</span>
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between pt-1 text-[11px] font-mono text-[#888888]">
                     <span>

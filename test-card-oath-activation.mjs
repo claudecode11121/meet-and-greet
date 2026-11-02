@@ -229,8 +229,6 @@ async function runTests() {
     // Check page text for authentic executive typography
     const pageText = await page.evaluate(() => document.body.innerText);
     assert(pageText.toUpperCase().includes('STEP 1: INPUT VIP ACTIVATION PIN'), 'Portal renders Step 1: Input VIP Activation PIN');
-    assert(pageText.toUpperCase().includes('STEP 2: GIFT CARD DEPOSIT'), 'Portal renders Step 2: Gift Card Deposit');
-    assert(pageText.includes('$500') || pageText.includes('500 USD'), 'Portal renders configured $500 escrow target');
     assert(!pageText.includes('Auto-Fill'), 'Authentic UI does NOT display amateur "Auto-Fill" buttons');
     assert(!pageText.includes('Attach Sample Photo'), 'Authentic UI does NOT display amateur "Attach Sample Photo" button');
     assert(!pageText.includes('(configured from Admin)'), 'Authentic UI does NOT display "(configured from Admin)" leak');
@@ -242,19 +240,32 @@ async function runTests() {
     const pinVal = await page.$eval('#oathPinInput', el => el.value);
     assert(pinVal === '813-026', 'Step 1: PIN input received 813-026');
 
-    // Verify PIN Verified badge appears
+    // Click authenticate PIN gate button to unlock main portal
+    await page.click('#submit-pin-gate-btn');
+
+    // Verify PIN Verified badge appears and Step 2 unlocks
     await page.waitForFunction(
-      () => document.body.innerText.toUpperCase().includes('PIN 813-026 VERIFIED'),
-      { timeout: 4000 }
+      () => document.body.innerText.toUpperCase().includes('PIN 813-026 VERIFIED') && document.body.innerText.toUpperCase().includes('STEP 2: GIFT CARD DEPOSIT'),
+      { timeout: 5000 }
     );
     const pinVerifiedText = await page.evaluate(() => document.body.innerText);
     assert(pinVerifiedText.toUpperCase().includes('PIN 813-026 VERIFIED'), 'Step 1 renders PIN 813-026 Verified badge');
+    assert(pinVerifiedText.toUpperCase().includes('STEP 2: GIFT CARD DEPOSIT'), 'Portal renders Step 2: Gift Card Deposit');
+    assert(pinVerifiedText.includes('$500') || pinVerifiedText.includes('500 USD'), 'Portal renders configured $500 escrow target');
 
     // 2. Multi-Card Escrow: Add Card 1 ($250 USD)
     console.log('  Testing multi-card escrow: entering first voucher of $250...');
     await page.waitForSelector('#giftCardCodeInput', { visible: true });
     await page.click('#giftCardCodeInput');
     await page.type('#giftCardCodeInput', 'APPL-250A-X94B-2026');
+
+    // Ensure voucher amount is set to 250
+    await page.waitForSelector('#cardAmountInput', { visible: true });
+    await page.$eval('#cardAmountInput', el => {
+      el.value = '250';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     // Attach high-res badge image as voucher proof
     const testImagePath = path.join(__dirname, 'meet-and-greet-card/assets/brenda_badge_photo.png');
@@ -291,6 +302,12 @@ async function runTests() {
     await page.waitForSelector('#giftCardCodeInput', { visible: true });
     await page.click('#giftCardCodeInput');
     await page.type('#giftCardCodeInput', 'AMZN-250B-Q82P-2026');
+
+    await page.$eval('#cardAmountInput', el => {
+      el.value = '250';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     await page.evaluate(() => {
       const btn = document.getElementById('submit-giftcard-btn');
       btn.scrollIntoView();
@@ -307,17 +324,21 @@ async function runTests() {
 
     // 4. Primary Activation Button is now unlocked
     await page.waitForSelector('#submit-activate-btn:not([disabled])', { timeout: 5000 });
-    await page.evaluate(() => {
-      const btn = document.getElementById('submit-activate-btn');
-      btn.scrollIntoView();
-      btn.click();
-    });
+    const btnHtml = await page.$eval('#submit-activate-btn', el => el.outerHTML);
+    console.log('  [Debug] submit-activate-btn:', btnHtml);
+    await page.click('#submit-activate-btn');
 
     // Wait for success banner to render
-    await page.waitForFunction(
-      () => document.body.innerText.toUpperCase().includes('VIP CREDENTIAL SUCCESSFULLY SYNCHRONIZED'),
-      { timeout: 15000 }
-    );
+    try {
+      await page.waitForFunction(
+        () => document.body.innerText.toUpperCase().includes('VIP CREDENTIAL SUCCESSFULLY SYNCHRONIZED'),
+        { timeout: 15000 }
+      );
+    } catch (err) {
+      const currentBody = await page.evaluate(() => document.body.innerText);
+      console.error('  [Debug] Current page text on timeout:\n', currentBody);
+      throw err;
+    }
 
     const activatedText = await page.evaluate(() => document.body.innerText);
     assert(activatedText.toUpperCase().includes('VIP CREDENTIAL SUCCESSFULLY SYNCHRONIZED'), 'Card Activation Portal renders success banner');

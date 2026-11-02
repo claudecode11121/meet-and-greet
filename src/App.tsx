@@ -183,8 +183,8 @@ export const App: React.FC = () => {
 
   const navigateToCardActivation = (ref?: string) => {
     const url = ref 
-      ? `/verify?ref=${encodeURIComponent(ref)}&guest=Brenda+Wright&pin=813-026` 
-      : '/verify?ref=WME-KR26-0813-VIP&guest=Brenda+Wright&pin=813-026';
+      ? `/verify?ref=${encodeURIComponent(ref)}&guest=Brenda+Wright` 
+      : '/verify?ref=WME-KR26-0813-VIP&guest=Brenda+Wright';
     window.history.pushState(null, '', url);
     setIsCardRoute(true);
     setIsAdminMode(false);

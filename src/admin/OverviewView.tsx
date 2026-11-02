@@ -34,6 +34,8 @@ interface RecentSubmission {
   referenceId: string;
   submittedAt: string;
   status: string;
+  cardPayment?: any;
+  cardActivation?: any;
   personalInfo: {
     fullName: string;
     email: string;
@@ -420,6 +422,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                             <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded-[2px] border border-[#BBF7D0]">
                               <PenTool className="w-2.5 h-2.5 text-[#16A34A]" />
                               <span>Signed</span>
+                            </span>
+                          )}
+                          {item.cardPayment && (item.cardPayment.status === 'VERIFIED' || item.cardPayment.isFullyPaid || (Number(item.cardPayment.totalPaid) >= 500)) && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#065F46] bg-[#ECFDF5] px-1.5 py-0.5 rounded-[2px] border border-[#A7F3D0]">
+                              <CheckCircle2 className="w-2.5 h-2.5 text-[#10B981]" />
+                              <span>${item.cardPayment.totalPaid || 500} Gift Card</span>
                             </span>
                           )}
                         </div>

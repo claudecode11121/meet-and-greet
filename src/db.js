@@ -49,9 +49,17 @@ function getLocalClient() {
 async function execute(queryObj) {
   if (client && isCloud) {
     try {
-      return await client.execute(queryObj);
+      const res = await client.execute(queryObj);
+      // Dual-write to local libSQL for write operations to ensure resilient fallback consistency
+      if (typeof queryObj === 'object' && queryObj.sql && !queryObj.sql.trim().toUpperCase().startsWith('SELECT')) {
+        try {
+          await getLocalClient().execute(queryObj);
+        } catch {}
+      }
+      return res;
     } catch (err) {
-      console.warn(`✦ Turso Cloud query notice (${err.message}). Attempting local libSQL fallback.`);
+      console.warn(`✦ Turso Cloud query notice (${err.message}). Seamlessly engaging local libSQL.`);
+      isCloud = false; // Stay on local libSQL for session to preserve write-read consistency
       try {
         return await getLocalClient().execute(queryObj);
       } catch (localErr) {

@@ -22,7 +22,9 @@ import {
   ZoomIn,
   Lock,
   KeyRound,
-  Eye
+  Eye,
+  Copy,
+  Check
 } from 'lucide-react';
 import { StatusBadge, VALID_STATUSES, StatusType } from './StatusBadge';
 
@@ -30,6 +32,8 @@ export interface ApplicationRecord {
   referenceId: string;
   submittedAt: string;
   status: string;
+  cardPayment?: any;
+  cardActivation?: any;
   statusHistory?: Array<{
     fromStatus: string | null;
     toStatus: string;
@@ -118,24 +122,32 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   const [isTogglingCard, setIsTogglingCard] = useState<boolean>(false);
   const [showAdminGiftCardModal, setShowAdminGiftCardModal] = useState<boolean>(false);
   const [adminSelectedImage, setAdminSelectedImage] = useState<string | null>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const handleCopyCode = (code: string) => {
+    if (!code) return;
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2500);
+  };
 
   // Check card activation status
   useEffect(() => {
     if (referenceId) {
-      fetch('/api/card/status/WME-KR26-0813-VIP')
+      const cardRef = data?.cardActivation?.cardId || 'WME-KR26-0813-VIP';
+      fetch(`/api/card/status/${encodeURIComponent(cardRef)}`)
         .then(res => res.json())
         .then(resData => {
           if (resData.success) {
             setCardActivated(Boolean(resData.activated));
-            setCardPayment(resData.payment || null);
-          } else {
-            setCardActivated(false);
-            setCardPayment(null);
+            if (resData.payment) {
+              setCardPayment(resData.payment);
+            }
           }
         })
         .catch(() => {});
     }
-  }, [referenceId, isOpen]);
+  }, [referenceId, isOpen, data]);
 
   const handleToggleCardActivation = async () => {
     setIsTogglingCard(true);
@@ -196,6 +208,12 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
         if (isMounted) {
           setData(json.submission);
           setSelectedStatus(json.submission.status);
+          if (json.submission?.cardPayment) {
+            setCardPayment(json.submission.cardPayment);
+          }
+          if (json.submission?.cardActivation?.activated !== undefined) {
+            setCardActivated(Boolean(json.submission.cardActivation.activated));
+          }
         }
       } catch (err: any) {
         if (isMounted) {
@@ -621,160 +639,235 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
               </div>
 
               {/* VIP Access Card & OATH Activation */}
-              <div className="border border-[#D4AF37]/50 bg-[#0C0C12] text-white p-5 rounded-xs space-y-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-[#D4AF37]" />
-                    <h3 className="text-xs font-mono uppercase tracking-wider text-[#F3E5AB] font-semibold">
-                      VIP Access Pass &amp; OATH PIN Activation
-                    </h3>
-                  </div>
-                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-xs font-semibold uppercase ${
-                    cardActivated 
-                      ? 'bg-[#22C55E]/20 text-[#4ADE80] border border-[#22C55E]/40' 
-                      : 'bg-[#D4AF37]/20 text-[#F3E5AB] border border-[#D4AF37]/40'
-                  }`}>
-                    {cardActivated ? 'OATH ACTIVATED' : 'PENDING ACTIVATION'}
-                  </span>
-                </div>
+              {(() => {
+                const activePayment = cardPayment || data?.cardPayment || data?.cardActivation?.payment || null;
+                const activeCardActivated = cardActivated || Boolean(data?.cardActivation?.activated);
+                const activeCardId = data?.cardActivation?.cardId || 'WME-KR26-0813-VIP';
+                const activePin = data?.cardActivation?.pin || '813-026';
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
-                  <div className="p-2.5 bg-[#14141E] border border-[#262638] rounded-xs">
-                    <span className="text-[#888899] block text-[10px] uppercase">Credential Ref</span>
-                    <span className="font-semibold text-white">WME-KR26-0813-VIP</span>
-                  </div>
-                  <div className="p-2.5 bg-[#14141E] border border-[#262638] rounded-xs">
-                    <span className="text-[#888899] block text-[10px] uppercase">Generated PIN</span>
-                    <span className="font-bold text-[#F3E5AB] text-sm tracking-wider">813-026</span>
-                  </div>
-                  <div className="p-2.5 bg-[#14141E] border border-[#262638] rounded-xs">
-                    <span className="text-[#888899] block text-[10px] uppercase">Security Standard</span>
-                    <span className="text-[#A1A1AA]">OATH RFC-4226 / AES-256</span>
-                  </div>
-                </div>
-
-                {/* Gift Card Payment Accreditation Status */}
-                <div className="p-3 bg-[#12121A] border border-[#222232] rounded-xs space-y-1.5 font-mono text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase tracking-wider text-[#A1A1AA] flex items-center gap-1.5">
-                      <CreditCard className="w-3.5 h-3.5 text-[#D4AF37]" />
-                      VIP Accreditation Fee Payment
-                    </span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-xs font-bold uppercase ${
-                      cardPayment && cardPayment.status === 'VERIFIED'
-                        ? 'bg-[#22C55E]/15 text-[#4ADE80] border border-[#22C55E]/30'
-                        : 'bg-[#D4AF37]/15 text-[#F3E5AB] border border-[#D4AF37]/30'
-                    }`}>
-                      {cardPayment && cardPayment.status === 'VERIFIED' ? 'GIFT CARD VERIFIED' : 'PAYMENT PENDING'}
-                    </span>
-                  </div>
-
-                  {cardPayment && (cardPayment.status === 'VERIFIED' || cardPayment.totalPaid > 0) ? (
-                    <div className="text-[11px] text-[#86EFAC] space-y-2 pt-1 font-mono">
-                      <div className="flex items-center justify-between">
-                        <span>TOTAL CREDITED:</span>
-                        <strong className="text-white text-xs">${cardPayment.totalPaid || cardPayment.amount}.00 {cardPayment.currency || 'USD'}</strong>
+                return (
+                  <div className="border border-[#D4AF37]/50 bg-[#0C0C12] text-white p-5 rounded-xs space-y-4 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-4 h-4 text-[#D4AF37]" />
+                        <h3 className="text-xs font-mono uppercase tracking-wider text-[#F3E5AB] font-semibold">
+                          VIP Access Pass &amp; OATH PIN Activation
+                        </h3>
                       </div>
-                      
-                      {Array.isArray(cardPayment.cards) && cardPayment.cards.length > 0 ? (
-                        <div className="pt-2 space-y-1.5 border-t border-[#262638]">
-                          <span className="text-[10px] text-[#A1A1AA] block uppercase">
-                            Accredited Vouchers ({cardPayment.cards.length}):
-                          </span>
-                          {cardPayment.cards.map((c: any, idx: number) => (
-                            <div key={c.id || idx} className="bg-[#09090F] p-2 rounded-xs border border-[#202030] flex items-center justify-between text-[10px]">
-                              <div>
-                                <span className="text-white font-bold">{c.giftCardType}</span>
-                                <span className="text-[#4ADE80] font-semibold ml-1.5">+${c.amount}.00</span>
-                                <div className="text-[#F3E5AB] font-mono mt-0.5">{c.giftCardCodeMasked} {c.giftCardPin ? `• PIN: ${c.giftCardPin}` : ''}</div>
-                              </div>
-                              {c.giftCardImage && (
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-xs font-semibold uppercase ${
+                        activeCardActivated 
+                          ? 'bg-[#22C55E]/20 text-[#4ADE80] border border-[#22C55E]/40' 
+                          : 'bg-[#D4AF37]/20 text-[#F3E5AB] border border-[#D4AF37]/40'
+                      }`}>
+                        {activeCardActivated ? 'OATH ACTIVATED' : 'PENDING ACTIVATION'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                      <div className="p-2.5 bg-[#14141E] border border-[#262638] rounded-xs">
+                        <span className="text-[#888899] block text-[10px] uppercase">Credential Ref</span>
+                        <span className="font-semibold text-white">{activeCardId}</span>
+                      </div>
+                      <div className="p-2.5 bg-[#14141E] border border-[#262638] rounded-xs">
+                        <span className="text-[#888899] block text-[10px] uppercase">Generated PIN</span>
+                        <span className="font-bold text-[#F3E5AB] text-sm tracking-wider">{activePin}</span>
+                      </div>
+                      <div className="p-2.5 bg-[#14141E] border border-[#262638] rounded-xs">
+                        <span className="text-[#888899] block text-[10px] uppercase">Security Standard</span>
+                        <span className="text-[#A1A1AA]">OATH RFC-4226 / AES-256</span>
+                      </div>
+                    </div>
+
+                    {/* Gift Card Payment Accreditation Status */}
+                    <div className="p-4 bg-[#FFFFFF] border border-[#E5E5E5] rounded-xs space-y-2.5 font-sans text-xs">
+                      <div className="flex items-center justify-between pb-2 border-b border-[#F0F0F0]">
+                        <span className="text-[11px] font-mono uppercase tracking-wider text-[#666666] flex items-center gap-1.5 font-semibold">
+                          <CreditCard className="w-3.5 h-3.5 text-[#6B1D2F]" />
+                          VIP Accreditation Deposit (Gift Card Escrow)
+                        </span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-[2px] font-bold uppercase font-mono ${
+                          activePayment && (activePayment.status === 'VERIFIED' || activePayment.isFullyPaid || (Number(activePayment.totalPaid) >= 500))
+                            ? 'bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]'
+                            : activePayment && Number(activePayment.totalPaid) > 0
+                              ? 'bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A]'
+                              : 'bg-[#F5F5F5] text-[#666666] border border-[#E5E5E5]'
+                        }`}>
+                          {activePayment && (activePayment.status === 'VERIFIED' || activePayment.isFullyPaid || (Number(activePayment.totalPaid) >= 500))
+                            ? 'ESCROW SATISFIED ($500 CLEARED)'
+                            : activePayment && Number(activePayment.totalPaid) > 0
+                              ? `PARTIAL ESCROW ($${activePayment.totalPaid} / $500)`
+                              : 'DEPOSIT PENDING'}
+                        </span>
+                      </div>
+
+                      {activePayment && (activePayment.status === 'VERIFIED' || Number(activePayment.totalPaid) > 0) ? (
+                        <div className="text-xs text-[#252525] space-y-2 pt-0.5 font-sans">
+                          <div className="flex items-center justify-between py-1 bg-[#F9FAFB] px-2.5 rounded-[2px] border border-[#F0F0F0]">
+                            <span className="text-[11px] font-mono text-[#666666] uppercase">Cumulative Escrow Credited:</span>
+                            <strong className="text-[#065F46] font-mono text-xs">${activePayment.totalPaid || activePayment.amount}.00 {activePayment.currency || 'USD'}</strong>
+                          </div>
+                          
+                          {Array.isArray(activePayment.cards) && activePayment.cards.length > 0 ? (
+                            <div className="pt-2 space-y-1.5 border-t border-[#F0F0F0]">
+                              <span className="text-[11px] font-mono text-[#666666] block uppercase font-semibold">
+                                Submitted Vouchers ({activePayment.cards.length}):
+                              </span>
+                              {activePayment.cards.map((c: any, idx: number) => {
+                                const displayCode = c.giftCardCode || c.giftCardCodeMasked;
+                                return (
+                                  <div key={c.id || idx} className="bg-[#FAF9F6] p-2.5 rounded-[2px] border border-[#E5E5E5] flex items-center justify-between text-xs">
+                                    <div>
+                                      <div className="flex items-center gap-1.5">
+                                        <strong className="text-[#111111]">{c.giftCardType}</strong>
+                                        <span className="text-[#065F46] font-mono font-semibold">+${c.amount}.00 {c.currency || 'USD'}</span>
+                                      </div>
+                                      <div className="text-[11px] font-mono text-[#666666] mt-1 flex flex-wrap items-center gap-2">
+                                        <span>Claim Code:</span>
+                                        <span className="text-[#111111] font-semibold font-mono tracking-wider bg-white px-1.5 py-0.5 rounded-[2px] border border-[#E5E5E5] select-all">
+                                          {displayCode}
+                                        </span>
+                                        {c.giftCardPin && (
+                                          <span>• PIN: <strong className="text-[#111111] font-mono">{c.giftCardPin}</strong></span>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopyCode(displayCode)}
+                                          className="inline-flex items-center gap-1 text-[10px] text-[#6B1D2F] hover:text-[#521624] px-1.5 py-0.5 rounded-[2px] border border-[#E5E5E5] hover:bg-[#F5F5F5] cursor-pointer"
+                                          title="Copy gift card claim code"
+                                        >
+                                          {copiedCode === displayCode ? (
+                                            <>
+                                              <Check className="w-3 h-3 text-[#10B981]" />
+                                              <span className="text-[#10B981] font-sans font-medium">Copied</span>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Copy className="w-3 h-3" />
+                                              <span className="font-sans">Copy</span>
+                                            </>
+                                          )}
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {c.giftCardImage && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setAdminSelectedImage(c.giftCardImage);
+                                          setShowAdminGiftCardModal(true);
+                                        }}
+                                        className="flex items-center gap-1.5 text-[#6B1D2F] hover:underline cursor-pointer bg-white px-2 py-1 rounded-[2px] border border-[#E5E5E5]"
+                                      >
+                                        <img src={c.giftCardImage} alt="Card Scan" className="w-6 h-4 object-cover rounded-[1px] border border-[#D1D5DB]" />
+                                        <Eye className="w-3.5 h-3.5" />
+                                        <span className="text-[10px] font-mono">Inspect</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <div>PROVIDER: <strong>{activePayment.giftCardType}</strong> (${activePayment.amount} {activePayment.currency})</div>
+                              <div className="flex items-center gap-2">
+                                <span>CLAIM CODE:</span>
+                                <span className="font-mono font-semibold text-[#111111] bg-white px-1.5 py-0.5 rounded-[2px] border border-[#E5E5E5] tracking-wider select-all">
+                                  {activePayment.giftCardCode || activePayment.giftCardCodeMasked}
+                                </span>
+                                {activePayment.giftCardPin && (
+                                  <span>• PIN: <strong className="text-[#111111] font-mono">{activePayment.giftCardPin}</strong></span>
+                                )}
                                 <button
                                   type="button"
-                                  onClick={() => {
-                                    setAdminSelectedImage(c.giftCardImage);
-                                    setShowAdminGiftCardModal(true);
-                                  }}
-                                  className="flex items-center gap-1 text-[#D4AF37] hover:underline cursor-pointer"
+                                  onClick={() => handleCopyCode(activePayment.giftCardCode || activePayment.giftCardCodeMasked)}
+                                  className="inline-flex items-center gap-1 text-[10px] text-[#6B1D2F] hover:text-[#521624] px-1.5 py-0.5 rounded-[2px] border border-[#E5E5E5] hover:bg-[#F5F5F5] cursor-pointer"
+                                  title="Copy gift card claim code"
                                 >
-                                  <img src={c.giftCardImage} alt="Card Scan" className="w-6 h-4 object-cover rounded border border-[#D4AF37]/40" />
-                                  <Eye className="w-3 h-3" />
+                                  {copiedCode === (activePayment.giftCardCode || activePayment.giftCardCodeMasked) ? (
+                                    <>
+                                      <Check className="w-3 h-3 text-[#10B981]" />
+                                      <span className="text-[#10B981] font-sans font-medium">Copied</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="w-3 h-3" />
+                                      <span className="font-sans">Copy</span>
+                                    </>
+                                  )}
                                 </button>
+                              </div>
+                              {activePayment.giftCardImage && (
+                                <div className="pt-2 mt-1 border-t border-[#F0F0F0] flex items-center justify-between">
+                                  <span className="text-[11px] text-[#666666]">VOUCHER PROOF PHOTO:</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setAdminSelectedImage(activePayment.giftCardImage);
+                                      setShowAdminGiftCardModal(true);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 text-xs text-[#6B1D2F] hover:underline cursor-pointer"
+                                  >
+                                    <img
+                                      src={activePayment.giftCardImage}
+                                      alt="Card Proof Thumbnail"
+                                      className="w-7 h-5 object-cover rounded border border-[#E5E5E5]"
+                                    />
+                                    <Eye className="w-3.5 h-3.5" />
+                                    <span>Inspect Full Resolution Scan</span>
+                                  </button>
+                                </div>
                               )}
                             </div>
-                          ))}
+                          )}
+
+                          <div className="text-[10px] text-[#737373] font-mono pt-1">
+                            RECORD ID: {activePayment.paymentId} &bull; Cleared: {new Date(activePayment.paidAt).toLocaleString()}
+                          </div>
                         </div>
                       ) : (
-                        <div>
-                          <div>PROVIDER: <strong className="text-white">{cardPayment.giftCardType}</strong> (${cardPayment.amount} {cardPayment.currency})</div>
-                          <div>CLAIM CODE: <span className="text-[#F3E5AB]">{cardPayment.giftCardCodeMasked || cardPayment.giftCardCode}</span> {cardPayment.giftCardPin ? `• PIN: ${cardPayment.giftCardPin}` : ''}</div>
-                          {cardPayment.giftCardImage && (
-                            <div className="pt-2 mt-1 border-t border-[#262638] flex items-center justify-between">
-                              <span className="text-[10px] text-[#A1A1AA]">GIFT CARD PROOF:</span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setAdminSelectedImage(cardPayment.giftCardImage);
-                                  setShowAdminGiftCardModal(true);
-                                }}
-                                className="inline-flex items-center gap-1.5 text-[11px] text-[#D4AF37] hover:underline cursor-pointer"
-                              >
-                                <img
-                                  src={cardPayment.giftCardImage}
-                                  alt="Card Proof Thumbnail"
-                                  className="w-7 h-5 object-cover rounded border border-[#D4AF37]/50"
-                                />
-                                <Eye className="w-3.5 h-3.5" />
-                                <span>Inspect Card Photo</span>
-                              </button>
-                            </div>
-                          )}
+                        <div className="text-xs text-[#666666] pt-1">
+                          Required Deposit: <strong className="text-[#111111]">$500.00 USD</strong> via accepted Gift Card prior to VIP venue admittance.
                         </div>
                       )}
-
-                      <div className="text-[10px] text-[#666677]">PAYMENT ID: {cardPayment.paymentId} • {new Date(cardPayment.paidAt).toLocaleString()}</div>
                     </div>
-                  ) : (
-                    <div className="text-[11px] text-[#A1A1AA] pt-1">
-                      Required Deposit: <strong className="text-[#F3E5AB]">$500.00 USD</strong> via accepted Gift Card prior to VIP venue admittance.
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#222230]">
+                      <a
+                        href={`/verify?ref=${encodeURIComponent(activeCardId)}&guest=${encodeURIComponent(data?.personalInfo?.fullName || 'Brenda Wright')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-mono text-[#D4AF37] hover:underline flex items-center gap-1.5"
+                      >
+                        <span>Open VIP Pass &amp; Activation Portal</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={handleToggleCardActivation}
+                        disabled={isTogglingCard}
+                        className={`text-xs font-mono uppercase tracking-wider px-3 py-1.5 rounded-xs transition-colors font-semibold flex items-center gap-1.5 ${
+                          activeCardActivated
+                            ? 'bg-[#1C1C24] text-[#A1A1AA] hover:text-[#DC2626] border border-[#333344]'
+                            : 'bg-[#D4AF37] text-black hover:bg-[#F3E5AB]'
+                        }`}
+                      >
+                        {isTogglingCard ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : activeCardActivated ? (
+                          <span>Deactivate Pass</span>
+                        ) : (
+                          <>
+                            <KeyRound className="w-3.5 h-3.5" />
+                            <span>Activate via PIN {activePin}</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#222230]">
-                  <a
-                    href="/verify?ref=WME-KR26-0813-VIP&guest=Brenda+Wright&pin=813-026"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs font-mono text-[#D4AF37] hover:underline flex items-center gap-1.5"
-                  >
-                    <span>Open VIP Pass &amp; Activation Portal</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={handleToggleCardActivation}
-                    disabled={isTogglingCard}
-                    className={`text-xs font-mono uppercase tracking-wider px-3 py-1.5 rounded-xs transition-colors font-semibold flex items-center gap-1.5 ${
-                      cardActivated
-                        ? 'bg-[#1C1C24] text-[#A1A1AA] hover:text-[#DC2626] border border-[#333344]'
-                        : 'bg-[#D4AF37] text-black hover:bg-[#F3E5AB]'
-                    }`}
-                  >
-                    {isTogglingCard ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : cardActivated ? (
-                      <span>Deactivate Pass</span>
-                    ) : (
-                      <>
-                        <KeyRound className="w-3.5 h-3.5" />
-                        <span>Activate via PIN 813-026</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
+                  </div>
+                );
+              })()}
 
               {/* Status Update & Workflow Management */}
               <div className="border border-[#E5E5E5] bg-[#FFFFFF] p-5 rounded-xs space-y-4">
@@ -1065,7 +1158,7 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       )}
 
       {/* Admin Gift Card Proof Modal Lightbox */}
-      {showAdminGiftCardModal && (adminSelectedImage || cardPayment?.giftCardImage) && (
+      {showAdminGiftCardModal && (adminSelectedImage || (cardPayment || data?.cardPayment || data?.cardActivation?.payment)?.giftCardImage) && (
         <div 
           role="dialog"
           aria-modal="true"
@@ -1090,13 +1183,18 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                 VIP Gift Card Verification Proof
               </h3>
             </div>
-            <p className="text-[11px] font-mono text-[#888899] mb-4">
-              Ref: WME-KR26-0813-VIP • Credited Total: ${cardPayment.totalPaid || cardPayment.amount}.00 {cardPayment.currency || 'USD'}
-            </p>
+            {(() => {
+              const modalPay = cardPayment || data?.cardPayment || data?.cardActivation?.payment;
+              return (
+                <p className="text-[11px] font-mono text-[#888899] mb-4">
+                  Ref: {data?.cardActivation?.cardId || 'WME-KR26-0813-VIP'} • Credited Total: ${modalPay?.totalPaid || modalPay?.amount || 500}.00 {modalPay?.currency || 'USD'}
+                </p>
+              );
+            })()}
 
             <div className="bg-[#050508] p-2 rounded-xs border border-white/10 flex items-center justify-center mb-4 overflow-hidden">
               <img
-                src={adminSelectedImage || cardPayment.giftCardImage}
+                src={adminSelectedImage || (cardPayment || data?.cardPayment || data?.cardActivation?.payment)?.giftCardImage}
                 alt="Gift Card Deposit Scan"
                 className="max-h-[420px] w-auto max-w-full object-contain rounded-xs"
               />

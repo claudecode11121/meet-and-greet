@@ -599,7 +599,9 @@ app.get('/api/admin/submissions', requireAdminAuth, async (req, res) => {
         signedAt: item.signature.signedAt,
         hasSignature: Boolean(item.signature.signatureData)
       } : null,
-      notesCount: (item.internalNotes || []).length
+      notesCount: (item.internalNotes || []).length,
+      cardPayment: item.cardPayment || null,
+      cardActivation: item.cardActivation || null
     }));
 
     res.json({
@@ -1310,6 +1312,11 @@ app.post('/api/card/deactivate', async (req, res) => {
 /* ==========================================================================
    STATIC CLIENT SERVING
    ========================================================================== */
+app.use('/meet-and-greet-card', express.static(path.join(__dirname, 'meet-and-greet-card')));
+if (fs.existsSync(path.join(__dirname, 'public/meet-and-greet-card'))) {
+  app.use('/meet-and-greet-card', express.static(path.join(__dirname, 'public/meet-and-greet-card')));
+}
+
 const distDir = path.join(__dirname, 'dist');
 if (fs.existsSync(distDir)) {
   app.use(express.static(distDir));
