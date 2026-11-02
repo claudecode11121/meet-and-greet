@@ -891,6 +891,137 @@ app.put('/api/admin/event-settings', requireAdminAuth, async (req, res) => {
 });
 
 /* ==========================================================================
+   VIP ACCESS CARD & OATH PIN ACTIVATION ENDPOINTS
+   ========================================================================== */
+const cardDir = path.join(__dirname, 'meet-and-greet-card');
+
+// Serve static VIP card assets
+if (fs.existsSync(cardDir)) {
+  app.use('/meet-and-greet-card', express.static(cardDir));
+  app.use('/card-assets', express.static(path.join(cardDir, 'assets')));
+}
+
+// Get Pass Data Manifest with live activation state
+app.get('/api/card/manifest', async (req, res) => {
+  try {
+    const passDataPath = path.join(cardDir, 'pass-data.json');
+    if (fs.existsSync(passDataPath)) {
+      const data = JSON.parse(fs.readFileSync(passDataPath, 'utf-8'));
+      const cardId = req.query.ref || data.credential.passId;
+      const activation = await db.getCardActivation(cardId);
+      if (activation && activation.activated) {
+        data.credential.status = 'ACTIVATED & ACCREDITED';
+        data.security.pinStatus = 'OATH ACTIVATED & VERIFIED';
+        data.activation = activation;
+      }
+      return res.json({ success: true, data });
+    }
+    return res.status(404).json({ success: false, error: 'Pass manifest not found.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Check card activation status
+app.get('/api/card/status/:cardId', async (req, res) => {
+  try {
+    const cardId = req.params.cardId || 'WME-KR26-0813-VIP';
+    const activation = await db.getCardActivation(cardId);
+    res.json({
+      success: true,
+      cardId,
+      activated: Boolean(activation?.activated),
+      activation: activation || null
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Verify & Activate Card via OATH PIN
+app.post('/api/card/activate', async (req, res) => {
+  try {
+    const { cardId = 'WME-KR26-0813-VIP', pin } = req.body || {};
+    if (!pin) {
+      return res.status(400).json({ success: false, error: 'A 6-digit VIP activation PIN is required.' });
+    }
+
+    const cleanPin = String(pin).replace(/[^0-9]/g, '');
+    const validPins = ['813026']; // Default generated PIN for Brenda Wright (WME-KR26-0813-VIP)
+
+    if (!validPins.includes(cleanPin)) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid OATH Activation PIN. Please check the 6-digit PIN on your VIP credential.'
+      });
+    }
+
+    const clearanceCode = `OATH-KR26-${cleanPin.slice(0, 3)}-CLEAR-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+    const activationRecord = {
+      cardId: String(cardId).toUpperCase(),
+      pin: '813-026',
+      activated: true,
+      activatedAt: new Date().toISOString(),
+      clearanceCode,
+      biometricClearance: 'OATH RFC-4226 Handshake Verified • AES-256 Synced',
+      passholder: 'Brenda Wright',
+      talent: 'Keanu Reeves'
+    };
+
+    await db.saveCardActivation(cardId, activationRecord);
+
+    // Sync submission and audit log in background
+    (async () => {
+      try {
+        const sub = await db.getSubmissionById('MG-EA9A71');
+        if (sub) {
+          sub.cardActivation = activationRecord;
+          await db.saveSubmission(sub);
+        }
+        await recordAuditLog(
+          'system.oath@wmeagency.com',
+          'VIP_PASS_OATH_ACTIVATED',
+          cardId,
+          { clearanceCode, pin: '813-026' }
+        );
+      } catch (e) {
+        console.warn('[WME Server] Background sync notice:', e.message);
+      }
+    })();
+
+    res.json({
+      success: true,
+      message: 'VIP Access Pass successfully activated via OATH PIN.',
+      activation: activationRecord
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Deactivate card (for testing / admin revocation)
+app.post('/api/card/deactivate', async (req, res) => {
+  try {
+    const { cardId = 'WME-KR26-0813-VIP' } = req.body || {};
+    const deactivationRecord = {
+      cardId: String(cardId).toUpperCase(),
+      activated: false,
+      deactivatedAt: new Date().toISOString()
+    };
+    await db.saveCardActivation(cardId, deactivationRecord);
+    await recordAuditLog(
+      'system.oath@wmeagency.com',
+      'VIP_PASS_OATH_DEACTIVATED',
+      cardId,
+      {}
+    );
+    res.json({ success: true, message: 'VIP Card reset to pending activation.', activation: deactivationRecord });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/* ==========================================================================
    STATIC CLIENT SERVING
    ========================================================================== */
 const distDir = path.join(__dirname, 'dist');

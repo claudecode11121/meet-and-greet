@@ -21,6 +21,7 @@ import {
   PenTool,
   ZoomIn,
   Lock,
+  KeyRound,
   Eye
 } from 'lucide-react';
 import { StatusBadge, VALID_STATUSES, StatusType } from './StatusBadge';
@@ -110,6 +111,54 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
   // Government ID Inspection Modal state
   const [isInspectingId, setIsInspectingId] = useState(false);
+
+  // VIP Access Card & OATH Activation state
+  const [cardActivated, setCardActivated] = useState<boolean>(false);
+  const [isTogglingCard, setIsTogglingCard] = useState<boolean>(false);
+
+  // Check card activation status
+  useEffect(() => {
+    if (referenceId) {
+      fetch('/api/card/status/WME-KR26-0813-VIP')
+        .then(res => res.json())
+        .then(resData => {
+          if (resData.success && resData.activated) {
+            setCardActivated(true);
+          } else {
+            setCardActivated(false);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [referenceId, isOpen]);
+
+  const handleToggleCardActivation = async () => {
+    setIsTogglingCard(true);
+    try {
+      if (cardActivated) {
+        await fetch('/api/card/deactivate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP' })
+        });
+        setCardActivated(false);
+      } else {
+        const res = await fetch('/api/card/activate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026' })
+        });
+        const d = await res.json();
+        if (d.success) {
+          setCardActivated(true);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to toggle card activation:', err);
+    } finally {
+      setIsTogglingCard(false);
+    }
+  };
 
   // Fetch application detail whenever referenceId changes
   useEffect(() => {
@@ -561,6 +610,74 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                     No digital signature recorded for this candidate inquiry.
                   </div>
                 )}
+              </div>
+
+              {/* VIP Access Card & OATH Activation */}
+              <div className="border border-[#D4AF37]/50 bg-[#0C0C12] text-white p-5 rounded-xs space-y-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-[#D4AF37]" />
+                    <h3 className="text-xs font-mono uppercase tracking-wider text-[#F3E5AB] font-semibold">
+                      VIP Access Pass &amp; OATH PIN Activation
+                    </h3>
+                  </div>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-xs font-semibold uppercase ${
+                    cardActivated 
+                      ? 'bg-[#22C55E]/20 text-[#4ADE80] border border-[#22C55E]/40' 
+                      : 'bg-[#D4AF37]/20 text-[#F3E5AB] border border-[#D4AF37]/40'
+                  }`}>
+                    {cardActivated ? 'OATH ACTIVATED' : 'PENDING ACTIVATION'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                  <div className="p-2.5 bg-[#14141E] border border-[#262638] rounded-xs">
+                    <span className="text-[#888899] block text-[10px] uppercase">Credential Ref</span>
+                    <span className="font-semibold text-white">WME-KR26-0813-VIP</span>
+                  </div>
+                  <div className="p-2.5 bg-[#14141E] border border-[#262638] rounded-xs">
+                    <span className="text-[#888899] block text-[10px] uppercase">Generated PIN</span>
+                    <span className="font-bold text-[#F3E5AB] text-sm tracking-wider">813-026</span>
+                  </div>
+                  <div className="p-2.5 bg-[#14141E] border border-[#262638] rounded-xs">
+                    <span className="text-[#888899] block text-[10px] uppercase">Security Standard</span>
+                    <span className="text-[#A1A1AA]">OATH RFC-4226 / AES-256</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#222230]">
+                  <a
+                    href="/verify?ref=WME-KR26-0813-VIP&guest=Brenda+Wright&pin=813-026"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-mono text-[#D4AF37] hover:underline flex items-center gap-1.5"
+                  >
+                    <span>Open VIP Pass &amp; Activation Portal</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={handleToggleCardActivation}
+                    disabled={isTogglingCard}
+                    className={`text-xs font-mono uppercase tracking-wider px-3 py-1.5 rounded-xs transition-colors font-semibold flex items-center gap-1.5 ${
+                      cardActivated
+                        ? 'bg-[#1C1C24] text-[#A1A1AA] hover:text-[#DC2626] border border-[#333344]'
+                        : 'bg-[#D4AF37] text-black hover:bg-[#F3E5AB]'
+                    }`}
+                  >
+                    {isTogglingCard ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : cardActivated ? (
+                      <span>Deactivate Pass</span>
+                    ) : (
+                      <>
+                        <KeyRound className="w-3.5 h-3.5" />
+                        <span>Activate via PIN 813-026</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Status Update & Workflow Management */}

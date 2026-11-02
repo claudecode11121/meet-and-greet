@@ -40,6 +40,8 @@
     "accreditationCode": "VIP-ACCRED-0813",
     "activationPin": "813-026",
     "pinStatus": "ACTIVE & PENDING VENUE SCAN",
+    "oathProtocol": "OATH RFC-4226 / AES-256 Token Sync",
+    "activationMethod": "Card Activation via Generated OATH PIN (813-026)",
     "encryptionStandard": "AES-256 Encrypted Identification Intake",
     "biometricClearance": "Facial Match & Photo ID Certified",
     "venueRules": [

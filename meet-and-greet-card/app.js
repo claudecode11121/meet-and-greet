@@ -34,13 +34,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Keyboard accessibility (Space or Enter flips card)
   window.addEventListener('keydown', (e) => {
-    if ((e.code === 'Space' || e.key === ' ') && !idModal?.classList.contains('is-active')) {
+    const isModalOpen = idModal?.classList.contains('is-active') || document.getElementById('authModal')?.classList.contains('is-active');
+    if ((e.code === 'Space' || e.key === ' ') && !isModalOpen) {
       if (e.target === document.body || e.target === card) {
         e.preventDefault();
         toggleFlip();
       }
-    } else if (e.key === 'Escape' && idModal?.classList.contains('is-active')) {
-      closeModal();
+    } else if (e.key === 'Escape') {
+      if (idModal?.classList.contains('is-active')) closeModal();
+      const authM = document.getElementById('authModal');
+      if (authM?.classList.contains('is-active')) authM.classList.remove('is-active');
     }
   });
 
@@ -240,5 +243,173 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(() => {
         alert('Could not download manifest directly. The pass-data.json file is available in the directory.');
       });
+  });
+
+  /* ==========================================================================
+     OATH PIN Activation & Card Authentication Flow
+     ========================================================================== */
+  const authModal = document.getElementById('authModal');
+  const activateCardBtn = document.getElementById('activateCardBtn');
+  const activateBtnLabel = document.getElementById('activateBtnLabel');
+  const activationPinPanel = document.getElementById('activationPinPanel');
+  const panelActivateBtn = document.getElementById('panelActivateBtn');
+  const authModalCloseBtn = document.getElementById('authModalCloseBtn');
+  const cardPinInput = document.getElementById('cardPinInput');
+  const quickFillPinBtn = document.getElementById('quickFillPinBtn');
+  const submitPinAuthBtn = document.getElementById('submitPinAuthBtn');
+  const authErrorMessage = document.getElementById('authErrorMessage');
+  const authInputSection = document.getElementById('authInputSection');
+  const authSuccessSection = document.getElementById('authSuccessSection');
+  const modalStatusBadge = document.getElementById('modalStatusBadge');
+  const pinStatusPill = document.getElementById('pinStatusPill');
+  const doneActivationBtn = document.getElementById('doneActivationBtn');
+  const resetActivationBtn = document.getElementById('resetActivationBtn');
+  const clearanceChip = document.getElementById('clearanceChip');
+
+  const STORAGE_KEY = 'wme_kr26_card_activated';
+
+  function openAuthModal() {
+    if (authModal) authModal.classList.add('is-active');
+    if (cardPinInput && !isActivated()) {
+      setTimeout(() => cardPinInput.focus(), 150);
+    }
+  }
+
+  function closeAuthModal() {
+    if (authModal) authModal.classList.remove('is-active');
+    if (authErrorMessage) authErrorMessage.style.display = 'none';
+  }
+
+  function isActivated() {
+    return localStorage.getItem(STORAGE_KEY) === 'true';
+  }
+
+  function applyActivationState(activated, clearanceCode = 'OATH-KR26-813-CLEAR') {
+    if (activated) {
+      if (pinStatusPill) {
+        pinStatusPill.textContent = 'OATH ACTIVATED';
+        pinStatusPill.className = 'pin-status-pill is-activated';
+      }
+      if (activateBtnLabel) {
+        activateBtnLabel.textContent = 'Pass Activated ✓';
+      }
+      if (activateCardBtn) {
+        activateCardBtn.classList.remove('btn-outline');
+        activateCardBtn.classList.add('btn-gold');
+      }
+      if (modalStatusBadge) {
+        modalStatusBadge.innerHTML = '<span class="pin-status-pill is-activated">OATH ACTIVATED &amp; CLEARED</span>';
+      }
+      if (authInputSection) authInputSection.style.display = 'none';
+      if (authSuccessSection) authSuccessSection.style.display = 'block';
+      if (clearanceChip) {
+        clearanceChip.innerHTML = `CLEARANCE: <strong>${clearanceCode}</strong>`;
+      }
+    } else {
+      if (pinStatusPill) {
+        pinStatusPill.textContent = 'OATH READY';
+        pinStatusPill.className = 'pin-status-pill is-pending';
+      }
+      if (activateBtnLabel) {
+        activateBtnLabel.textContent = 'OATH Activate';
+      }
+      if (modalStatusBadge) {
+        modalStatusBadge.innerHTML = '<span class="pin-status-pill is-pending">PENDING ACTIVATION</span>';
+      }
+      if (authInputSection) authInputSection.style.display = 'block';
+      if (authSuccessSection) authSuccessSection.style.display = 'none';
+      if (cardPinInput) cardPinInput.value = '';
+    }
+  }
+
+  // Initialize activation state on load
+  applyActivationState(isActivated());
+
+  // Check server status if running via HTTP
+  if (window.location.protocol.startsWith('http')) {
+    fetch('/api/card/status/WME-KR26-0813-VIP')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.activated) {
+          localStorage.setItem(STORAGE_KEY, 'true');
+          applyActivationState(true, data.activation?.clearanceCode);
+        }
+      })
+      .catch(() => {});
+  }
+
+  activateCardBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openAuthModal();
+  });
+
+  activationPinPanel?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openAuthModal();
+  });
+
+  panelActivateBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openAuthModal();
+  });
+
+  authModalCloseBtn?.addEventListener('click', closeAuthModal);
+  doneActivationBtn?.addEventListener('click', closeAuthModal);
+
+  authModal?.addEventListener('click', (e) => {
+    if (e.target === authModal) closeAuthModal();
+  });
+
+  quickFillPinBtn?.addEventListener('click', () => {
+    if (cardPinInput) {
+      cardPinInput.value = '813-026';
+      cardPinInput.focus();
+    }
+    if (authErrorMessage) authErrorMessage.style.display = 'none';
+  });
+
+  cardPinInput?.addEventListener('input', (e) => {
+    let val = e.target.value.replace(/[^0-9]/g, '');
+    if (val.length > 6) val = val.slice(0, 6);
+    if (val.length > 3) {
+      val = `${val.slice(0, 3)}-${val.slice(3)}`;
+    }
+    e.target.value = val;
+    if (authErrorMessage) authErrorMessage.style.display = 'none';
+  });
+
+  submitPinAuthBtn?.addEventListener('click', () => {
+    const rawVal = cardPinInput?.value || '';
+    const cleanDigits = rawVal.replace(/[^0-9]/g, '');
+
+    if (cleanDigits !== '813026') {
+      if (authErrorMessage) {
+        authErrorMessage.textContent = 'Invalid OATH PIN. Please enter the valid 6-digit PIN on this credential (813-026).';
+        authErrorMessage.style.display = 'block';
+      }
+      return;
+    }
+
+    // PIN is valid! Trigger activation
+    const clearance = `OATH-KR26-813-CLEAR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    localStorage.setItem(STORAGE_KEY, 'true');
+    applyActivationState(true, clearance);
+
+    // Sync with backend if available
+    fetch('/api/card/activate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP', pin: '813-026' })
+    }).catch(() => {});
+  });
+
+  resetActivationBtn?.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    applyActivationState(false);
+    fetch('/api/card/deactivate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cardId: 'WME-KR26-0813-VIP' })
+    }).catch(() => {});
   });
 });

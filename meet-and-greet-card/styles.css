@@ -883,6 +883,273 @@ body {
   margin-bottom: 14px;
 }
 
+/* OATH Authentication & Activation Enhancements */
+.activation-pin-panel {
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.activation-pin-panel:hover {
+  border-color: var(--gold-light);
+  box-shadow: inset 0 0 16px rgba(212, 175, 55, 0.12), 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.pin-action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 3px;
+}
+
+.btn-micro-activate {
+  background: var(--gold-gradient);
+  color: #0b0b10;
+  border: none;
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.2s ease;
+}
+
+.btn-micro-activate:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+.pin-status-pill.is-activated {
+  color: #4ade80 !important;
+  background: rgba(34, 197, 94, 0.18) !important;
+  border-color: rgba(34, 197, 94, 0.5) !important;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.35);
+}
+
+.pin-status-pill.is-pending {
+  color: #facc15 !important;
+  background: rgba(234, 179, 8, 0.18) !important;
+  border-color: rgba(234, 179, 8, 0.5) !important;
+}
+
+.badge-tag.is-activated {
+  border-color: #22c55e !important;
+  color: #4ade80 !important;
+  background: rgba(34, 197, 94, 0.15) !important;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+}
+
+/* Auth Modal Styles */
+.auth-modal-content {
+  max-width: 480px;
+  background: #0d0d14;
+  border: 1.5px solid var(--gold-primary);
+  border-radius: 10px;
+  padding: 24px;
+}
+
+.auth-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 14px;
+}
+
+.auth-lock-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid var(--gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-light);
+  flex-shrink: 0;
+}
+
+.auth-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: 1.2px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.auth-card-meta {
+  background: #07070a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-card-meta .meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.meta-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+.meta-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.meta-value.gold {
+  color: var(--gold-light);
+}
+
+.card-pin-input {
+  width: 100%;
+  background: #050508;
+  border: 1.5px solid var(--gold-primary);
+  border-radius: 6px;
+  padding: 10px 14px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: var(--gold-light);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.card-pin-input:focus {
+  border-color: #fbf2c4;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.4), inset 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.pin-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.btn-quick-pin {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  color: var(--gold-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 2px 0;
+}
+
+.btn-quick-pin:hover {
+  color: var(--gold-light);
+}
+
+.auth-input-label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.auth-input-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 14px;
+  font-family: 'Inter', sans-serif;
+}
+
+.auth-error-message {
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  color: #fca5a5;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.btn-full-width {
+  width: 100%;
+  padding: 12px;
+  font-size: 11px;
+  justify-content: center;
+}
+
+.success-banner {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.success-banner .success-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.token-chip {
+  margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 3px 8px;
+  border-radius: 3px;
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.auth-activated-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.auth-footer-note {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
 /* Print Optimization */
 @media print {
   body {

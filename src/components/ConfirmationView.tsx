@@ -24,9 +24,10 @@ export interface SubmissionResult {
 interface ConfirmationViewProps {
   data: SubmissionResult;
   onReset: () => void;
+  onOpenCardActivation?: (ref?: string) => void;
 }
 
-export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onReset }) => {
+export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onReset, onOpenCardActivation }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopyReference = () => {
@@ -183,6 +184,41 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({ data, onRese
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* VIP Access Credential & OATH PIN Activation Card */}
+      <div className="bg-[#0C0C12] border-2 border-[#D4AF37]/50 p-4 sm:p-5 rounded-[3px] mb-6 sm:mb-8 text-white shadow-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#D4AF37] font-semibold bg-[#D4AF37]/10 px-2 py-0.5 rounded-[2px] border border-[#D4AF37]/30">
+                VIP Access Credential Ready
+              </span>
+              <span className="text-[10px] font-mono text-[#BBF7D0] bg-[#14532D]/40 px-2 py-0.5 rounded-[2px] border border-[#22C55E]/30 font-bold">
+                PIN: 813-026
+              </span>
+            </div>
+            <h4 className="text-base sm:text-lg font-serif font-medium text-[#F3E5AB]">
+              Keanu Reeves VIP All-Access Credential
+            </h4>
+            <p className="text-xs text-[#A1A1AA] leading-relaxed max-w-lg">
+              Your VIP Meet &amp; Greet pass has been provisioned. Connect your OATH activation PIN (<strong>813-026</strong>) to verify your credential and activate venue admittance.
+            </p>
+          </div>
+
+          <a
+            href={`/verify?ref=${encodeURIComponent(data.referenceId || 'WME-KR26-0813-VIP')}&guest=${encodeURIComponent(data.summary.fullName || 'Brenda Wright')}&pin=813-026`}
+            onClick={(e) => {
+              if (onOpenCardActivation) {
+                e.preventDefault();
+                onOpenCardActivation(data.referenceId || 'WME-KR26-0813-VIP');
+              }
+            }}
+            className="px-4 py-2.5 bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37] text-black font-mono text-xs uppercase tracking-wider font-bold rounded-[2px] hover:brightness-110 transition-all text-center shrink-0 shadow-sm"
+          >
+            Activate Pass via PIN →
+          </a>
         </div>
       </div>
 

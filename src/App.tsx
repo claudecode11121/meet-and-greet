@@ -5,6 +5,7 @@ import { PrivacyModal } from './components/PrivacyModal';
 import { ConfirmationView, SubmissionResult } from './components/ConfirmationView';
 import { SignaturePad, SignatureData } from './components/SignaturePad';
 import { IdVerificationSection, IdentificationData, IdentificationErrors } from './components/IdVerificationSection';
+import { CardActivationPortal } from './components/CardActivationPortal';
 import { AdminLogin } from './admin/AdminLogin';
 import { AdminLayout } from './admin/AdminLayout';
 
@@ -97,6 +98,14 @@ export const App: React.FC = () => {
   const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
+  // Helper to test if route belongs to card activation / verification
+  const isCardPath = (pathname: string) => {
+    return pathname.startsWith('/verify') || 
+           pathname.startsWith('/activate') || 
+           pathname.startsWith('/card') || 
+           pathname.startsWith('/pass');
+  };
+
   // Administrative Portal & Session State
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -104,6 +113,15 @@ export const App: React.FC = () => {
     }
     return false;
   });
+
+  // VIP Access Pass & OATH Activation Portal State
+  const [isCardRoute, setIsCardRoute] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return isCardPath(window.location.pathname);
+    }
+    return false;
+  });
+
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [isCheckingAdminAuth, setIsCheckingAdminAuth] = useState<boolean>(true);
 
@@ -143,6 +161,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     const handlePopState = () => {
       setIsAdminMode(window.location.pathname.startsWith('/admin'));
+      setIsCardRoute(isCardPath(window.location.pathname));
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -151,11 +170,23 @@ export const App: React.FC = () => {
   const navigateToAdmin = () => {
     window.history.pushState(null, '', '/admin');
     setIsAdminMode(true);
+    setIsCardRoute(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToPublicForm = () => {
     window.history.pushState(null, '', '/');
+    setIsAdminMode(false);
+    setIsCardRoute(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToCardActivation = (ref?: string) => {
+    const url = ref 
+      ? `/verify?ref=${encodeURIComponent(ref)}&guest=Brenda+Wright&pin=813-026` 
+      : '/verify?ref=WME-KR26-0813-VIP&guest=Brenda+Wright&pin=813-026';
+    window.history.pushState(null, '', url);
+    setIsCardRoute(true);
     setIsAdminMode(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -509,6 +540,16 @@ export const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Render VIP Card OATH Activation Portal if on /verify, /activate, /card, or /pass
+  if (isCardRoute) {
+    return (
+      <CardActivationPortal
+        onBackToPublicForm={navigateToPublicForm}
+        onNavigateToAdmin={navigateToAdmin}
+      />
+    );
+  }
+
   // Render Admin View if on /admin route or Admin Mode active
   if (isAdminMode) {
     if (isCheckingAdminAuth) {
@@ -563,7 +604,15 @@ export const App: React.FC = () => {
             </span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 text-[11px] font-mono tracking-wider text-[#737373] uppercase shrink-0">
-            <span className="hidden sm:inline">Talent Inquiry</span>
+            <button
+              type="button"
+              onClick={() => navigateToCardActivation()}
+              className="text-[10px] sm:text-[11px] font-mono tracking-wider uppercase text-[#9A7631] hover:text-[#111111] bg-[#FDF8EB] hover:bg-[#F7E2A9] px-2.5 py-1 rounded-[2px] border border-[#D4AF37]/50 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Activate VIP Pass via OATH PIN"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+              <span>VIP Pass Activation</span>
+            </button>
             <span className="hidden sm:inline text-[#E5E5E5]">•</span>
             <span className="text-[#6B1D2F] font-semibold bg-[#6B1D2F]/5 px-2 py-0.5 rounded-[2px] border border-[#6B1D2F]/20 text-[10px] sm:text-[11px]">
               Keanu Reeves
@@ -576,7 +625,11 @@ export const App: React.FC = () => {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-10 lg:py-14 w-full flex-1 min-w-0">
         {submissionResult ? (
           <div className="max-w-2xl mx-auto w-full min-w-0">
-            <ConfirmationView data={submissionResult} onReset={handleResetForm} />
+            <ConfirmationView 
+              data={submissionResult} 
+              onReset={handleResetForm} 
+              onOpenCardActivation={navigateToCardActivation}
+            />
           </div>
         ) : (
           <div className="lg:grid lg:grid-cols-12 lg:gap-12 xl:gap-16 items-start w-full min-w-0">

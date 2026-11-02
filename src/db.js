@@ -491,6 +491,42 @@ export async function saveSettings(settings) {
   return settings;
 }
 
+/**
+ * Get VIP card activation state by card reference / ID.
+ */
+export async function getCardActivation(cardId) {
+  await initDatabase();
+  const sanitizedId = String(cardId).trim().toUpperCase();
+  const res = await execute({
+    sql: `SELECT value_json FROM meet_greet_settings WHERE key = ?;`,
+    args: [`card_activation_${sanitizedId}`]
+  });
+  if (res.rows.length === 0) return null;
+  try {
+    return JSON.parse(res.rows[0].value_json);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Save VIP card activation state.
+ */
+export async function saveCardActivation(cardId, data) {
+  await initDatabase();
+  const sanitizedId = String(cardId).trim().toUpperCase();
+  const payload = {
+    ...data,
+    cardId: sanitizedId,
+    updatedAt: new Date().toISOString()
+  };
+  await execute({
+    sql: `INSERT OR REPLACE INTO meet_greet_settings (key, value_json) VALUES (?, ?);`,
+    args: [`card_activation_${sanitizedId}`, JSON.stringify(payload)]
+  });
+  return payload;
+}
+
 export function isCloudDatabase() {
   return isCloud;
 }
@@ -508,5 +544,7 @@ export default {
   getAuditLogs,
   getSettings,
   saveSettings,
+  getCardActivation,
+  saveCardActivation,
   isCloudDatabase
 };

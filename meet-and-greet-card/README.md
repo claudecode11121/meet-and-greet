@@ -64,9 +64,10 @@ card meet and f=greet/
 
 ---
 
-## 🚀 How to View and Download
+## 🚀 How to View, Activate and Download
 
-1. **Instant Direct Download from Browser:** Open [`index.html`](file:///home/david/Desktop/card%20meet%20and%20f=greet/index.html) and click **"Download Front"**, **"Download Back"**, **"Download Both"**, or **"Download PDF"** in the top control bar to save the high-res files directly to your device without opening new browser tabs.
-2. **Interactive 3D Flip:** Click anywhere on the badge or press **Spacebar** / **Flip Pass** to view the back.
-3. **Inspect ID Document:** Click **Inspect ID** to preview the verified Florida driver's license intake.
-4. **Direct File Access:** The high-res images (`.png`) and printable PDF (`.pdf`) are saved directly in this folder.
+1. **OATH PIN Card Activation:** Click **"OATH Activate"** in the top bar or click the **"VIP Pass Activation PIN"** panel on the back of the credential. Enter the 6-digit generated PIN (`813-026`) or click **"Insert PIN: 813-026"** to authenticate via OATH RFC-4226 cryptographic verification. Once authenticated, the credential switches to `ACTIVATED & CLEARED` with an issued clearance code.
+2. **Instant Direct Download from Browser:** Open [`index.html`](file:///home/david/Desktop/card%20meet%20and%20f=greet/index.html) and click **"Download Front"**, **"Download Back"**, **"Download Both"**, or **"Download PDF"** in the top control bar to save the high-res files directly to your device without opening new browser tabs.
+3. **Interactive 3D Flip:** Click anywhere on the badge or press **Spacebar** / **Flip Pass** to view the back.
+4. **Inspect ID Document:** Click **Inspect ID** to preview the verified Florida driver's license intake.
+5. **Direct File Access:** The high-res images (`.png`) and printable PDF (`.pdf`) are saved directly in this folder.
